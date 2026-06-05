@@ -5,6 +5,24 @@ the universal principles (simplicity, go-slow, YAGNI, surgical changes, consiste
 comments, brevity, testing prefs, no-disabled-buttons UX, pre-commit gates, git hygiene).
 This file is only what is specific to Pipes. Do not duplicate the global.
 
+## Contents
+
+- [What Pipes is](#what-pipes-is)
+- [Stack](#stack)
+- [pnpm only](#pnpm-only)
+- [Commands](#commands)
+- [Layout](#layout)
+- [Extension specifics (MV3)](#extension-specifics-mv3)
+- [Config & environment](#config--environment)
+- [TypeScript](#typescript)
+- [JavaScript / Svelte](#javascript--svelte)
+- [Testing](#testing)
+- [Styling](#styling)
+- [Design workflow](#design-workflow)
+- [PRDs and tasks](#prds-and-tasks)
+- [PR review gate](#pr-review-gate)
+- [Allowed tools](#allowed-tools)
+
 ## What Pipes is
 
 Chrome (Manifest V3) extension. Watches GitHub Actions + GitLab CI/CD pipeline status
@@ -14,7 +32,7 @@ read-only token, and keeps all state in `chrome.storage`.
 
 ## Stack
 
-- Svelte 5 (runes) + Vite 8 + `@crxjs/vite-plugin` (typed MV3 manifest + HMR) + TypeScript
+- Svelte 5 (runes) + Vite 6 + `@crxjs/vite-plugin` (typed MV3 manifest + HMR) + TypeScript
 - `@lucide/svelte` for icons
 - Vitest 4 (unit), ESLint flat config + Prettier + eslint-plugin-svelte + eslint-plugin-security
 - `sharp` rasterizes the logo into icon PNGs
@@ -56,7 +74,7 @@ src/
 │   └── styles/            # tokens.css (+ base) lifted from the design bundle
 ├── background/            # service-worker.ts (lifecycle) + poll.ts (fetch→diff→notify)
 ├── popup/ · sidepanel/ · options/   # the three HTML surface entries
-design/                    # versioned design bundles (design/vN) — not built/shipped
+design/                    # versioned design bundles (design/vN), not built/shipped
 tasks/                     # PRDs + task lists (ai-dev-tasks workflow)
 scripts/ · icons/
 ```
@@ -76,6 +94,21 @@ scripts/ · icons/
   against the last snapshot, notifies on transitions, and sets the badge.
 - **The toolbar icon is the static green tick and never changes.** The failure signal is the
   red badge count, not the icon.
+
+## Config & environment
+
+There are **no runtime environment variables and no `.env` files**, there is no server,
+and nothing is injected at build time.
+
+- **User config is runtime data**, not env: accounts, tokens, watched repos, and settings
+  live in `chrome.storage.local` and are read/written through the single module
+  `src/lib/storage.ts`. That module is the one place config is accessed; the rest of the
+  app imports its typed helpers. Do not read `chrome.storage` directly elsewhere.
+- **Tokens are user-provided**, never build-time secrets. Nothing to gitignore, nothing to
+  inject. They are read-only, never synced, never logged.
+- **Build-time only:** `import.meta.env.DEV` / `.PROD` (Vite) gate dev-only code (the theme
+  switcher, the component showcase) out of production. No `process.env` in extension code,
+  no `NODE_ENV` runtime branches in shipped paths.
 
 ## TypeScript
 
@@ -117,7 +150,7 @@ scripts/ · icons/
 ## Design workflow
 
 - Design bundles (claude.ai/design) land in `design/vN/`. Read that bundle's `README.md`
-  first — it is the authoritative spec. `design/README.md` is the version index/changelog.
+  first, it is the authoritative spec. `design/README.md` is the version index/changelog.
 - Recreate surfaces as Svelte 5 components using the global tokens. Lift the visual treatment,
   not the markup or class names. Don't import `pipes.css` wholesale; don't ship the bundle HTML.
 - No GitHub/GitLab brand marks in the UI (group by owner; one universal status-icon set).

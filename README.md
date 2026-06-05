@@ -6,7 +6,16 @@ tab open on the pipelines page. **Loud when the default branch breaks.**
 
 > Status: **in development.** Background engine (providers, polling, notifications,
 > badge) is built and type-checks clean. The popup / side panel / options UI is
-> being built against designs in [`design/`](design/BRIEF.md).
+> being built against designs in [`design/`](design/).
+
+## Contents
+
+- [What it does](#what-it-does)
+- [Architecture](#architecture)
+- [Develop](#develop)
+- [Tokens](#tokens)
+- [Notes](#notes)
+- [Licence](#licence)
 
 ---
 
@@ -84,11 +93,11 @@ the extension card.
 
 ### Viewing each surface
 
-- **Popup** — click the Pipes icon in the toolbar.
-- **Side panel** — open it from the button in the popup.
-- **Options** — right-click the toolbar icon → **Options** (or
+- **Popup**, click the Pipes icon in the toolbar.
+- **Side panel**, open it from the button in the popup.
+- **Options**, right-click the toolbar icon → **Options** (or
   `chrome://extensions` → Pipes → **Details** → **Extension options**).
-- **Themes** — the extension follows your OS light/dark automatically. While
+- **Themes**, the extension follows your OS light/dark automatically. While
   developing, a dev-only theme switcher (dev build only, never shipped) flips
   light / dark / system on the fly.
 
@@ -99,7 +108,7 @@ unpacked. The browser-viewable design reference lives in `design/v1/` (open the
 
 > Note: until the surface entry points (`src/popup/index.html`, etc.) exist,
 > `pnpm dev` has nothing to load. They're created by the design-foundation and
-> popup tasks — after that, load-unpacked works and you watch it build up surface
+> popup tasks, after that, load-unpacked works and you watch it build up surface
 > by surface.
 
 ---

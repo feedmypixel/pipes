@@ -39,7 +39,7 @@
     "@crxjs/vite-plugin": "2.4.0",
     "@eslint/compat": "2.1.0",
     "@eslint/js": "10.0.1",
-    "@sveltejs/vite-plugin-svelte": "7.1.2",
+    "@sveltejs/vite-plugin-svelte": "5.1.1",
     "@tsconfig/svelte": "5.0.8",
     "@types/chrome": "0.1.42",
     "eslint": "10.4.0",
@@ -56,7 +56,7 @@
     "svelte-check": "4.6.0",
     "typescript": "6.0.3",
     "typescript-eslint": "8.60.0",
-    "vite": "8.0.16",
+    "vite": "6.4.3",
     "vitest": "4.1.8"
   }
 }

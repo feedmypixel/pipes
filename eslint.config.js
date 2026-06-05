@@ -26,7 +26,11 @@ export default defineConfig(
     languageOptions: { globals: { ...globals.browser, ...globals.node } },
     rules: {
       'no-undef': 'off',
-      curly: ['error', 'all']
+      curly: ['error', 'all'],
+      // Both fire only on safe patterns here (typed keyof access, a controlled
+      // build-script path) and are widely regarded as noise. TypeScript guards the keys.
+      'security/detect-object-injection': 'off',
+      'security/detect-non-literal-fs-filename': 'off'
     }
   },
   {

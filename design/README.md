@@ -1,7 +1,16 @@
-# Pipes — Design
+# Pipes Design
 
 Locked visual reference for **Pipes**. Source of truth for tokens, surfaces, and
 component primitives.
+
+## Contents
+
+- [Where these came from](#where-these-came-from)
+- [Status](#status)
+- [What you'll find in a bundle](#what-youll-find-in-a-bundle)
+- [How to use these](#how-to-use-these)
+- [What NOT to do](#what-not-to-do)
+- [Changelog](#changelog)
 
 ## Where these came from
 
@@ -12,14 +21,14 @@ HTML + CSS + JS prototypes intended as the visual brief for re-implementation as
 ## Status
 
 **`v1/` is the current locked direction** (handoff 2026-06-05). Read its `README.md`
-first — it documents tokens, the logo, status vocabulary, behaviour, and every surface
+first, it documents tokens, the logo, status vocabulary, behaviour, and every surface
 in light + dark. `BRIEF.md` is the brief that produced it.
 
 ## What you'll find in a bundle
 
 | File / folder                | Purpose                                                            |
 | ---------------------------- | ----------------------------------------------------------------- |
-| `README.md`                  | Spec from claude.ai/design — fidelity, tokens, surfaces. Authoritative. |
+| `README.md`                  | Spec from claude.ai/design, fidelity, tokens, surfaces. Authoritative. |
 | `Pipes - Design Handoff.html`| All surfaces + states on one page. Open in a browser, no build.    |
 | `assets/pipes.css`           | Token values (`:root`, `[data-theme]`) + every component style. Exact colour/spacing source of truth. |
 | `assets/logo-pipes.svg`      | Final mark (green tick) + greyscale variant.                       |
@@ -40,7 +49,7 @@ in light + dark. `BRIEF.md` is the brief that produced it.
 ## What NOT to do
 
 - Do not import `pipes.css` wholesale; each component owns scoped styles.
-- Do not ship the HTML/JS — `design/` sits outside the build.
+- Do not ship the HTML/JS, `design/` sits outside the build.
 - Do not treat it as immutable; a v2 will land when the product shifts, and the PRDs +
   tokens follow.
 

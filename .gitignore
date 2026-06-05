@@ -10,7 +10,7 @@ dist/
 .idea/
 .vscode/
 
-# Local secrets — never commit a token. Config lives in chrome.storage at runtime,
+# Local secrets: never commit a token. Config lives in chrome.storage at runtime,
 # but ignore any local env files you might add during development.
 .env
 .env.local

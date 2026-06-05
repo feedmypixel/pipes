@@ -1,5 +1,17 @@
 # PRD: Design Foundation
 
+## Contents
+
+- [Introduction / Overview](#introduction--overview)
+- [Goals](#goals)
+- [User Stories](#user-stories)
+- [Functional Requirements](#functional-requirements)
+- [Non-Goals (Out of Scope)](#non-goals-out-of-scope)
+- [Design Considerations](#design-considerations)
+- [Technical Considerations](#technical-considerations)
+- [Success Metrics](#success-metrics)
+- [Open Questions](#open-questions)
+
 ## Introduction / Overview
 
 Pipes has a complete, type-checked background engine (providers, polling, storage,
@@ -79,19 +91,19 @@ are pure composition.
 
 ### Shared primitives (`src/lib/components/`)
 
-8. **`StatusIcon.svelte`** — a solid colour circle with a white symbol on a transparent
+8. **`StatusIcon.svelte`**, a solid colour circle with a white symbol on a transparent
    background, one unified set for both providers. Props: `status: PipelineStatus`,
    `size` (default 20, dense 18, larger for other surfaces). Symbols per the design:
    success = check, failed = ✗, running = spinning arc, pending = pause, canceled = slash,
    skipped = double-chevron, unknown = dot. The status **word is never shown inline**; it is
    the element's `title` (hover) and an accessible label. Running spins, but honours
    `prefers-reduced-motion`.
-9. **`RefChip.svelte`** — the branch/ref pill: `git-branch` icon + ref name in mono. Props:
+9. **`RefChip.svelte`**, the branch/ref pill: `git-branch` icon + ref name in mono. Props:
    `ref: string`.
-10. **`RelativeTime.svelte`** — renders a relative timestamp ("just now", "5h ago", "1d ago")
+10. **`RelativeTime.svelte`**, renders a relative timestamp ("just now", "5h ago", "1d ago")
     in mono from an ISO string. Self-updates on a sensible interval and tears the timer down
     on destroy. Props: `iso: string`.
-11. **`Row.svelte`** — the shared repo row reused by popup **and** side panel. Grid
+11. **`Row.svelte`**, the shared repo row reused by popup **and** side panel. Grid
     `auto 1fr auto`: `[StatusIcon] [name + meta] [external-link on hover]`. Name = project
     in mono-ish semibold; meta line = `RefChip` · `RelativeTime`. Failed/running rows get a
     2px coloured left edge; a failed-on-default-branch row gets a red tint + 3px edge. The
@@ -108,7 +120,7 @@ are pure composition.
     `Row` variants; `RefChip`; `RelativeTime`) with the dev theme switcher so both themes are
     previewable. Must be excluded from the production build.
 
-### Logo / icons (already in place — verify)
+### Logo / icons (already in place, verify)
 
 14. The extension icon set is the static green tick, generated from
     `design/v1/assets/logo-pipes.svg` by `scripts/generate-icons.mjs` (`pnpm icons`).
@@ -122,10 +134,10 @@ are pure composition.
 
 ## Non-Goals (Out of Scope)
 
-- Popup, side panel, options, and notification surfaces (their own PRDs) — this is only the
+- Popup, side panel, options, and notification surfaces (their own PRDs), this is only the
   shared layer they consume.
 - Owner grouping, the alarm strip, the "pipe rail", health summary, forms, the incident
-  banner — surface-specific, deferred.
+  banner, surface-specific, deferred.
 - Any dynamic toolbar icon / `chrome.action.setIcon` behaviour. **The logo is static.**
 - A user-facing theme toggle (auto only; dev-only switcher excepted).
 - GitHub/GitLab brand marks (the design drops provider marks; grouping is by owner).
@@ -145,7 +157,7 @@ are pure composition.
 - Each surface HTML entry imports `base.css` + `tokens.css` once; primitives assume the
   tokens are present.
 - `StatusIcon`/`Row` consume the existing normalized model (`PipelineStatus`, `Pipeline`
-  from `src/providers/types.ts`) — no new data shapes.
+  from `src/providers/types.ts`), no new data shapes.
 - Dev-only code (theme switcher, showcase) is gated on `import.meta.env.DEV` and tree-shaken
   out of production, never via `NODE_ENV` runtime branches in shipped paths.
 - Svelte 5 runes only; tear down `matchMedia` listeners and `RelativeTime` timers in
@@ -162,7 +174,7 @@ are pure composition.
 
 ## Open Questions
 
-1. Exact self-update interval for `RelativeTime` (30s vs 60s) — pick the lower-churn option
+1. Exact self-update interval for `RelativeTime` (30s vs 60s), pick the lower-churn option
    that still feels live; confirm during build.
 2. Whether the dev showcase is a standalone HTML entry (crxjs) or only run via `pnpm dev`
-   outside the extension — decide for least production-bundle risk during task breakdown.
+   outside the extension, decide for least production-bundle risk during task breakdown.
