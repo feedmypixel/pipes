@@ -50,8 +50,11 @@ gh pr create --title "feat: design foundation" --body "..."
 gh pr merge --squash --delete-branch   # after you've gated it
 ```
 
-CI runs `check + lint + test + security-audit` on every PR. Husky runs the same on pre-push.
-One feature, one PR. Skip the ceremony only for trivial single-line/doc fixes.
+CI runs `lint + check + test + security-audit` as separate checks on every PR; husky runs
+the same gate on pre-push. The repo is free + private, so GitHub server-side **required**
+status checks aren't available (Pro or public only). The merge gate is therefore: husky
+pre-push (never `--no-verify`) + CI as a visible signal + your review. One feature, one PR.
+Skip the ceremony only for trivial single-line/doc fixes.
 
 ## Safety rules
 
