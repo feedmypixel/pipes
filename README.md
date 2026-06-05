@@ -93,23 +93,30 @@ the extension card.
 
 ### Viewing each surface
 
-- **Popup**, click the Pipes icon in the toolbar.
-- **Side panel**, open it from the button in the popup.
-- **Options**, right-click the toolbar icon → **Options** (or
-  `chrome://extensions` → Pipes → **Details** → **Extension options**).
-- **Themes**, the extension follows your OS light/dark automatically. While
-  developing, a dev-only theme switcher (dev build only, never shipped) flips
-  light / dark / system on the fly.
+Each surface is an HTML page, reachable two ways: loaded into Chrome (with real
+`chrome.*` APIs), or as a dev-server URL in a plain browser tab (for pure-UI work).
 
-There is **no plain-browser-tab preview** of the real UI: `chrome.*` APIs
-(storage, notifications, alarms) only exist inside the extension, so you load it
-unpacked. The browser-viewable design reference lives in `design/v1/` (open the
-`.html` file).
+**Loaded into Chrome** (the real thing, `chrome.*` available):
 
-> Note: until the surface entry points (`src/popup/index.html`, etc.) exist,
-> `pnpm dev` has nothing to load. They're created by the design-foundation and
-> popup tasks, after that, load-unpacked works and you watch it build up surface
-> by surface.
+- **Popup**, click the Pipes toolbar icon.
+- **Side panel**, the button in the popup.
+- **Options**, right-click the toolbar icon → **Options**.
+
+**Dev-server URLs** (`pnpm dev` running):
+
+| Surface            | URL                                              | Renders in a plain tab?                  |
+| ------------------ | ------------------------------------------------ | ---------------------------------------- |
+| Component showcase | `http://localhost:5173/src/showcase/`            | ✅ yes — no `chrome.*`, best for styling |
+| Popup              | `http://localhost:5173/src/popup/index.html`     | shell only                               |
+| Side panel         | `http://localhost:5173/src/sidepanel/index.html` | shell only                               |
+| Options            | `http://localhost:5173/src/options/index.html`   | shell only                               |
+
+The real surfaces call `chrome.storage` / `alarms`, which are **undefined in a plain
+tab**, so the shell loads but storage-driven content is empty. Load unpacked for the
+full surface. (Loaded, the same pages live at `chrome-extension://<id>/src/...`.)
+
+**Themes**, follows OS light/dark automatically; dev-only console override
+`pipesTheme('dark' | 'light' | 'auto')` (never shipped).
 
 ---
 
