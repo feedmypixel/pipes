@@ -10,7 +10,7 @@ import { fileURLToPath } from 'node:url'
 import { dirname, join } from 'node:path'
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..')
-const SOURCE = join(ROOT, 'design/v1/assets/logo-pipes.svg')
+const SOURCE = join(ROOT, 'assets/logo.svg')
 const OUT_DIR = join(ROOT, 'icons')
 const SIZES = [16, 32, 48, 128]
 

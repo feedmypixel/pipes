@@ -1,4 +1,4 @@
-# Pipes ✅
+# <img src="assets/logo.svg" alt="" width="30" align="top" /> Pipes
 
 Chrome (Manifest V3) extension to watch **GitHub Actions** and **GitLab CI/CD**
 pipeline status across the repos you care about, at a glance, without leaving a
@@ -65,6 +65,9 @@ asks each provider for the latest pipeline per ref, diffs against the stored
 snapshots. The popup and side panel subscribe to `snapshots` and live-update.
 
 Nothing is sent anywhere except your configured GitHub/GitLab hosts.
+
+**Styling** (tokens, theming, conventions): see
+[`src/lib/styles/README.md`](src/lib/styles/README.md).
 
 ---
 
