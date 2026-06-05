@@ -24,12 +24,11 @@ This PRD covers the **foundation** those surfaces are built on, so each surface 
 can _assemble_ primitives instead of reinventing them:
 
 1. A global token + base stylesheet lifted from the design bundle.
-2. Light / dark theming (auto, plus a dev-only switcher for previewing).
+2. Light / dark theming, automatic from `prefers-color-scheme`, plus a dev-only
+   switcher to preview both themes in the real surfaces.
 3. The Lucide icon setup.
 4. The shared primitives every surface reuses: **StatusIcon**, **Row**, **RefChip**,
    **RelativeTime**.
-5. A dev-only **component showcase** page to eyeball every primitive in every state and
-   both themes while building.
 
 Goal: a stable, design-faithful base layer so the popup, side panel, and options surfaces
 are pure composition.
@@ -37,19 +36,16 @@ are pure composition.
 ## Goals
 
 1. Reproduce the design's tokens exactly (one source of truth, consumed via `var(--*)`).
-2. Light and dark both correct, driven by `prefers-color-scheme`, with no user-facing
-   toggle but a dev-only override for previewing.
+2. Light and dark both correct, driven by `prefers-color-scheme` (no user-facing toggle),
+   previewable in dev via a console theme override.
 3. Ship the four shared primitives, each self-contained (scoped styles, tokens only),
    pixel-faithful to `design/v1/`.
-4. Make every primitive visually verifiable in isolation across states and themes.
-5. Add zero runtime weight beyond Lucide's tree-shaken icons and (dev-only) the showcase.
+4. Add zero runtime weight beyond Lucide's tree-shaken icons.
 
 ## User Stories
 
 - **As a developer building a surface**, I import `StatusIcon`, `Row`, and `RefChip` and
   they already match the design, so I focus on layout, not styling.
-- **As a developer**, I open the showcase page and flip light/dark to confirm a primitive
-  looks right in both themes before wiring it into a surface.
 - **As a user**, the extension matches my OS light/dark preference automatically.
 - **As a user relying on a screen reader**, each status circle announces its meaning
   (the status word lives in `title`, not just colour).
@@ -65,22 +61,23 @@ are pure composition.
    pending, canceled/skipped/unknown) each with base + bg-tint + line, radii (4px; round
    for pills/circles), spacing (4px base), and type (system sans + mono stacks, sizes,
    weights).
-2. Light and dark token sets are defined under `[data-theme='light']` and
-   `[data-theme='dark']` blocks (matching `pipes.css`), so a single `data-theme` attribute
-   on the root switches the whole palette.
+2. Light is the `:root` default; dark is applied under `@media (prefers-color-scheme: dark)`
+   **and** under an explicit `[data-theme='dark']` selector (and `[data-theme='light']` to
+   force light), same token names, so a dev override can pin a theme regardless of the OS.
 3. Create `src/lib/styles/base.css`: a minimal reset, `box-sizing: border-box`, the body
    font stack and base text/`bg` colours from tokens, `:focus-visible` ring using the brand
    focus token, and a `prefers-reduced-motion` guard. No component styling here.
-4. No hex literals anywhere outside `tokens.css`. Components reference `var(--*)` only.
+4. Create `src/lib/styles/a11y.css`: only screen-reader / accessibility helpers
+   (`.visually-hidden`). No layout or utility-class system.
+5. No hex literals anywhere outside `tokens.css`. Components reference `var(--*)` only.
 
 ### Theming
 
-5. The effective theme follows `prefers-color-scheme` by default (no user-facing toggle).
-   Implement by setting `data-theme` on the root from a `matchMedia('(prefers-color-scheme: dark)')`
-   read, updated on change.
-6. Provide a **dev-only** theme switcher (light / dark / system) that overrides `data-theme`
-   for previewing. It must be gated by the dev build (`import.meta.env.DEV`) and **must not**
-   appear in or affect the production bundle.
+6. The effective theme follows `prefers-color-scheme` automatically (production behaviour,
+   no user-facing toggle). For development, expose a **dev-only** theme override gated by
+   `import.meta.env.DEV`: a console-callable setter (e.g. `globalThis.pipesTheme('dark' |
+'light' | 'auto')`) that sets/clears `data-theme` on the document root. No UI required,
+   does not need to be pretty, and is tree-shaken out of production.
 
 ### Icons
 
@@ -113,24 +110,20 @@ are pure composition.
 12. Every primitive is self-contained: scoped `<style>`, depends only on tokens, renders
     correctly with zero global utility classes.
 
-### Dev showcase
-
-13. Add a **dev-only** showcase surface that renders every primitive across all relevant
-    states (all 7 statuses for `StatusIcon`; healthy/failed/running/default-branch-failed
-    `Row` variants; `RefChip`; `RelativeTime`) with the dev theme switcher so both themes are
-    previewable. Must be excluded from the production build.
-
 ### Logo / icons (already in place, verify)
 
-14. The extension icon set is the static green tick, generated from
+13. The extension icon set is the static green tick, generated from
     `design/v1/assets/logo-pipes.svg` by `scripts/generate-icons.mjs` (`pnpm icons`).
     Confirm the four PNG sizes exist and the manifest references them. **The toolbar icon is
     static and never changes** (the red badge count is the failure signal).
 
 ### Quality gates
 
-15. `pnpm check`, `pnpm lint`, and `pnpm test` pass. New pure logic (e.g. relative-time
-    formatting, status→symbol mapping) is unit-tested beside its source.
+14. `pnpm check`, `pnpm lint`, and `pnpm test` pass. The placeholder surface stubs
+    (`src/{popup,sidepanel,options}/App.svelte`) get a `<script lang="ts">` block so
+    `svelte-check` can resolve them from their `.ts` entries (a scriptless component yields
+    no module type). New pure logic (relative-time formatting, status→symbol mapping) is
+    unit-tested beside its source.
 
 ## Non-Goals (Out of Scope)
 
@@ -139,7 +132,8 @@ are pure composition.
 - Owner grouping, the alarm strip, the "pipe rail", health summary, forms, the incident
   banner, surface-specific, deferred.
 - Any dynamic toolbar icon / `chrome.action.setIcon` behaviour. **The logo is static.**
-- A user-facing theme toggle (auto only; dev-only switcher excepted).
+- A user-facing theme toggle (auto only); the dev-only console theme override is fine.
+- A component showcase page (maybe later); components are eyeballed in the real surfaces.
 - GitHub/GitLab brand marks (the design drops provider marks; grouping is by owner).
 
 ## Design Considerations
@@ -154,27 +148,23 @@ are pure composition.
 
 ## Technical Considerations
 
-- Each surface HTML entry imports `base.css` + `tokens.css` once; primitives assume the
-  tokens are present.
+- Each surface HTML entry imports `tokens.css` + `base.css` + `a11y.css` once; primitives
+  assume the tokens are present.
 - `StatusIcon`/`Row` consume the existing normalized model (`PipelineStatus`, `Pipeline`
   from `src/providers/types.ts`), no new data shapes.
-- Dev-only code (theme switcher, showcase) is gated on `import.meta.env.DEV` and tree-shaken
-  out of production, never via `NODE_ENV` runtime branches in shipped paths.
-- Svelte 5 runes only; tear down `matchMedia` listeners and `RelativeTime` timers in
-  `$effect` cleanup.
+- The dev theme override is gated on `import.meta.env.DEV` and tree-shaken out of
+  production, never a `NODE_ENV` runtime branch in shipped paths.
+- Svelte 5 runes only; tear down `RelativeTime` timers in `$effect` cleanup.
 
 ## Success Metrics
 
-- All four primitives render pixel-faithfully to `design/v1/` in both themes (verified on the
-  showcase).
+- All four primitives render pixel-faithfully to `design/v1/` in both themes (verified by
+  toggling OS appearance once a surface renders them, plus unit tests on the pure logic).
 - A surface PRD can build a working list using only `Row` + `StatusIcon` + `RefChip` with no
   extra styling.
-- `pnpm check && pnpm lint && pnpm test` green; production build contains no dev-only showcase
-  or switcher.
+- `pnpm check && pnpm lint && pnpm test` green.
 
 ## Open Questions
 
 1. Exact self-update interval for `RelativeTime` (30s vs 60s), pick the lower-churn option
    that still feels live; confirm during build.
-2. Whether the dev showcase is a standalone HTML entry (crxjs) or only run via `pnpm dev`
-   outside the extension, decide for least production-bundle risk during task breakdown.
