@@ -1,4 +1,4 @@
-# <img src="assets/logo.svg" alt="" width="30" align="top" /> Pipes
+# <img src="assets/logo.svg" alt="" width="32" align="top" /> Pipes
 
 Chrome (Manifest V3) extension to watch **GitHub Actions** and **GitLab CI/CD**
 pipeline status across the repos you care about, at a glance, without leaving a
