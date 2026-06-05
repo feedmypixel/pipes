@@ -8,8 +8,9 @@
   let {
     pipeline,
     name,
-    dense = false
-  }: { pipeline: Pipeline; name: string; dense?: boolean } = $props()
+    dense = false,
+    child = false
+  }: { pipeline: Pipeline; name: string; dense?: boolean; child?: boolean } = $props()
 
   const headline = $derived(pipeline.isDefaultBranch && pipeline.status === 'failed')
 </script>
@@ -17,24 +18,29 @@
 <a
   class="row"
   class:dense
+  class:child
   class:headline
   data-status={pipeline.status}
   href={pipeline.webUrl}
   target="_blank"
   rel="noopener noreferrer"
 >
-  <StatusIcon status={pipeline.status} size={dense ? 18 : 20} />
+  <StatusIcon status={pipeline.status} size={dense || child ? 18 : 20} />
 
-  <span class="main">
-    <span class="name">{name}</span>
-    <span class="meta">
-      <RefChip ref={pipeline.ref} />
-      <span class="sep" aria-hidden="true"></span>
-      <RelativeTime iso={pipeline.updatedAt} />
+  {#if child}
+    <span class="branch"><RefChip ref={pipeline.ref} /></span>
+    <RelativeTime iso={pipeline.updatedAt} />
+  {:else}
+    <span class="main">
+      <span class="name">{name}</span>
+      <span class="meta">
+        <RefChip ref={pipeline.ref} />
+        <span class="sep" aria-hidden="true"></span>
+        <RelativeTime iso={pipeline.updatedAt} />
+      </span>
     </span>
-  </span>
-
-  <span class="go"><ExternalLink size={14} aria-hidden="true" /></span>
+    <span class="go"><ExternalLink size={14} aria-hidden="true" /></span>
+  {/if}
 </a>
 
 <style>
@@ -55,6 +61,10 @@
   .row.dense {
     padding: 7px 14px;
   }
+  .row.child {
+    padding: 7px 14px 7px 40px;
+    background: var(--surface-2);
+  }
   .row[data-status='failed'] {
     box-shadow: inset 2px 0 0 var(--failed);
   }
@@ -65,6 +75,7 @@
     background: var(--failed-bg);
     box-shadow: inset 3px 0 0 var(--failed);
   }
+
   .main {
     min-width: 0;
   }
@@ -82,6 +93,9 @@
     gap: 7px;
     min-width: 0;
     margin-top: 2px;
+  }
+  .branch {
+    min-width: 0;
   }
   .sep {
     flex: none;
