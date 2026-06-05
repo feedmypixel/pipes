@@ -1,0 +1,13 @@
+# Package managers
+pnpm-lock.yaml
+
+# Generated
+dist
+coverage
+icons
+
+# Design reference (claude.ai prototypes, not production code)
+design
+
+# Claude Code working dir
+.claude

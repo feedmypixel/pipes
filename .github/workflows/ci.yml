@@ -1,0 +1,29 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - run: pnpm check
+      - run: pnpm lint
+      - run: pnpm test
+      - run: pnpm security-audit
+      # NOTE: `pnpm build` is omitted until the surface entry points
+      # (src/popup/index.html etc.) exist — added with the foundation/popup PRDs.

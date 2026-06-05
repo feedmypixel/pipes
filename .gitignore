@@ -14,3 +14,6 @@ dist/
 # but ignore any local env files you might add during development.
 .env
 .env.local
+
+# Symlinks
+ai-dev-tasks
