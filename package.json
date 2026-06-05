@@ -58,5 +58,8 @@
     "typescript-eslint": "8.60.0",
     "vite": "6.4.3",
     "vitest": "4.1.8"
+  },
+  "dependencies": {
+    "@lucide/svelte": "1.17.0"
   }
 }
