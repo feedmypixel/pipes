@@ -15,7 +15,10 @@ test('maps in-flight GitHub runs by status, ignoring conclusion', () => {
   expect(mapGithubStatus('requested', null)).toBe('pending')
 })
 
+test('treats a completed run with no conclusion yet as still settling', () => {
+  expect(mapGithubStatus('completed', null)).toBe('pending')
+})
+
 test('maps unrecognised conclusion to unknown', () => {
   expect(mapGithubStatus('completed', 'neutral')).toBe('unknown')
-  expect(mapGithubStatus('completed', null)).toBe('unknown')
 })

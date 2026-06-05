@@ -26,4 +26,4 @@ jobs:
       - run: pnpm test
       - run: pnpm security-audit
       # NOTE: `pnpm build` is omitted until the surface entry points
-      # (src/popup/index.html etc.) exist — added with the foundation/popup PRDs.
+      # (src/popup/index.html etc.) exist, added with the foundation/popup PRDs.

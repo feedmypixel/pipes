@@ -47,6 +47,10 @@ export function mapGithubStatus(status: string | null, conclusion: string | null
   if (status !== 'completed') {
     return status === 'in_progress' ? 'running' : 'pending'
   }
+  // A completed run with no conclusion yet is still settling, not a terminal state.
+  if (conclusion === null) {
+    return 'pending'
+  }
   switch (conclusion) {
     case 'success':
       return 'success'

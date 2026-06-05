@@ -1,6 +1,6 @@
 import { poll } from './poll'
 import * as storage from '../lib/storage'
-import { openNotificationLink } from '../lib/notify'
+import { openNotificationLink, forgetNotificationLink } from '../lib/notify'
 
 const ALARM_NAME = 'pw-poll'
 const MIN_INTERVAL = 0.5 // Chrome's floor for alarm periods.
@@ -43,10 +43,17 @@ chrome.notifications.onClicked.addListener((notifId) => {
   openNotificationLink(notifId)
 })
 
+// Reclaim the stored link when a notification is dismissed or expires unclicked.
+chrome.notifications.onClosed.addListener((notifId) => {
+  forgetNotificationLink(notifId)
+})
+
 // Manual "refresh now" from popup / side panel.
 chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
   if (message?.type === 'poll-now') {
-    poll().then(() => sendResponse({ ok: true }))
+    poll()
+      .then(() => sendResponse({ ok: true }))
+      .catch((err) => sendResponse({ ok: false, error: (err as Error).message }))
     return true // keep the channel open for the async response
   }
 })

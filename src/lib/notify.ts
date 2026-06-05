@@ -66,15 +66,22 @@ export async function setBadge(failCount: number): Promise<void> {
   await chrome.action.setBadgeBackgroundColor({ color: FAIL_COLOR })
 }
 
+/** Drop a stored link. Called when a notification is closed or after it's opened. */
+export async function forgetNotificationLink(notifId: string): Promise<void> {
+  const links = await storage.get('notifLinks')
+  if (notifId in links) {
+    delete links[notifId]
+    await storage.set('notifLinks', links)
+  }
+}
+
 /** Open the pipeline a notification points at, then forget the link. */
 export async function openNotificationLink(notifId: string): Promise<void> {
-  const links = await storage.get('notifLinks')
-  const url = links[notifId]
+  const url = (await storage.get('notifLinks'))[notifId]
   if (!url) {
     return
   }
   await chrome.tabs.create({ url })
-  delete links[notifId]
-  await storage.set('notifLinks', links)
   await chrome.notifications.clear(notifId)
+  await forgetNotificationLink(notifId)
 }
