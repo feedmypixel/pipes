@@ -50,7 +50,7 @@
 
 <div class="popup">
   <header class="appbar">
-    <img class="logo" src="/icons/icon-32.png" alt="" width="23" height="23" />
+    <img class="logo" src="/icons/icon-32.png" alt="" width="24" height="24" />
     <span class="wordmark">Pipes</span>
     <div class="actions">
       <button class="icon-btn" title="Refresh now" aria-label="Refresh now" onclick={refresh}>
@@ -116,7 +116,7 @@
               </button>
               {#if expanded[view.repo.id]}
                 {#each view.others as other (other.id)}
-                  <Row name={view.displayName} pipeline={other} dense />
+                  <Row name={view.displayName} pipeline={other} child />
                 {/each}
               {/if}
             {/if}
