@@ -110,9 +110,17 @@ are pure composition.
 12. Every primitive is self-contained: scoped `<style>`, depends only on tokens, renders
     correctly with zero global utility classes.
 
+### Dev showcase
+
+13. A **dev-only** component showcase: its own HTML entry (`src/showcase/`), excluded from
+    the production build and the manifest, gated by `import.meta.env.DEV`. Renders every
+    primitive across states (all 7 `StatusIcon` statuses; `Row` healthy/failed/running/
+    failed-on-default; `RefChip`; `RelativeTime`) plus token swatches, viewable in both themes
+    via the `pipesTheme()` override or a tiny in-page toggle.
+
 ### Logo / icons (already in place, verify)
 
-13. The extension icon set is the static green tick, generated from
+14. The extension icon set is the static green tick, generated from
     `design/v1/assets/logo-pipes.svg` by `scripts/generate-icons.mjs` (`pnpm icons`).
     Confirm the four PNG sizes exist and the manifest references them. **The toolbar icon is
     static and never changes** (the red badge count is the failure signal).
@@ -133,7 +141,6 @@ are pure composition.
   banner, surface-specific, deferred.
 - Any dynamic toolbar icon / `chrome.action.setIcon` behaviour. **The logo is static.**
 - A user-facing theme toggle (auto only); the dev-only console theme override is fine.
-- A component showcase page (maybe later); components are eyeballed in the real surfaces.
 - GitHub/GitLab brand marks (the design drops provider marks; grouping is by owner).
 
 ## Design Considerations
