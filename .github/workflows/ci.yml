@@ -8,7 +8,12 @@ on:
 
 jobs:
   verify:
+    name: ${{ matrix.task }}
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        task: [lint, check, test, security-audit]
     steps:
       - uses: actions/checkout@v4
 
@@ -21,9 +26,6 @@ jobs:
 
       - run: pnpm install --frozen-lockfile
 
-      - run: pnpm check
-      - run: pnpm lint
-      - run: pnpm test
-      - run: pnpm security-audit
-      # NOTE: `pnpm build` is omitted until the surface entry points
-      # (src/popup/index.html etc.) exist, added with the foundation/popup PRDs.
+      - run: pnpm ${{ matrix.task }}
+    # NOTE: `pnpm build` is not a check yet; surface entry points
+    # (src/popup/index.html etc.) arrive with the foundation/popup PRDs.
