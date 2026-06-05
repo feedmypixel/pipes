@@ -53,6 +53,12 @@
   --font-mono: ui-monospace, 'SF Mono', 'JetBrains Mono', menlo, consolas, monospace;
   --radius: 4px;
   --radius-pill: 999px;
+
+  /* dark app-bar (popup / side-panel header, dark in both themes) */
+  --appbar: #0d1219;
+  --appbar-text: #f4f6fb;
+  --appbar-muted: #9aa3b2;
+  --appbar-hover: rgb(255 255 255 / 8%);
 }
 
 /* dark, automatic from the OS unless a theme is forced */
