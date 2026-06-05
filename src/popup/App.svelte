@@ -50,7 +50,7 @@
 
 <div class="popup">
   <header class="appbar">
-    <img class="logo" src="/icons/icon-32.png" alt="" width="22" height="22" />
+    <img class="logo" src="/icons/icon-32.png" alt="" width="23" height="23" />
     <span class="wordmark">Pipes</span>
     <div class="actions">
       <button class="icon-btn" title="Refresh now" aria-label="Refresh now" onclick={refresh}>
