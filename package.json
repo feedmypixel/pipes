@@ -1,0 +1,12 @@
+{
+  "name": "gitlab-pipeline-watcher",
+  "version": "0.1.0",
+  "description": "Chrome extension to see GitLab CI/CD pipeline failures at a glance.",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "lint": "echo \"TODO: wire up eslint/prettier\" && exit 0",
+    "zip": "cd $(git rev-parse --show-toplevel) && zip -r dist/extension.zip manifest.json src icons -x '*.DS_Store'"
+  },
+  "license": "MIT"
+}

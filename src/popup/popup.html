@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="popup.css" />
+    <title>Pipeline Watcher</title>
+  </head>
+  <body>
+    <header>
+      <h1>Pipeline Watcher</h1>
+      <button id="refresh" title="Refresh" aria-label="Refresh">&#x21bb;</button>
+    </header>
+
+    <main id="content">
+      <p class="state" id="loading">Loading…</p>
+    </main>
+
+    <footer>
+      <a href="#" id="open-options">Settings</a>
+    </footer>
+
+    <!-- type=module so we can import the shared lib -->
+    <script type="module" src="popup.js"></script>
+  </body>
+</html>

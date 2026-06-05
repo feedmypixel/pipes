@@ -1,0 +1,100 @@
+:root {
+  --bg: #1f1f23;
+  --fg: #e8e8ea;
+  --muted: #9a9aa2;
+  --border: #34343a;
+  --fail: #db3b21;
+  --accent: #6e49cb;
+  color-scheme: dark;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  width: 360px;
+  margin: 0;
+  font: 13px/1.4 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  background: var(--bg);
+  color: var(--fg);
+}
+
+header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--border);
+}
+
+h1 {
+  font-size: 14px;
+  margin: 0;
+}
+
+button {
+  background: none;
+  border: 1px solid var(--border);
+  color: var(--fg);
+  border-radius: 6px;
+  padding: 4px 8px;
+  cursor: pointer;
+}
+
+button:hover {
+  border-color: var(--accent);
+}
+
+main {
+  max-height: 420px;
+  overflow-y: auto;
+}
+
+.state {
+  padding: 24px 12px;
+  text-align: center;
+  color: var(--muted);
+}
+
+.pipeline {
+  display: block;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--border);
+  text-decoration: none;
+  color: inherit;
+}
+
+.pipeline:hover {
+  background: #26262b;
+}
+
+.pipeline .project {
+  font-weight: 600;
+}
+
+.pipeline .meta {
+  color: var(--muted);
+  margin-top: 2px;
+}
+
+.dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--fail);
+  margin-right: 6px;
+}
+
+footer {
+  padding: 8px 12px;
+  border-top: 1px solid var(--border);
+  text-align: right;
+}
+
+footer a {
+  color: var(--accent);
+  text-decoration: none;
+  font-size: 12px;
+}
