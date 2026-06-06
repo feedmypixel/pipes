@@ -95,10 +95,56 @@ function install() {
     },
     windows: { getCurrent: async () => ({ id: 1 }) },
     sidePanel: { open: log('sidePanel.open') },
-    tabs: { create: async ({ url }: { url: string }) => window.open(url, '_blank') }
+    tabs: { create: async ({ url }: { url: string }) => window.open(url, '_blank') },
+    permissions: { request: async () => true }
   }
 
   ;(globalThis as { chrome?: unknown }).chrome = shim
+  mockFetch()
+}
+
+// Mock the provider endpoints so validate + the repo picker work in a tab preview.
+function mockFetch() {
+  const json = (data: unknown) =>
+    new Response(JSON.stringify(data), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' }
+    })
+  const repos = (full: string) => ({
+    full_name: full,
+    default_branch: 'main',
+    html_url: `https://github.com/${full}`
+  })
+  const projects = (id: number, path: string) => ({
+    id,
+    path_with_namespace: path,
+    default_branch: 'main',
+    web_url: `https://gitlab.com/${path}`
+  })
+
+  globalThis.fetch = (async (input: RequestInfo | URL) => {
+    const url = String(input)
+    if (/(api\.github\.com|\/api\/v3)\/user\/repos/.test(url)) {
+      return json([
+        repos('feedmypixel/marketing-site'),
+        repos('feedmypixel/pixel-cli'),
+        repos('feedmypixel/status-api')
+      ])
+    }
+    if (/(api\.github\.com|\/api\/v3)\/user/.test(url)) {
+      return json({ login: 'feedmypixel' })
+    }
+    if (/\/api\/v4\/projects/.test(url)) {
+      return json([
+        projects(1, 'whiskyinvestdirect/api'),
+        projects(2, 'whiskyinvestdirect/database')
+      ])
+    }
+    if (/\/api\/v4\/user/.test(url)) {
+      return json({ username: 'feedmypixel' })
+    }
+    return json({})
+  }) as typeof fetch
 }
 
 if (import.meta.env.DEV && !(globalThis as { chrome?: { storage?: unknown } }).chrome?.storage) {

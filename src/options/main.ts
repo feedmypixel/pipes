@@ -1,3 +1,4 @@
+import '../lib/dev-chrome'
 import '../lib/styles/tokens.css'
 import '../lib/styles/base.css'
 import '../lib/styles/a11y.css'
