@@ -56,9 +56,21 @@ product). Captured so nothing is lost.
   - `.button-group` — duplicated in **options + showcase** → a `Cluster` / button-group object.
   - `.card` / `.card-body` (options) + the popup app-bar → a `Card` component/pattern the side
     panel will also want.
-    Categorise each as component (markup + behaviour) vs object (classless layout) per
-    `docs/css.md`; pairs with the `Stack` primitive above. Do before/with the side panel so it
-    reuses them rather than re-duplicating.
+
+  Plus **same thing, different names** (semantic duplication to unify):
+  - small mono group/section label: `.eyebrow` (showcase) = `.owner-name` (popup) =
+    `.repo-group-header` text (options) → one label pattern.
+  - group header bar (surface-2 + label + optional action): `.owner` (popup) =
+    `.repo-group-header` (options) → one group-header object.
+  - empty-state message: `.empty` / `.empty-action` (popup) = `.repo-empty` (options) → one
+    empty-state pattern.
+  - card/panel: `.card` (options) = `section` (showcase) → `Card`.
+  - branch chip: `.repo-branch` (options) reinvents the existing **`RefChip`** component → use
+    `RefChip`.
+
+  Categorise each as component (markup + behaviour) vs object (classless layout) vs utility per
+  `docs/css.md`; pairs with the `Stack` primitive above. Do before/with the side panel so it
+  reuses them rather than re-duplicating.
 
 ## Code structure (from the earlier hardening discussion)
 
