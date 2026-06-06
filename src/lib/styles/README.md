@@ -1,7 +1,7 @@
 # Styling
 
 How CSS works in Pipes. Tokens-first, scoped components, modern CSS only (no SCSS, no BEM).
-Architecture, scales, and vertical rhythm: see [`docs/css.md`](../../../docs/css.md).
+The fuller CSS principles (scales, vertical rhythm) are WIP — see [`docs/README.md`](../../../docs/README.md).
 
 ## The files here
 
@@ -12,8 +12,8 @@ Architecture, scales, and vertical rhythm: see [`docs/css.md`](../../../docs/css
 | `a11y.css`   | Accessibility helpers (`.visually-hidden`).                    |
 
 Each surface entry (`src/{popup,sidepanel,options,showcase}/main.ts`) imports all three. Form,
-banner, and toast chrome lives in each component's scoped `<style>` (see
-[`docs/forms.md`](../../../docs/forms.md)), not a global stylesheet — only tokens are shared.
+banner, and toast chrome lives in each component's scoped `<style>`, not a global stylesheet —
+only tokens are shared.
 There is no single global document — an extension has separate HTML entries per surface — so
 "global" CSS is imported into each entry and Vite dedupes per build.
 
@@ -21,8 +21,8 @@ There is no single global document — an extension has separate HTML entries pe
 
 - **Tokens are the only shared surface.** Components share values via `var(--token)`, never via
   shared classes. A component must render correctly with zero global classes.
-- **No magic numbers.** Spacing/type/line-height/weight come from the scale tokens (see
-  `docs/css.md`); only true device-pixel values (`1px` borders) are raw px.
+- **No magic numbers.** Spacing/type/line-height/weight come from the scale tokens; only true
+  device-pixel values (`1px` borders) are raw px.
 - **No hex outside `tokens.css`** (the `white` keyword for status glyphs is allowed).
 - **Scoped `<style>` per component.** No global utility classes inside components.
 - **Brand `#3194fc` is identity/links/focus only — never a status colour.** Status hues are the
