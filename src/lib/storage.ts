@@ -41,9 +41,25 @@ const DEFAULTS: StorageShape = {
   notifLinks: {}
 }
 
+/**
+ * A stored value is usable only if it matches the default's shape (array vs object
+ * vs primitive). Guards against a corrupt/legacy value bricking the app — e.g. a
+ * non-array `accounts` would throw on `.map`/spread everywhere. Wrong type → default.
+ */
+function matchesShape(value: unknown, fallback: unknown): boolean {
+  if (Array.isArray(fallback)) {
+    return Array.isArray(value)
+  }
+  if (fallback !== null && typeof fallback === 'object') {
+    return value !== null && typeof value === 'object' && !Array.isArray(value)
+  }
+  return typeof value === typeof fallback
+}
+
 export async function get<K extends keyof StorageShape>(key: K): Promise<StorageShape[K]> {
   const result = await chrome.storage.local.get(key)
-  return (result[key] ?? DEFAULTS[key]) as StorageShape[K]
+  const value = result[key]
+  return (matchesShape(value, DEFAULTS[key]) ? value : DEFAULTS[key]) as StorageShape[K]
 }
 
 export async function set<K extends keyof StorageShape>(
