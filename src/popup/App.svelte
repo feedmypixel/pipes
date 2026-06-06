@@ -62,18 +62,20 @@
     <img class="logo" src="/icons/icon-32.png" alt="" width="24" height="24" />
     <span class="wordmark">Pipes</span>
     <div class="actions">
-      <button class="icon-button" title="Refresh now" aria-label="Refresh now" onclick={refresh}>
-        <RefreshCw size={17} />
-      </button>
-      <button
-        class="icon-button"
-        title="Open side panel"
-        aria-label="Open side panel"
-        onclick={openSidePanel}
-      >
-        <PanelRight size={17} />
-      </button>
-      <button class="icon-button" title="Options" aria-label="Options" onclick={openOptions}>
+      {#if configured}
+        <button class="icon-button" title="Refresh now" aria-label="Refresh now" onclick={refresh}>
+          <RefreshCw size={17} />
+        </button>
+        <button
+          class="icon-button"
+          title="Open side panel"
+          aria-label="Open side panel"
+          onclick={openSidePanel}
+        >
+          <PanelRight size={17} />
+        </button>
+      {/if}
+      <button class="icon-button" title="Settings" aria-label="Settings" onclick={openOptions}>
         <Settings size={17} />
       </button>
     </div>
@@ -89,8 +91,8 @@
   {#if !configured}
     <div class="empty">
       <h2>No connections yet</h2>
-      <p>Add a GitHub or GitLab account to start watching pipelines.</p>
-      <button class="empty-action" onclick={openOptions}>Open setup</button>
+      <p>Add a GitHub or GitLab account to start watching pipelines</p>
+      <button class="empty-action" onclick={openOptions}>Settings</button>
     </div>
   {:else if watchedRepos.length === 0}
     <div class="empty">
@@ -133,7 +135,11 @@
   {/if}
 
   <footer class="footer">
-    <span class="live"><span class="ring"></span> updated just now</span>
+    {#if configured}
+      <span class="live"><span class="pulse"></span> updated just now</span>
+    {:else}
+      <span class="live"><span class="pulse idle"></span> Waiting for connection</span>
+    {/if}
   </footer>
 </div>
 
@@ -321,21 +327,28 @@
     align-items: center;
     gap: var(--space-xs);
   }
-  .ring {
-    width: 9px;
-    height: 9px;
-    border: 1.6px solid var(--success);
-    border-right-color: transparent;
+  .pulse {
+    width: 8px;
+    height: 8px;
     border-radius: 50%;
-    animation: spin 1s linear infinite;
+    background: var(--success);
+    animation: live-pulse 1.6s ease-in-out infinite;
   }
-  @keyframes spin {
-    to {
-      transform: rotate(360deg);
+  .pulse.idle {
+    background: var(--text-3);
+    animation: none;
+  }
+  @keyframes live-pulse {
+    0%,
+    100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0.35;
     }
   }
   @media (prefers-reduced-motion: reduce) {
-    .ring {
+    .pulse {
       animation: none;
     }
   }
