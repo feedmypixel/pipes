@@ -564,11 +564,15 @@
   }
   .token-help ul {
     margin: var(--space-sm) 0 0;
-    padding-left: 0;
-    list-style: none;
-    display: grid;
-    gap: var(--space-xs);
+    padding: var(--space-md) var(--space-lg) var(--space-md) var(--space-4xl);
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    list-style: disc;
     line-height: var(--leading-normal);
+  }
+  .token-help li + li {
+    margin-top: var(--space-xs);
   }
   .token-help b {
     color: var(--text);
