@@ -60,6 +60,28 @@ export function groupByOwner(repos: Repo[], snapshots: Snapshots): OwnerGroup[] 
     .sort((a, b) => a.owner.localeCompare(b.owner))
 }
 
+export interface RepoOwnerGroup {
+  owner: string
+  repos: Repo[]
+}
+
+/** Owner groups (A-Z) of plain repos, for the picker — no pipeline state needed. */
+export function groupReposByOwner(repos: Repo[]): RepoOwnerGroup[] {
+  const byOwner = new Map<string, Repo[]>()
+  for (const repo of repos) {
+    const { owner } = splitName(repo.name)
+    const list = byOwner.get(owner) ?? []
+    list.push(repo)
+    byOwner.set(owner, list)
+  }
+  return [...byOwner.entries()]
+    .map(([owner, list]) => ({
+      owner,
+      repos: list.sort((a, b) => a.name.localeCompare(b.name))
+    }))
+    .sort((a, b) => a.owner.localeCompare(b.owner))
+}
+
 /** Count default-branch pipelines currently failing (drives the alarm strip). */
 export function countDefaultBranchFailures(repos: Repo[], snapshots: Snapshots): number {
   let count = 0

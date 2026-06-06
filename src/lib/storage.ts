@@ -18,6 +18,8 @@ export type Snapshots = Record<string, Pipeline[]>
 interface StorageShape {
   accounts: Account[]
   watchedRepos: Repo[]
+  /** Repos a connection can see, cached per accountId so the picker renders without refetching. */
+  availableRepos: Record<string, Repo[]>
   settings: Settings
   snapshots: Snapshots
   /** notificationId → web URL, so a click can open the right pipeline. */
@@ -27,6 +29,7 @@ interface StorageShape {
 const DEFAULTS: StorageShape = {
   accounts: [],
   watchedRepos: [],
+  availableRepos: {},
   settings: DEFAULT_SETTINGS,
   snapshots: {},
   notifLinks: {}
