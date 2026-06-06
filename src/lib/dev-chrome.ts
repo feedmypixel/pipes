@@ -122,28 +122,32 @@ function mockFetch() {
     web_url: `https://gitlab.com/${path}`
   })
 
-  globalThis.fetch = (async (input: RequestInfo | URL) => {
+  // Only the real SaaS hosts succeed, and only with a token header — so a garbage host
+  // or empty token fails just like the real API would.
+  globalThis.fetch = (async (input: RequestInfo | URL, init?: RequestInit) => {
     const url = String(input)
-    if (/(api\.github\.com|\/api\/v3)\/user\/repos/.test(url)) {
+    const headers = new Headers(init?.headers)
+    const hasToken = Boolean(headers.get('authorization') || headers.get('private-token'))
+    if (hasToken && /^https:\/\/api\.github\.com\/user\/repos/.test(url)) {
       return json([
         repos('feedmypixel/marketing-site'),
         repos('feedmypixel/pixel-cli'),
         repos('feedmypixel/status-api')
       ])
     }
-    if (/(api\.github\.com|\/api\/v3)\/user/.test(url)) {
+    if (hasToken && /^https:\/\/api\.github\.com\/user(\?|$)/.test(url)) {
       return json({ login: 'feedmypixel' })
     }
-    if (/\/api\/v4\/projects/.test(url)) {
+    if (hasToken && /^https:\/\/gitlab\.com\/api\/v4\/projects/.test(url)) {
       return json([
         projects(1, 'whiskyinvestdirect/api'),
         projects(2, 'whiskyinvestdirect/database')
       ])
     }
-    if (/\/api\/v4\/user/.test(url)) {
+    if (hasToken && /^https:\/\/gitlab\.com\/api\/v4\/user(\?|$)/.test(url)) {
       return json({ username: 'feedmypixel' })
     }
-    return json({})
+    return new Response('{"message":"Unauthorized"}', { status: 401 })
   }) as typeof fetch
 }
 
