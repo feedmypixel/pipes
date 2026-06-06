@@ -64,6 +64,15 @@
   --toast-z: 2147483000;
   --toast-gap: 10px;
   --toast-width: 320px;
+  /* tinted toast fill, built from the status colour via relative-colour:
+     -l = lightness, -sat = chroma as a fraction of the status chroma (the
+     saturation dial; raise -sat for a punchier tint). Themed per scheme. */
+  --toast-success-fill: color-mix(in oklab, var(--success) 14%, var(--surface));
+  --toast-success-edge: color-mix(in oklab, var(--success) 30%, var(--surface));
+  --toast-error-fill: color-mix(in oklab, var(--failed) 14%, var(--surface));
+  --toast-error-edge: color-mix(in oklab, var(--failed) 30%, var(--surface));
+  --toast-info-fill: color-mix(in oklab, var(--brand) 14%, var(--surface));
+  --toast-info-edge: color-mix(in oklab, var(--brand) 30%, var(--surface));
 }
 
 /* dark, automatic from the OS unless a theme is forced */
@@ -84,6 +93,12 @@
     --brand: #5aa8ff;
     --brand-ink: #06152b;
     --brand-soft: oklch(0.3 0.07 256);
+    --toast-success-fill: var(--success-bg);
+    --toast-success-edge: var(--success-line);
+    --toast-error-fill: var(--failed-bg);
+    --toast-error-edge: var(--failed-line);
+    --toast-info-fill: var(--brand-soft);
+    --toast-info-edge: color-mix(in oklab, var(--brand) 45%, var(--surface));
     --link: oklch(0.78 0.13 256);
     --success: oklch(0.76 0.16 152);
     --success-bg: oklch(0.3 0.06 152);
@@ -146,4 +161,10 @@
   --alarm-line: oklch(0.45 0.11 27);
   --shadow: 0 0 0 1px rgba(0, 0, 0, 0.2), 0 2px 6px rgba(0, 0, 0, 0.4);
   --shadow-lg: 0 12px 36px rgba(0, 0, 0, 0.55);
+  --toast-success-fill: var(--success-bg);
+  --toast-success-edge: var(--success-line);
+  --toast-error-fill: var(--failed-bg);
+  --toast-error-edge: var(--failed-line);
+  --toast-info-fill: var(--brand-soft);
+  --toast-info-edge: color-mix(in oklab, var(--brand) 45%, var(--surface));
 }
