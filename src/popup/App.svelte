@@ -129,9 +129,9 @@
     </main>
   {/if}
 
-  <footerer class="footer">
+  <footer class="footer">
     <span class="live"><span class="ring"></span> updated just now</span>
-  </footerer>
+  </footer>
 </div>
 
 <style>
