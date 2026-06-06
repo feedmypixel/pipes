@@ -4,12 +4,14 @@
   import Trash2 from '@lucide/svelte/icons/trash-2'
   import Check from '@lucide/svelte/icons/check'
   import Search from '@lucide/svelte/icons/search'
+  import RefreshCw from '@lucide/svelte/icons/refresh-cw'
   import Zap from '@lucide/svelte/icons/zap'
   import GitBranch from '@lucide/svelte/icons/git-branch'
   import * as storage from '../lib/storage'
   import type { Settings } from '../lib/storage'
   import { getProvider, normaliseHost, saasProvider } from '../providers'
   import type { Account, ProviderId, Repo } from '../providers/types'
+  import { groupReposByOwner } from '../lib/group'
   import Field from '../lib/components/forms/Field.svelte'
   import Input from '../lib/components/forms/Input.svelte'
   import PasswordInput from '../lib/components/forms/PasswordInput.svelte'
@@ -35,11 +37,17 @@
 
   let reposByAccount = $state<Record<string, Repo[]>>({})
   let loadingRepos = $state<Record<string, boolean>>({})
+  let failedRepos = $state<Record<string, boolean>>({})
   let search = $state('')
 
   $effect(() => {
-    storage.get('accounts').then((value) => (accounts = value))
+    storage.get('accounts').then((value) => {
+      accounts = value
+      // Render cached repos immediately, then refresh each connection in the background.
+      value.forEach((account) => loadRepos(account))
+    })
     storage.get('watchedRepos').then((value) => (watchedRepos = value))
+    storage.get('availableRepos').then((value) => (reposByAccount = value))
     storage.get('settings').then((value) => (settings = value))
   })
 
@@ -147,24 +155,35 @@
 
   async function removeAccount(account: Account) {
     const removedRepos = watchedRepos.filter((r) => r.accountId === account.id)
+    const cachedRepos = reposByAccount[account.id]
     accounts = accounts.filter((a) => a.id !== account.id)
     watchedRepos = watchedRepos.filter((r) => r.accountId !== account.id)
+    const remainingRepos = { ...reposByAccount }
+    delete remainingRepos[account.id]
+    reposByAccount = remainingRepos
     await storage.set('accounts', accounts)
     await storage.set('watchedRepos', watchedRepos)
+    await storage.set('availableRepos', reposByAccount)
     toastUndo('Connection removed', async () => {
       accounts = [...accounts, account]
       watchedRepos = [...watchedRepos, ...removedRepos]
+      reposByAccount = { ...reposByAccount, [account.id]: cachedRepos ?? [] }
       await storage.set('accounts', accounts)
       await storage.set('watchedRepos', watchedRepos)
+      await storage.set('availableRepos', reposByAccount)
     })
   }
 
   async function loadRepos(account: Account) {
     loadingRepos[account.id] = true
+    failedRepos[account.id] = false
     try {
-      reposByAccount[account.id] = await getProvider(account.provider).listRepos(account)
+      const repos = await getProvider(account.provider).listRepos(account)
+      reposByAccount[account.id] = repos
+      await storage.set('availableRepos', { ...reposByAccount, [account.id]: repos })
     } catch {
-      reposByAccount[account.id] = []
+      // Keep any cached repos on screen; just flag the failure for a retry.
+      failedRepos[account.id] = true
     } finally {
       loadingRepos[account.id] = false
     }
@@ -219,7 +238,7 @@
               <button
                 class="icon-button"
                 title="Remove"
-                aria-label="Remove connectionection"
+                aria-label="Remove connection"
                 onclick={() => removeAccount(account)}
               >
                 <Trash2 size={15} />
@@ -230,7 +249,7 @@
       {/if}
 
       <div class="card-body">
-        <h3>Add a connectionection</h3>
+        <h3>Add a connection</h3>
         {#if addResult}
           <Banner variant={addResult.variant}>{addResult.text}</Banner>
         {/if}
@@ -271,7 +290,7 @@
         <div class="button-group">
           <Button variant="primary" {submitting} onclick={addConnection}>
             <Plus size={14} />
-            {submitting ? 'Adding connectionection…' : 'Add connectionection'}
+            {submitting ? 'Adding connection…' : 'Add connection'}
           </Button>
           <Button variant="secondary" disabled={submitting} onclick={validate}>
             <Zap size={14} /> Validate
@@ -289,32 +308,54 @@
             <input type="text" placeholder="Filter repositories…" bind:value={search} />
           </div>
           {#each accounts as account (account.id)}
-            <div class="repo-group">
-              <div class="repo-group-header">{account.label}</div>
-              {#if loadingRepos[account.id]}
-                <p class="repo-empty">Loading…</p>
-              {:else if reposByAccount[account.id] === undefined}
-                <div class="repo-load">
-                  <Button variant="secondary" onclick={() => loadRepos(account)}>
-                    Load repositories
-                  </Button>
-                </div>
+            {@const repos = reposByAccount[account.id]}
+            {@const host = account.host.replace(/^https?:\/\//, '')}
+            {#if repos === undefined && loadingRepos[account.id]}
+              <p class="repo-empty">Loading {host}…</p>
+            {:else if repos === undefined && failedRepos[account.id]}
+              <div class="repo-error">
+                <span>Couldn't reach {host}</span>
+                <Button variant="secondary" onclick={() => loadRepos(account)}>Retry</Button>
+              </div>
+            {:else if repos !== undefined}
+              {@const groups = groupReposByOwner(repos.filter(matches))}
+              {#if repos.length === 0}
+                <p class="repo-empty">No repositories found for {host}</p>
+              {:else if groups.length === 0}
+                <p class="repo-empty">No repositories match “{search}”</p>
               {:else}
-                {#each (reposByAccount[account.id] ?? []).filter(matches) as repo (repo.id)}
-                  <button
-                    class="repo-item"
-                    class:on={watchedIds.has(repo.id)}
-                    onclick={() => toggleRepo(repo)}
-                  >
-                    <span class="checkbox">
-                      {#if watchedIds.has(repo.id)}<Check size={11} />{/if}
-                    </span>
-                    <span class="repo-name">{repo.name}</span>
-                    <span class="repo-branch"><GitBranch size={13} /> {repo.defaultBranch}</span>
-                  </button>
+                {#each groups as group (host + '/' + group.owner)}
+                  <div class="repo-group">
+                    <div class="repo-group-header">
+                      <span>{host} / {group.owner}</span>
+                      <button
+                        class="icon-button refresh"
+                        class:spinning={loadingRepos[account.id]}
+                        title="Refresh"
+                        aria-label="Refresh repositories for {group.owner}"
+                        onclick={() => loadRepos(account)}
+                      >
+                        <RefreshCw size={13} />
+                      </button>
+                    </div>
+                    {#each group.repos as repo (repo.id)}
+                      <button
+                        class="repo-item"
+                        class:on={watchedIds.has(repo.id)}
+                        onclick={() => toggleRepo(repo)}
+                      >
+                        <span class="checkbox">
+                          {#if watchedIds.has(repo.id)}<Check size={11} />{/if}
+                        </span>
+                        <span class="repo-name">{repo.name}</span>
+                        <span class="repo-branch"><GitBranch size={13} /> {repo.defaultBranch}</span
+                        >
+                      </button>
+                    {/each}
+                  </div>
                 {/each}
               {/if}
-            </div>
+            {/if}
           {/each}
         </div>
       </section>
@@ -521,11 +562,32 @@
     margin-bottom: var(--space-lg);
   }
   .repo-group-header {
-    padding: var(--space-sm) var(--space-xl);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-sm);
+    padding: var(--space-xs) var(--space-sm) var(--space-xs) var(--space-xl);
     background: var(--surface-2);
     border-bottom: 1px solid var(--border);
     font: var(--weight-semibold) var(--font-size-xs) / var(--leading-none) var(--font-mono);
     color: var(--text-2);
+  }
+  .refresh {
+    width: 26px;
+    height: 26px;
+  }
+  .refresh.spinning :global(svg) {
+    animation: spin 0.8s linear infinite;
+  }
+  @keyframes spin {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .refresh.spinning :global(svg) {
+      animation: none;
+    }
   }
   .repo-empty {
     margin: 0;
@@ -533,8 +595,14 @@
     font-size: var(--font-size-base);
     color: var(--text-3);
   }
-  .repo-load {
+  .repo-error {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-md);
     padding: var(--space-md) var(--space-xl);
+    font-size: var(--font-size-base);
+    color: var(--failed);
   }
   .repo-item {
     display: flex;

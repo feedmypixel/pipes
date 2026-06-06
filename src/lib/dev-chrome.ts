@@ -37,7 +37,13 @@ function repo(name: string): Repo {
 
 function seedData() {
   const accounts: Account[] = [
-    { id: 'gh', provider: 'github', label: 'personal', host: 'https://github.com', token: '' }
+    {
+      id: 'gh',
+      provider: 'github',
+      label: 'personal',
+      host: 'https://github.com',
+      token: 'ghp_dev'
+    }
   ]
   const watchedRepos = [
     repo('feedmypixel/marketing-site'),
@@ -132,7 +138,9 @@ function mockFetch() {
       return json([
         repos('feedmypixel/marketing-site'),
         repos('feedmypixel/pixel-cli'),
-        repos('feedmypixel/status-api')
+        repos('feedmypixel/status-api'),
+        repos('acme-corp/billing'),
+        repos('acme-corp/dashboard')
       ])
     }
     if (hasToken && /^https:\/\/api\.github\.com\/user(\?|$)/.test(url)) {
