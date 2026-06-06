@@ -5,8 +5,9 @@ node_modules/
 dist/
 *.zip
 
-# Test artifacts (browser-project attachments: screenshots/traces)
+# Test artifacts (browser-project: attachments + failure screenshots, coverage)
 .vitest-attachments/
+**/__screenshots__/
 coverage/
 
 # Editor / OS
