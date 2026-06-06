@@ -16,6 +16,7 @@
   import Input from '../lib/components/forms/Input.svelte'
   import PasswordInput from '../lib/components/forms/PasswordInput.svelte'
   import FormSummary from '../lib/components/forms/FormSummary.svelte'
+  import MessageIcon from '../lib/components/forms/MessageIcon.svelte'
   import Banner from '../lib/components/Banner.svelte'
   import Button from '../lib/components/Button.svelte'
   import PermissionNote from '../lib/components/PermissionNote.svelte'
@@ -287,13 +288,16 @@
           />
         </Field>
         <details class="token-help">
-          <summary>What permissions does my token need?</summary>
+          <summary>
+            <MessageIcon variant="info" size={14} />
+            <span>What permissions does my token need?</span>
+          </summary>
           <ul>
             <li>
-              <b>GitHub</b> — fine-grained token, <b>Actions: read-only</b> (Metadata is automatic); grant
-              the repos or orgs you want to watch.
+              <b>GitHub</b>: fine-grained token with <b>Actions: read-only</b>. Grant the repos or
+              orgs you want to watch.
             </li>
-            <li><b>GitLab</b> — personal access token with the <b>read_api</b> scope.</li>
+            <li><b>GitLab</b>: personal access token with the <b>read_api</b> scope.</li>
           </ul>
         </details>
         <div class="note-row"><PermissionNote /></div>
@@ -540,13 +544,28 @@
     color: var(--text-2);
   }
   .token-help summary {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
     cursor: pointer;
     color: var(--text-3);
     font-size: var(--font-size-xs);
+    list-style: none;
+  }
+  .token-help summary::-webkit-details-marker {
+    display: none;
+  }
+  .token-help summary :global(.message-icon) {
+    margin-left: -2px;
+  }
+  .token-help summary span {
+    text-decoration: underline;
+    text-underline-offset: 2px;
   }
   .token-help ul {
     margin: var(--space-sm) 0 0;
-    padding-left: var(--space-xl);
+    padding-left: 0;
+    list-style: none;
     display: grid;
     gap: var(--space-xs);
     line-height: var(--leading-normal);
