@@ -104,7 +104,10 @@
             {#if view.primary}
               <Row name={view.displayName} pipeline={view.primary} />
             {/if}
-            {#if view.others.length > 0}
+            {#each view.active as branch (branch.id)}
+              <Row name={view.displayName} pipeline={branch} child />
+            {/each}
+            {#if view.collapsed.length > 0}
               <button
                 class="more"
                 aria-expanded={expanded[view.repo.id] ?? false}
@@ -112,11 +115,11 @@
               >
                 <ChevronDown size={11} />
                 {expanded[view.repo.id] ? 'Hide' : 'Show'}
-                {view.others.length} other branch{view.others.length > 1 ? 'es' : ''}
+                {view.collapsed.length} more branch{view.collapsed.length > 1 ? 'es' : ''}
               </button>
               {#if expanded[view.repo.id]}
-                {#each view.others as other (other.id)}
-                  <Row name={view.displayName} pipeline={other} child />
+                {#each view.collapsed as branch (branch.id)}
+                  <Row name={view.displayName} pipeline={branch} child />
                 {/each}
               {/if}
             {/if}

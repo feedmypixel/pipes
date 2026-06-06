@@ -1,14 +1,18 @@
-import type { Pipeline, Repo } from '../providers/types'
+import type { Pipeline, PipelineStatus, Repo } from '../providers/types'
 import type { Snapshots } from './storage'
+
+// Live / needs-attention; non-default branches in any other state collapse.
+const ALWAYS_SHOWN: ReadonlySet<PipelineStatus> = new Set(['failed', 'running', 'pending'])
 
 export interface RepoView {
   repo: Repo
-  /** Repo name with the owner prefix stripped. */
+  /** Repo name without the owner prefix. */
   displayName: string
-  /** The default-branch pipeline, if present. */
   primary: Pipeline | undefined
-  /** Non-default-branch pipelines, newest first. */
-  others: Pipeline[]
+  /** Live/broken non-default branches, always shown, newest first. */
+  active: Pipeline[]
+  /** Settled non-default branches, collapsed, newest first. */
+  collapsed: Pipeline[]
 }
 
 export interface OwnerGroup {
@@ -28,19 +32,20 @@ function newestFirst(a: Pipeline, b: Pipeline): number {
   return b.updatedAt.localeCompare(a.updatedAt)
 }
 
-/** Group watched repos by owner (owners A-Z, repos A-Z), splitting each repo's
- *  pipelines into the default-branch primary and the other refs. */
+/** Owner groups (A-Z), each repo split into default-branch primary, active, collapsed. */
 export function groupByOwner(repos: Repo[], snapshots: Snapshots): OwnerGroup[] {
   const byOwner = new Map<string, RepoView[]>()
 
   for (const repo of repos) {
     const pipelines = snapshots[repo.id] ?? []
+    const nonDefault = pipelines.filter((p) => !p.isDefaultBranch)
     const { owner, displayName } = splitName(repo.name)
     const view: RepoView = {
       repo,
       displayName,
       primary: pipelines.find((p) => p.isDefaultBranch),
-      others: pipelines.filter((p) => !p.isDefaultBranch).sort(newestFirst)
+      active: nonDefault.filter((p) => ALWAYS_SHOWN.has(p.status)).sort(newestFirst),
+      collapsed: nonDefault.filter((p) => !ALWAYS_SHOWN.has(p.status)).sort(newestFirst)
     }
     const list = byOwner.get(owner) ?? []
     list.push(view)
