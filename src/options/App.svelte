@@ -3,7 +3,6 @@
   import Plus from '@lucide/svelte/icons/plus'
   import Trash2 from '@lucide/svelte/icons/trash-2'
   import Check from '@lucide/svelte/icons/check'
-  import TriangleAlert from '@lucide/svelte/icons/triangle-alert'
   import Lock from '@lucide/svelte/icons/lock'
   import Search from '@lucide/svelte/icons/search'
   import Zap from '@lucide/svelte/icons/zap'
@@ -12,6 +11,13 @@
   import type { Settings } from '../lib/storage'
   import { getProvider, normaliseHost, saasProvider } from '../providers'
   import type { Account, ProviderId, Repo } from '../providers/types'
+  import Field from '../lib/components/forms/Field.svelte'
+  import Input from '../lib/components/forms/Input.svelte'
+  import PasswordInput from '../lib/components/forms/PasswordInput.svelte'
+  import FormSummary from '../lib/components/forms/FormSummary.svelte'
+  import Banner from '../lib/components/Banner.svelte'
+  import ToastHost from '../lib/components/ToastHost.svelte'
+  import { toastSuccess, toastUndo } from '../lib/toasts.svelte'
 
   let accounts = $state<Account[]>([])
   let watchedRepos = $state<Repo[]>([])
@@ -20,12 +26,11 @@
   let label = $state('')
   let host = $state('')
   let token = $state('')
-  let showToken = $state(false)
-  let availability = $state<{ state: 'idle' | 'busy' | 'ok' | 'bad'; text: string }>({
-    state: 'idle',
-    text: ''
-  })
+  let errors = $state<{ host?: string; token?: string }>({})
+  let availability = $state<{ state: 'busy' | 'ok' | 'bad'; text: string } | null>(null)
   let detected = $state<ProviderId | null>(null)
+  let submitting = $state(false)
+  let addResult = $state<{ variant: 'ok' | 'err'; text: string } | null>(null)
 
   let reposByAccount = $state<Record<string, Repo[]>>({})
   let loadingRepos = $state<Record<string, boolean>>({})
@@ -38,6 +43,29 @@
   })
 
   const watchedIds = $derived(new Set(watchedRepos.map((r) => r.id)))
+  const summaryErrors = $derived(
+    [
+      errors.host ? { name: 'host', message: errors.host } : null,
+      errors.token ? { name: 'token', message: errors.token } : null
+    ].filter((e): e is { name: string; message: string } => e !== null)
+  )
+
+  function checkHost() {
+    errors.host = host.trim() ? undefined : 'Enter a host'
+  }
+  function checkToken() {
+    errors.token = token.trim() ? undefined : 'Enter a token'
+  }
+  function clearHostIfValid() {
+    if (errors.host && host.trim()) {
+      errors.host = undefined
+    }
+  }
+  function clearTokenIfValid() {
+    if (errors.token && token.trim()) {
+      errors.token = undefined
+    }
+  }
 
   function tempAccount(provider: ProviderId): Account {
     return { id: 'probe', provider, label, host: normaliseHost(host), token }
@@ -50,42 +78,50 @@
     return chrome.permissions.request({ origins: [`${origin}/*`] })
   }
 
-  async function validate() {
+  async function validate(): Promise<boolean> {
     const origin = normaliseHost(host)
     if (!origin) {
-      availability = { state: 'bad', text: 'Enter a valid host.' }
-      return
+      availability = { state: 'bad', text: 'Enter a valid host' }
+      return false
     }
     if (!token) {
-      availability = { state: 'bad', text: 'Enter a token.' }
-      return
+      availability = { state: 'bad', text: 'Enter a token' }
+      return false
     }
-    availability = { state: 'busy', text: 'Checking…' }
+    availability = { state: 'busy', text: 'Validating…' }
     detected = null
     if (!(await ensurePermission(origin))) {
-      availability = { state: 'bad', text: 'Permission for this host was declined.' }
-      return
+      availability = { state: 'bad', text: 'Permission for this host was declined' }
+      return false
     }
-    const candidates: ProviderId[] = saasProvider(origin)
-      ? [saasProvider(origin) as ProviderId]
-      : ['github', 'gitlab']
+    const saas = saasProvider(origin)
+    const candidates: ProviderId[] = saas ? [saas] : ['github', 'gitlab']
     for (const id of candidates) {
       const result = await getProvider(id).validateToken(tempAccount(id))
       if (result.ok) {
         detected = id
         const name = id === 'github' ? 'GitHub' : 'GitLab'
         availability = { state: 'ok', text: `${name} detected, signed in as ${result.user}` }
-        return
+        return true
       }
     }
-    availability = { state: 'bad', text: 'Could not validate this token against the host.' }
+    availability = { state: 'bad', text: 'Could not validate, check the token and host' }
+    return false
   }
 
   async function addConnection() {
-    if (detected === null) {
-      await validate()
+    checkHost()
+    checkToken()
+    if (errors.host || errors.token) {
+      document.getElementById(errors.host ? 'host' : 'token')?.focus()
+      return
     }
-    if (detected === null) {
+    submitting = true
+    addResult = null
+    const ok = await validate()
+    if (!ok || detected === null) {
+      submitting = false
+      addResult = { variant: 'err', text: availability?.text ?? 'Could not validate' }
       return
     }
     const origin = normaliseHost(host)
@@ -98,19 +134,28 @@
     }
     accounts = [...accounts, account]
     await storage.set('accounts', accounts)
+    addResult = { variant: 'ok', text: 'Connection added' }
     label = ''
     host = ''
     token = ''
-    availability = { state: 'idle', text: '' }
+    availability = null
     detected = null
+    submitting = false
     loadRepos(account)
   }
 
-  async function removeAccount(id: string) {
-    accounts = accounts.filter((a) => a.id !== id)
-    watchedRepos = watchedRepos.filter((r) => r.accountId !== id)
+  async function removeAccount(account: Account) {
+    const removedRepos = watchedRepos.filter((r) => r.accountId === account.id)
+    accounts = accounts.filter((a) => a.id !== account.id)
+    watchedRepos = watchedRepos.filter((r) => r.accountId !== account.id)
     await storage.set('accounts', accounts)
     await storage.set('watchedRepos', watchedRepos)
+    toastUndo('Connection removed', async () => {
+      accounts = [...accounts, account]
+      watchedRepos = [...watchedRepos, ...removedRepos]
+      await storage.set('accounts', accounts)
+      await storage.set('watchedRepos', watchedRepos)
+    })
   }
 
   async function loadRepos(account: Account) {
@@ -138,11 +183,13 @@
   async function setPoll(next: number) {
     settings = { ...settings, pollMinutes: Math.max(0.5, Math.round(next * 2) / 2) }
     await storage.set('settings', settings)
+    toastSuccess('Settings saved')
   }
 
   async function toggleNotify() {
     settings = { ...settings, notifyOnSuccess: !settings.notifyOnSuccess }
     await storage.set('settings', settings)
+    toastSuccess('Settings saved')
   }
 </script>
 
@@ -172,7 +219,7 @@
                 class="icon-btn"
                 title="Remove"
                 aria-label="Remove connection"
-                onclick={() => removeAccount(account.id)}
+                onclick={() => removeAccount(account)}
               >
                 <Trash2 size={15} />
               </button>
@@ -183,52 +230,59 @@
 
       <div class="pad">
         <h3>Add a connection</h3>
-        <div class="field">
-          <label for="label">Label <span class="opt-tag">(optional)</span></label>
-          <input id="label" type="text" placeholder="work" bind:value={label} autocomplete="off" />
-        </div>
-        <div class="field">
-          <label for="host">Host</label>
-          <p class="hint">github.com, gitlab.com, or a self-hosted origin</p>
-          <input
-            id="host"
-            type="text"
+        {#if addResult}
+          <Banner variant={addResult.variant}>{addResult.text}</Banner>
+        {/if}
+        <FormSummary errors={summaryErrors} />
+        <Field name="label" label="Label" optional>
+          <Input placeholder="work" autocomplete="off" bind:value={label} />
+        </Field>
+        <Field
+          name="host"
+          label="Host"
+          hint="github.com, gitlab.com, or a self-hosted origin"
+          error={errors.host}
+        >
+          <Input
             placeholder="github.com"
-            bind:value={host}
             autocomplete="off"
+            bind:value={host}
+            onblur={checkHost}
+            oninput={clearHostIfValid}
           />
-        </div>
-        <div class="field">
-          <label for="token">Personal access token</label>
-          <p class="hint">read-only scope; never synced, never logged</p>
-          <div class="pw">
-            <input
-              id="token"
-              type={showToken ? 'text' : 'password'}
-              bind:value={token}
-              autocomplete="off"
-            />
-            <button class="pw-toggle" type="button" onclick={() => (showToken = !showToken)}>
-              {showToken ? 'Hide' : 'Show'}
-            </button>
-          </div>
-          {#if availability.state !== 'idle'}
-            <p class="below {availability.state}" aria-live="polite">
-              {#if availability.state === 'ok'}<Check size={13} />{/if}
-              {#if availability.state === 'bad'}<TriangleAlert size={13} />{/if}
-              {availability.text}
-            </p>
-          {/if}
-        </div>
+        </Field>
+        <Field
+          name="token"
+          label="Personal access token"
+          hint="read-only scope; never synced, never logged"
+          error={errors.token}
+          mono
+          below={availability ?? undefined}
+        >
+          <PasswordInput
+            autocomplete="off"
+            bind:value={token}
+            onblur={checkToken}
+            oninput={clearTokenIfValid}
+          />
+        </Field>
         <p class="permnote">
           <Lock size={15} /> Self-hosted hosts request permission when you validate. Tokens stay on this
           device.
         </p>
-        <div class="buttons">
-          <button class="btn primary" onclick={addConnection}
-            ><Plus size={14} /> Add connection</button
+        <div class="button-group">
+          <button
+            class="btn btn-primary"
+            class:submitting
+            disabled={submitting}
+            onclick={addConnection}
           >
-          <button class="btn secondary" onclick={validate}><Zap size={14} /> Validate</button>
+            {#if !submitting}<Plus size={14} />{/if}
+            {submitting ? 'Adding connection…' : 'Add connection'}
+          </button>
+          <button class="btn btn-secondary" disabled={submitting} onclick={validate}>
+            <Zap size={14} /> Validate
+          </button>
         </div>
       </div>
     </section>
@@ -247,7 +301,7 @@
               {#if loadingRepos[account.id]}
                 <p class="repo-empty">Loading…</p>
               {:else if reposByAccount[account.id] === undefined}
-                <button class="btn secondary small" onclick={() => loadRepos(account)}>
+                <button class="btn btn-secondary small" onclick={() => loadRepos(account)}>
                   Load repositories
                 </button>
               {:else}
@@ -257,9 +311,9 @@
                     class:on={watchedIds.has(repo.id)}
                     onclick={() => toggleRepo(repo)}
                   >
-                    <span class="checkbox"
-                      >{#if watchedIds.has(repo.id)}<Check size={11} />{/if}</span
-                    >
+                    <span class="checkbox">
+                      {#if watchedIds.has(repo.id)}<Check size={11} />{/if}
+                    </span>
                     <span class="rn">{repo.name}</span>
                     <span class="rb"><GitBranch size={13} /> {repo.defaultBranch}</span>
                   </button>
@@ -311,6 +365,8 @@
     </p>
   </div>
 </div>
+
+<ToastHost />
 
 <style>
   .opt {
@@ -428,121 +484,8 @@
     color: var(--text);
   }
 
-  .field {
-    display: grid;
-    gap: 6px;
-    margin-bottom: 16px;
-  }
-  .field label {
-    font-size: 12.5px;
-    font-weight: 600;
-  }
-  .field .opt-tag {
-    font-weight: 500;
-    color: var(--text-3);
-  }
-  .field .hint {
-    margin: 0;
-    font-size: 11.5px;
-    color: var(--text-3);
-  }
-  .field input {
-    width: 100%;
-    padding: 10px 12px;
-    border: 1px solid var(--border-2);
-    border-radius: var(--radius);
-    background: var(--bg);
-    color: var(--text);
-    font: 500 13px/1 var(--font-sans);
-  }
-  .field input:focus {
-    outline: 0;
-    border-color: var(--brand);
-    box-shadow: 0 0 0 3px color-mix(in srgb, var(--brand) 22%, transparent);
-  }
-  .pw {
-    position: relative;
-    display: flex;
-  }
-  .pw input {
-    flex: 1;
-    padding-right: 62px;
-    font-family: var(--font-mono);
-    font-size: 12px;
-  }
-  .pw-toggle {
-    position: absolute;
-    right: 6px;
-    top: 50%;
-    transform: translateY(-50%);
-    border: 0;
-    background: transparent;
-    color: var(--link);
-    font: 600 11.5px/1 var(--font-sans);
-    cursor: pointer;
-  }
-  .below {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    margin: 0;
-    font-size: 11.5px;
-  }
-  .below.ok {
-    color: var(--success);
-  }
-  .below.bad {
-    color: var(--failed);
-  }
-  .below.busy {
-    color: var(--text-3);
-  }
   .permnote {
-    display: flex;
-    gap: 9px;
-    align-items: flex-start;
     margin: 4px 0 16px;
-    padding: 10px 12px;
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    background: var(--surface-2);
-    font-size: 11.5px;
-    color: var(--text-2);
-    line-height: 1.5;
-  }
-  .permnote :global(svg) {
-    flex: none;
-    color: var(--pending);
-    margin-top: 1px;
-  }
-  .buttons {
-    display: flex;
-    gap: 10px;
-  }
-  .btn {
-    display: inline-flex;
-    align-items: center;
-    gap: 7px;
-    padding: 9px 15px;
-    border: 1px solid transparent;
-    border-radius: var(--radius);
-    font: 600 12.5px/1 var(--font-sans);
-    cursor: pointer;
-  }
-  .btn.small {
-    padding: 7px 12px;
-  }
-  .btn.primary {
-    background: var(--brand);
-    color: var(--brand-ink);
-  }
-  .btn.secondary {
-    background: var(--surface);
-    color: var(--text);
-    border-color: var(--border-2);
-  }
-  .btn.secondary:hover {
-    background: var(--hover);
   }
 
   .repo-search {
@@ -585,7 +528,7 @@
     font-size: 12.5px;
     color: var(--text-3);
   }
-  .repo-group .btn {
+  .repo-group :global(.btn) {
     margin: 10px 14px;
   }
   .repo-item {
