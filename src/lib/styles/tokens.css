@@ -54,6 +54,46 @@
   --radius: 4px;
   --radius-pill: 999px;
 
+  /* ----- Scales (rem, root 16px). One source of truth; no magic numbers in
+     component styles. Pipes is dense UI, so the steps are tighter than a
+     typical app (2px baseline at the small end, 4px above). See docs/css.md. */
+
+  /* Spacing */
+  --space-3xs: 0.125rem; /* 2 */
+  --space-2xs: 0.25rem; /* 4 */
+  --space-xs: 0.375rem; /* 6 */
+  --space-sm: 0.5rem; /* 8 */
+  --space-md: 0.625rem; /* 10 */
+  --space-lg: 0.75rem; /* 12 */
+  --space-xl: 0.875rem; /* 14 */
+  --space-2xl: 1rem; /* 16 */
+  --space-3xl: 1.25rem; /* 20 */
+  --space-4xl: 1.5rem; /* 24 */
+  --space-5xl: 2rem; /* 32 */
+
+  /* Font sizes */
+  --font-size-2xs: 0.625rem; /* 10 */
+  --font-size-xs: 0.6875rem; /* 11 */
+  --font-size-sm: 0.75rem; /* 12 */
+  --font-size-base: 0.8125rem; /* 13 — body */
+  --font-size-md: 0.875rem; /* 14 */
+  --font-size-lg: 0.9375rem; /* 15 */
+  --font-size-xl: 1rem; /* 16 */
+  --font-size-2xl: 1.3125rem; /* 21 */
+
+  /* Line heights */
+  --leading-none: 1;
+  --leading-tight: 1.2;
+  --leading-snug: 1.35;
+  --leading-normal: 1.45;
+  --leading-relaxed: 1.55;
+
+  /* Font weights */
+  --weight-medium: 500;
+  --weight-semibold: 600;
+  --weight-bold: 650;
+  --weight-heavy: 700;
+
   /* dark app-bar (popup / side-panel header, dark in both themes) */
   --appbar: #0d1219;
   --appbar-text: #f4f6fb;

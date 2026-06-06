@@ -1,9 +1,16 @@
-/* Global reset + element defaults. No component styling. */
+/* Global reset + element defaults. No component styling.
+
+   Reset: Josh Comeau's custom reset (https://www.joshwcomeau.com/css/custom-css-reset/),
+   trimmed to what a desktop Chrome MV3 extension needs (no iOS-16px input floor — pipes
+   surfaces aren't mobile Safari). Body type comes from the scale tokens. */
 
 *,
 *::before,
 *::after {
   box-sizing: border-box;
+}
+
+*:not(dialog) {
   margin: 0;
 }
 
@@ -11,10 +18,55 @@ html {
   -webkit-text-size-adjust: 100%;
 }
 
+@media (prefers-reduced-motion: no-preference) {
+  html {
+    interpolate-size: allow-keywords;
+  }
+}
+
+img,
+picture,
+video,
+canvas,
+svg {
+  display: block;
+  max-width: 100%;
+}
+
+input,
+button,
+textarea,
+select {
+  font: inherit;
+}
+
+p,
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  overflow-wrap: break-word;
+}
+
+p {
+  text-wrap: pretty;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  text-wrap: balance;
+}
+
 body {
   font-family: var(--font-sans);
-  font-size: 13px;
-  line-height: 1.45;
+  font-size: var(--font-size-base);
+  line-height: var(--leading-normal);
   color: var(--text);
   background: var(--bg);
   -webkit-font-smoothing: antialiased;
@@ -26,8 +78,8 @@ a {
 }
 
 button {
-  font: inherit;
   color: inherit;
+  cursor: pointer;
 }
 
 :focus-visible {
