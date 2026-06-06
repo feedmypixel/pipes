@@ -1,4 +1,4 @@
-import { groupByOwner, countDefaultBranchFailures } from './group'
+import { groupByOwner, groupReposByOwner, countDefaultBranchFailures } from './group'
 import type { Pipeline, PipelineStatus, Repo } from '../providers/types'
 import type { Snapshots } from './storage'
 
@@ -28,6 +28,20 @@ test('groups by owner, owners and repos A-Z', () => {
   const groups = groupByOwner([repo('zeta/web'), repo('alpha/api'), repo('alpha/cli')], {})
   expect(groups.map((g) => g.owner)).toEqual(['alpha', 'zeta'])
   expect(groups[0].repos.map((r) => r.displayName)).toEqual(['api', 'cli'])
+})
+
+test('groupReposByOwner: owners + repos A-Z, across owners', () => {
+  const groups = groupReposByOwner([repo('zeta/web'), repo('alpha/cli'), repo('alpha/api')])
+  expect(groups.map((g) => g.owner)).toEqual(['alpha', 'zeta'])
+  expect(groups[0].repos.map((r) => r.name)).toEqual(['alpha/api', 'alpha/cli'])
+})
+
+test('groupReposByOwner: empty input → no groups', () => {
+  expect(groupReposByOwner([])).toEqual([])
+})
+
+test('groupReposByOwner: a name with no slash uses the whole name as owner', () => {
+  expect(groupReposByOwner([repo('solo', 'solo')])[0].owner).toBe('solo')
 })
 
 test('splits primary, active (live/broken), and collapsed (settled), newest first', () => {
