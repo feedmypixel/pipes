@@ -7,24 +7,24 @@
   let show = $state(false)
 </script>
 
-<div class="pw-wrap">
+<div class="password-wrap">
   <Input {...rest} type={show ? 'text' : 'password'} autocomplete="new-password" bind:value />
-  <button class="pw-toggle" type="button" onclick={() => (show = !show)}>
+  <button class="password-toggle" type="button" onclick={() => (show = !show)}>
     {show ? 'Hide' : 'Show'}
   </button>
 </div>
 
 <style>
-  .pw-wrap {
+  .password-wrap {
     position: relative;
     display: flex;
   }
   /* the input is an <Input> child; reserve room for the toggle without leaking globals */
-  .pw-wrap :global(input) {
+  .password-wrap :global(input) {
     flex: 1;
     padding-right: 60px;
   }
-  .pw-toggle {
+  .password-toggle {
     position: absolute;
     right: var(--space-xs);
     top: 50%;
@@ -36,7 +36,7 @@
     font: var(--weight-semibold) var(--font-size-sm) / var(--leading-none) var(--font-sans);
     cursor: pointer;
   }
-  .pw-toggle:hover {
+  .password-toggle:hover {
     text-decoration: underline;
   }
 </style>

@@ -5,7 +5,7 @@
   let { children }: { children?: Snippet } = $props()
 </script>
 
-<p class="permnote">
+<p class="permission-note">
   <Lock size={15} />
   {#if children}{@render children()}{:else}
     Self-hosted hosts request permission when you validate. Tokens stay on this device.
@@ -13,7 +13,7 @@
 </p>
 
 <style>
-  .permnote {
+  .permission-note {
     display: flex;
     gap: var(--space-md);
     align-items: flex-start;
@@ -26,7 +26,7 @@
     color: var(--text-2);
     line-height: var(--leading-relaxed);
   }
-  .permnote :global(svg) {
+  .permission-note :global(svg) {
     flex: none;
     margin-top: 1px;
     color: var(--pending);

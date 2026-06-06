@@ -53,18 +53,18 @@
     <img class="logo" src="/icons/icon-32.png" alt="" width="24" height="24" />
     <span class="wordmark">Pipes</span>
     <div class="actions">
-      <button class="icon-btn" title="Refresh now" aria-label="Refresh now" onclick={refresh}>
+      <button class="icon-button" title="Refresh now" aria-label="Refresh now" onclick={refresh}>
         <RefreshCw size={17} />
       </button>
       <button
-        class="icon-btn"
+        class="icon-button"
         title="Open side panel"
         aria-label="Open side panel"
         onclick={openSidePanel}
       >
         <PanelRight size={17} />
       </button>
-      <button class="icon-btn" title="Options" aria-label="Options" onclick={openOptions}>
+      <button class="icon-button" title="Options" aria-label="Options" onclick={openOptions}>
         <Settings size={17} />
       </button>
     </div>
@@ -81,13 +81,13 @@
     <div class="empty">
       <h2>No connections yet</h2>
       <p>Add a GitHub or GitLab account to start watching pipelines.</p>
-      <button class="cta" onclick={openOptions}>Open setup</button>
+      <button class="empty-action" onclick={openOptions}>Open setup</button>
     </div>
   {:else if watchedRepos.length === 0}
     <div class="empty">
       <h2>No repositories watched</h2>
       <p>Choose the repos to watch in the options.</p>
-      <button class="cta" onclick={openOptions}>Choose repos</button>
+      <button class="empty-action" onclick={openOptions}>Choose repos</button>
     </div>
   {:else}
     <main class="body">
@@ -129,9 +129,9 @@
     </main>
   {/if}
 
-  <footer class="foot">
+  <footerer class="footer">
     <span class="live"><span class="ring"></span> updated just now</span>
-  </footer>
+  </footerer>
 </div>
 
 <style>
@@ -166,7 +166,7 @@
     display: flex;
     gap: var(--space-3xs);
   }
-  .icon-btn {
+  .icon-button {
     display: grid;
     place-items: center;
     width: 30px;
@@ -180,7 +180,7 @@
       background 0.12s,
       color 0.12s;
   }
-  .icon-btn:hover {
+  .icon-button:hover {
     background: var(--appbar-hover);
     color: var(--appbar-text);
   }
@@ -293,7 +293,7 @@
     line-height: var(--leading-relaxed);
     color: var(--text-2);
   }
-  .cta {
+  .empty-action {
     padding: var(--space-md) var(--space-2xl);
     border: 0;
     border-radius: var(--radius);
@@ -303,7 +303,7 @@
     cursor: pointer;
   }
 
-  .foot {
+  .footer {
     display: flex;
     align-items: center;
     padding: var(--space-sm) var(--space-xl);
