@@ -11,4 +11,4 @@ feedback) + an undo-on-delete pattern. Build to `design/v2` (incoming, `design/B
 - [x] 3.0 Notifications — notify store + `Toast` host (success/error/info) + inline banner
 - [x] 4.0 Undo-on-delete for connection removal (~5s undo toast)
 - [x] 5.0 Stricter dev-chrome mock + wire action feedback across options (added / removed / saved / validate)
-- [ ] 6.0 Component tests (`vitest-browser-svelte` setup) + Pipes forms docs (`docs/forms.md`, linked from README) + gates — **follow-up, not in PR #8**
+- [x] 6.0 Component tests (`vitest-browser-svelte` two-project setup) — Field / Input / PasswordInput / FormSummary + the `toasts` store; Pipes forms docs (`docs/forms.md`, linked from README + styles README)
