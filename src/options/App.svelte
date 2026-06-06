@@ -21,7 +21,7 @@
   import Button from '../lib/components/Button.svelte'
   import PermissionNote from '../lib/components/PermissionNote.svelte'
   import ToastHost from '../lib/components/ToastHost.svelte'
-  import { toastSuccess, toastUndo } from '../lib/toasts.svelte'
+  import { toastSuccess, toastInfo, toastUndo } from '../lib/toasts.svelte'
 
   let accounts = $state<Account[]>([])
   let watchedRepos = $state<Repo[]>([])
@@ -111,7 +111,11 @@
       if (result.ok) {
         detected = id
         const name = id === 'github' ? 'GitHub' : 'GitLab'
-        availability = { state: 'ok', text: `${name} detected, signed in as ${result.user}` }
+        availability = { state: 'ok', text: `Signed in as ${result.user}` }
+        addResult = {
+          variant: 'ok',
+          text: `${name} validated, signed in as ${result.user}. Add the connection below.`
+        }
         return true
       }
     }
@@ -145,6 +149,7 @@
     accounts = [...accounts, account]
     await storage.set('accounts', accounts)
     addResult = { variant: 'ok', text: 'Connection added' }
+    toastSuccess('Connection added')
     label = ''
     host = ''
     token = ''
@@ -191,10 +196,15 @@
   }
 
   async function toggleRepo(repo: Repo) {
-    watchedRepos = watchedIds.has(repo.id)
-      ? watchedRepos.filter((r) => r.id !== repo.id)
-      : [...watchedRepos, repo]
+    const watching = watchedIds.has(repo.id)
+    watchedRepos = watching ? watchedRepos.filter((r) => r.id !== repo.id) : [...watchedRepos, repo]
     await storage.set('watchedRepos', watchedRepos)
+    const shortName = repo.name.split('/').pop() ?? repo.name
+    if (watching) {
+      toastInfo(`No longer watching ${shortName}`)
+    } else {
+      toastSuccess(`Watching ${shortName}`)
+    }
   }
 
   function matches(repo: Repo): boolean {
