@@ -48,8 +48,8 @@
     display: grid;
     grid-template-columns: auto 1fr auto;
     align-items: center;
-    gap: 10px;
-    padding: 10px 14px;
+    gap: var(--space-md);
+    padding: var(--space-md) var(--space-xl);
     border-bottom: 1px solid var(--border);
     color: inherit;
     text-decoration: none;
@@ -59,10 +59,11 @@
     background: var(--hover);
   }
   .row.dense {
-    padding: 7px 14px;
+    padding: var(--space-sm) var(--space-xl);
   }
   .row.child {
-    padding: 7px 14px 7px 40px;
+    /* 40px left = parent padding + icon + gap, so the child branch aligns under the name */
+    padding: var(--space-sm) var(--space-xl) var(--space-sm) 40px;
     background: var(--surface-2);
   }
   .row[data-status='failed'] {
@@ -82,17 +83,17 @@
   .name {
     display: block;
     overflow: hidden;
-    font-weight: 600;
-    font-size: 13px;
+    font-weight: var(--weight-semibold);
+    font-size: var(--font-size-base);
     text-overflow: ellipsis;
     white-space: nowrap;
   }
   .meta {
     display: flex;
     align-items: center;
-    gap: 7px;
+    gap: var(--space-sm);
     min-width: 0;
-    margin-top: 2px;
+    margin-top: var(--space-3xs);
   }
   .branch {
     min-width: 0;
