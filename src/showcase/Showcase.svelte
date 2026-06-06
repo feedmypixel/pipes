@@ -11,6 +11,7 @@
   import Banner from '../lib/components/Banner.svelte'
   import ToastHost from '../lib/components/ToastHost.svelte'
   import { toastSuccess, toastError, toastInfo, toastUndo } from '../lib/toasts.svelte'
+  import Lock from '@lucide/svelte/icons/lock'
 
   type ThemeChoice = 'auto' | 'light' | 'dark'
   const themeChoices: ThemeChoice[] = ['auto', 'light', 'dark']
@@ -91,6 +92,37 @@
     { name: 'host', message: 'Enter a host' },
     { name: 'token', message: 'Enter a token' }
   ]
+
+  // Live demo: a real one-field form. Submit empty to invoke errors; submit valid
+  // to see the in-flight disabled state resolve to a success banner.
+  let demoToken = $state('')
+  let demoError = $state<string | undefined>(undefined)
+  let demoSummary = $state<{ name: string; message: string }[]>([])
+  let demoSubmitting = $state(false)
+  let demoDone = $state(false)
+
+  function demoBlur() {
+    demoError = demoToken.trim() ? undefined : 'Enter a token'
+  }
+  function demoInput() {
+    if (demoError && demoToken.trim()) {
+      demoError = undefined
+    }
+  }
+  async function demoSubmit() {
+    demoDone = false
+    demoError = demoToken.trim() ? undefined : 'Enter a token'
+    demoSummary = demoError ? [{ name: 'demo-token', message: demoError }] : []
+    if (demoError) {
+      document.getElementById('demo-token')?.focus()
+      return
+    }
+    demoSubmitting = true
+    await new Promise((resolve) => setTimeout(resolve, 900))
+    demoSubmitting = false
+    demoDone = true
+    toastSuccess('Saved')
+  }
 </script>
 
 <div class="page">
@@ -151,6 +183,52 @@
     >
       <PasswordInput bind:value={goodToken} autocomplete="new-password" />
     </Field>
+    <Field
+      name="host-busy"
+      label="Host"
+      hint="below line, busy state"
+      below={{ state: 'busy', text: 'Checking github.com…' }}
+    >
+      <Input bind:value={goodHost} type="text" placeholder="github.com" />
+    </Field>
+  </section>
+
+  <section>
+    <p class="eyebrow">Forms · live (press submit)</p>
+    {#if demoDone}<Banner variant="ok">Saved.</Banner>{/if}
+    <FormSummary errors={demoSummary} />
+    <Field
+      name="demo-token"
+      label="Token"
+      hint="submit empty to invoke errors; type to clear"
+      error={demoError}
+    >
+      <Input
+        bind:value={demoToken}
+        type="text"
+        placeholder="paste a token"
+        onblur={demoBlur}
+        oninput={demoInput}
+      />
+    </Field>
+    <div class="button-group">
+      <button
+        type="button"
+        class="btn btn-primary"
+        class:submitting={demoSubmitting}
+        disabled={demoSubmitting}
+        onclick={demoSubmit}
+      >
+        {demoSubmitting ? 'Saving…' : 'Submit'}
+      </button>
+    </div>
+  </section>
+
+  <section>
+    <p class="eyebrow">Permission note</p>
+    <p class="permnote">
+      <Lock size={15} /> Self-hosted hosts request permission when you validate. Tokens stay on this device.
+    </p>
   </section>
 
   <section>
