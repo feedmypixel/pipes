@@ -8,9 +8,39 @@ export function providerFor(account: Account): Provider {
   return PROVIDERS[account.provider]
 }
 
+export function getProvider(id: ProviderId): Provider {
+  return PROVIDERS[id]
+}
+
 /** Default sign-in origin for a provider's SaaS offering. */
 export function defaultHost(provider: ProviderId): string {
   return provider === 'github' ? 'https://github.com' : 'https://gitlab.com'
+}
+
+/** Turn user input ("github.com", "https://x/", a path) into a bare origin, or '' if invalid. */
+export function normaliseHost(input: string): string {
+  const trimmed = input.trim()
+  if (!trimmed) {
+    return ''
+  }
+  const withProtocol = /^https?:\/\//i.test(trimmed) ? trimmed : `https://${trimmed}`
+  try {
+    return new URL(withProtocol).origin
+  } catch {
+    return ''
+  }
+}
+
+/** The provider for a known SaaS host, or null for a self-hosted origin (detect by probing). */
+export function saasProvider(host: string): ProviderId | null {
+  const origin = normaliseHost(host)
+  if (origin === 'https://github.com') {
+    return 'github'
+  }
+  if (origin === 'https://gitlab.com') {
+    return 'gitlab'
+  }
+  return null
 }
 
 export type { Account, Provider, ProviderId } from './types'
