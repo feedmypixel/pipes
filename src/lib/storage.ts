@@ -22,6 +22,10 @@ interface StorageShape {
   availableRepos: Record<string, Repo[]>
   settings: Settings
   snapshots: Snapshots
+  /** ETag per repo id, for conditional poll requests (304s don't cost rate-limit budget). */
+  repoEtags: Record<string, string>
+  /** accountId → epoch seconds to resume polling after a rate-limit back-off. */
+  rateLimitPausedUntil: Record<string, number>
   /** notificationId → web URL, so a click can open the right pipeline. */
   notifLinks: Record<string, string>
 }
@@ -32,6 +36,8 @@ const DEFAULTS: StorageShape = {
   availableRepos: {},
   settings: DEFAULT_SETTINGS,
   snapshots: {},
+  repoEtags: {},
+  rateLimitPausedUntil: {},
   notifLinks: {}
 }
 

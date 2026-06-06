@@ -58,26 +58,38 @@ async function announceTransition(
   }
 }
 
-/** Fetch + diff one repo, returning its new snapshot (or the old one on error). */
+interface RepoPollResult {
+  pipelines: Pipeline[]
+  etag: string | null
+  rateLimit: { remaining: number; reset: number } | null
+}
+
+/**
+ * Fetch + diff one repo. Sends the prior ETag for a conditional request; a 304
+ * keeps the cached snapshot silently. Any error keeps the old snapshot.
+ */
 async function pollRepo(
   account: Account,
   repo: Repo,
   prevSnapshots: Snapshots,
-  notifyOnSuccess: boolean
-): Promise<Pipeline[]> {
-  const prev = byRef(prevSnapshots[repo.id] ?? [])
-  let next: Pipeline[]
+  notifyOnSuccess: boolean,
+  etag: string | undefined
+): Promise<RepoPollResult> {
+  const prevList = prevSnapshots[repo.id] ?? []
   try {
-    next = await providerFor(account).listPipelines(account, repo)
+    const result = await providerFor(account).listPipelines(account, repo, etag)
+    if (result.notModified) {
+      return { pipelines: prevList, etag: result.etag, rateLimit: result.rateLimit }
+    }
+    const prev = byRef(prevList)
+    for (const pipeline of result.pipelines) {
+      await announceTransition(repo, prev.get(pipeline.ref), pipeline, notifyOnSuccess)
+    }
+    return { pipelines: result.pipelines, etag: result.etag, rateLimit: result.rateLimit }
   } catch (err) {
     console.warn(`Poll failed for ${repo.name}:`, (err as Error).message)
-    return prevSnapshots[repo.id] ?? []
+    return { pipelines: prevList, etag: etag ?? null, rateLimit: null }
   }
-
-  for (const pipeline of next) {
-    await announceTransition(repo, prev.get(pipeline.ref), pipeline, notifyOnSuccess)
-  }
-  return next
 }
 
 /** Count refs currently in a failed state across all snapshots. */
@@ -93,31 +105,59 @@ function countFailures(snapshots: Snapshots): number {
  * One full poll cycle: every watched repo, in parallel, diffed and announced.
  * Writes fresh snapshots (which the UIs subscribe to) and updates the badge.
  */
+/** Pause a connection's polling when its remaining rate-limit budget drops below this. */
+const RATE_LIMIT_FLOOR = 50
+
 export async function poll(): Promise<void> {
-  const [accounts, watchedRepos, settings, prevSnapshots] = await Promise.all([
-    storage.get('accounts'),
-    storage.get('watchedRepos'),
-    storage.get('settings'),
-    storage.get('snapshots')
-  ])
+  const [accounts, watchedRepos, settings, prevSnapshots, repoEtags, pausedUntil] =
+    await Promise.all([
+      storage.get('accounts'),
+      storage.get('watchedRepos'),
+      storage.get('settings'),
+      storage.get('snapshots'),
+      storage.get('repoEtags'),
+      storage.get('rateLimitPausedUntil')
+    ])
   if (accounts.length === 0 || watchedRepos.length === 0) {
     return
   }
 
   const accountById = new Map(accounts.map((a) => [a.id, a]))
+  const now = Math.floor(Date.now() / 1000)
 
   const results = await Promise.all(
     watchedRepos.map(async (repo) => {
       const account = accountById.get(repo.accountId)
-      if (!account) {
-        return [repo.id, prevSnapshots[repo.id] ?? []] as const
+      const keep = prevSnapshots[repo.id] ?? []
+      if (!account || (pausedUntil[account.id] ?? 0) > now) {
+        return { repo, account, pipelines: keep, etag: repoEtags[repo.id] ?? null, rateLimit: null }
       }
-      const pipelines = await pollRepo(account, repo, prevSnapshots, settings.notifyOnSuccess)
-      return [repo.id, pipelines] as const
+      const result = await pollRepo(
+        account,
+        repo,
+        prevSnapshots,
+        settings.notifyOnSuccess,
+        repoEtags[repo.id]
+      )
+      return { repo, account, ...result }
     })
   )
 
-  const snapshots: Snapshots = Object.fromEntries(results)
+  const snapshots: Snapshots = {}
+  const nextEtags: Record<string, string> = {}
+  const nextPaused: Record<string, number> = { ...pausedUntil }
+  for (const { repo, account, pipelines, etag, rateLimit } of results) {
+    snapshots[repo.id] = pipelines
+    if (etag) {
+      nextEtags[repo.id] = etag
+    }
+    if (account && rateLimit && rateLimit.remaining < RATE_LIMIT_FLOOR) {
+      nextPaused[account.id] = Math.max(nextPaused[account.id] ?? 0, rateLimit.reset)
+    }
+  }
+
   await storage.set('snapshots', snapshots)
+  await storage.set('repoEtags', nextEtags)
+  await storage.set('rateLimitPausedUntil', nextPaused)
   await notify.setBadge(countFailures(snapshots))
 }

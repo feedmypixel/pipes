@@ -1,20 +1,30 @@
-import type { Account, Pipeline, PipelineStatus, Provider, Repo, ValidationResult } from './types'
+import type {
+  Account,
+  Pipeline,
+  PipelineStatus,
+  PipelinesResult,
+  Provider,
+  Repo,
+  ValidationResult
+} from './types'
+import { fetchJson, type RateLimitHeaders } from './http'
 
 const REPO_PAGES = 3 // up to 300 projects
 const PIPELINES_PER_PROJECT = 30
+const RATE_LIMIT_HEADERS: RateLimitHeaders = {
+  remaining: 'ratelimit-remaining',
+  reset: 'ratelimit-reset'
+}
 
 function apiBase(account: Account): string {
   return `${account.host.replace(/\/$/, '')}/api/v4`
 }
 
 async function request<T>(account: Account, path: string): Promise<T> {
-  const res = await fetch(`${apiBase(account)}${path}`, {
-    headers: { 'PRIVATE-TOKEN': account.token }
+  const { data } = await fetchJson<T>(`${apiBase(account)}${path}`, {
+    'PRIVATE-TOKEN': account.token
   })
-  if (!res.ok) {
-    throw new Error(`GitLab API ${res.status} ${res.statusText} on ${path}`)
-  }
-  return res.json() as Promise<T>
+  return data as T
 }
 
 interface GlProject {
@@ -90,16 +100,29 @@ export const gitlab: Provider = {
     return repos
   },
 
-  async listPipelines(account: Account, repo: Repo): Promise<Pipeline[]> {
-    const list = await request<GlPipeline[]>(
-      account,
-      `/projects/${repo.id}/pipelines?order_by=updated_at&sort=desc&per_page=${PIPELINES_PER_PROJECT}`
+  async listPipelines(
+    account: Account,
+    repo: Repo,
+    etag?: string | null
+  ): Promise<PipelinesResult> {
+    const {
+      status,
+      data,
+      etag: newEtag,
+      rateLimit
+    } = await fetchJson<GlPipeline[]>(
+      `${apiBase(account)}/projects/${repo.id}/pipelines?order_by=updated_at&sort=desc&per_page=${PIPELINES_PER_PROJECT}`,
+      { 'PRIVATE-TOKEN': account.token },
+      { etag, rateLimitHeaders: RATE_LIMIT_HEADERS }
     )
+    if (status === 304 || data === null) {
+      return { pipelines: [], etag: etag ?? null, notModified: true, rateLimit }
+    }
 
     // Newest pipeline per ref. The API already returns newest first.
     const seen = new Set<string>()
     const pipelines: Pipeline[] = []
-    for (const p of list) {
+    for (const p of data) {
       if (seen.has(p.ref)) {
         continue
       }
@@ -115,6 +138,6 @@ export const gitlab: Provider = {
         updatedAt: p.updated_at
       })
     }
-    return pipelines
+    return { pipelines, etag: newEtag, notModified: false, rateLimit }
   }
 }

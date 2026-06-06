@@ -1,9 +1,22 @@
-import type { Account, Pipeline, PipelineStatus, Provider, Repo, ValidationResult } from './types'
+import type {
+  Account,
+  Pipeline,
+  PipelineStatus,
+  PipelinesResult,
+  Provider,
+  Repo,
+  ValidationResult
+} from './types'
+import { fetchJson, type RateLimitHeaders } from './http'
 
 const SAAS_HOST = 'https://github.com'
 const SAAS_API = 'https://api.github.com'
 const REPO_PAGES = 3 // up to 300 repos
 const RUNS_PER_REPO = 30
+const RATE_LIMIT_HEADERS: RateLimitHeaders = {
+  remaining: 'x-ratelimit-remaining',
+  reset: 'x-ratelimit-reset'
+}
 
 /** api.github.com for SaaS; {host}/api/v3 for GitHub Enterprise Server. */
 function apiBase(account: Account): string {
@@ -12,18 +25,17 @@ function apiBase(account: Account): string {
     : `${account.host.replace(/\/$/, '')}/api/v3`
 }
 
-async function request<T>(account: Account, path: string): Promise<T> {
-  const res = await fetch(`${apiBase(account)}${path}`, {
-    headers: {
-      Authorization: `Bearer ${account.token}`,
-      Accept: 'application/vnd.github+json',
-      'X-GitHub-Api-Version': '2022-11-28'
-    }
-  })
-  if (!res.ok) {
-    throw new Error(`GitHub API ${res.status} ${res.statusText} on ${path}`)
+function headers(account: Account): Record<string, string> {
+  return {
+    Authorization: `Bearer ${account.token}`,
+    Accept: 'application/vnd.github+json',
+    'X-GitHub-Api-Version': '2022-11-28'
   }
-  return res.json() as Promise<T>
+}
+
+async function request<T>(account: Account, path: string): Promise<T> {
+  const { data } = await fetchJson<T>(`${apiBase(account)}${path}`, headers(account))
+  return data as T
 }
 
 interface GhRepo {
@@ -99,16 +111,29 @@ export const github: Provider = {
     return repos
   },
 
-  async listPipelines(account: Account, repo: Repo): Promise<Pipeline[]> {
-    const runs = await request<{ workflow_runs: GhRun[] }>(
-      account,
-      `/repos/${repo.id}/actions/runs?per_page=${RUNS_PER_REPO}`
+  async listPipelines(
+    account: Account,
+    repo: Repo,
+    etag?: string | null
+  ): Promise<PipelinesResult> {
+    const {
+      status,
+      data,
+      etag: newEtag,
+      rateLimit
+    } = await fetchJson<{ workflow_runs: GhRun[] }>(
+      `${apiBase(account)}/repos/${repo.id}/actions/runs?per_page=${RUNS_PER_REPO}`,
+      headers(account),
+      { etag, rateLimitHeaders: RATE_LIMIT_HEADERS }
     )
+    if (status === 304 || data === null) {
+      return { pipelines: [], etag: etag ?? null, notModified: true, rateLimit }
+    }
 
     // Collapse to the newest run per ref. The API already returns newest first.
     const seen = new Set<string>()
     const pipelines: Pipeline[] = []
-    for (const run of runs.workflow_runs) {
+    for (const run of data.workflow_runs) {
       const ref = run.head_branch ?? '(detached)'
       if (seen.has(ref)) {
         continue
@@ -125,6 +150,6 @@ export const github: Provider = {
         updatedAt: run.updated_at
       })
     }
-    return pipelines
+    return { pipelines, etag: newEtag, notModified: false, rateLimit }
   }
 }
