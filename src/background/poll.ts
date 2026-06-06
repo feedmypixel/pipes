@@ -92,11 +92,17 @@ async function pollRepo(
   }
 }
 
-/** Count refs currently in a failed state across all snapshots. */
+/**
+ * Badge count = default branches currently failing. Matches the "X failing on main"
+ * headline, so a green set of default branches clears the badge even when feature
+ * branches are red.
+ */
 function countFailures(snapshots: Snapshots): number {
   let count = 0
   for (const pipelines of Object.values(snapshots)) {
-    count += pipelines.filter((p) => p.status === 'failed').length
+    if (pipelines.some((p) => p.isDefaultBranch && p.status === 'failed')) {
+      count++
+    }
   }
   return count
 }
@@ -118,7 +124,26 @@ export async function poll(): Promise<void> {
       storage.get('repoEtags'),
       storage.get('rateLimitPausedUntil')
     ])
-  if (accounts.length === 0 || watchedRepos.length === 0) {
+  if (accounts.length === 0) {
+    await storage.set('accountHealth', {})
+    return
+  }
+
+  // Connection health: surface invalid/expired tokens and unreachable hosts.
+  const health: Record<string, { ok: boolean; error?: string }> = {}
+  await Promise.all(
+    accounts.map(async (account) => {
+      try {
+        const result = await providerFor(account).validateToken(account)
+        health[account.id] = result.ok ? { ok: true } : { ok: false, error: result.error }
+      } catch (err) {
+        health[account.id] = { ok: false, error: (err as Error).message }
+      }
+    })
+  )
+  await storage.set('accountHealth', health)
+
+  if (watchedRepos.length === 0) {
     return
   }
 
@@ -159,5 +184,6 @@ export async function poll(): Promise<void> {
   await storage.set('snapshots', snapshots)
   await storage.set('repoEtags', nextEtags)
   await storage.set('rateLimitPausedUntil', nextPaused)
+  await storage.set('lastPolledAt', Date.now())
   await notify.setBadge(countFailures(snapshots))
 }

@@ -3,45 +3,61 @@
   import PanelRight from '@lucide/svelte/icons/panel-right'
   import Settings from '@lucide/svelte/icons/settings'
   import * as storage from '../lib/storage'
-  import type { Snapshots } from '../lib/storage'
+  import type { Snapshots, AccountHealth } from '../lib/storage'
   import {
     groupByOwner,
-    visibleBranches,
-    PROBLEM_STATES,
+    filterGroups,
     ALL_BRANCH_STATES,
     countDefaultBranchFailures
   } from '../lib/group'
   import type { Account, Repo } from '../providers/types'
-  import Row from '../lib/components/Row.svelte'
+  import RepoList from '../lib/components/RepoList.svelte'
+  import TopAlerts from '../lib/components/TopAlerts.svelte'
+  import UpdatedFooter from '../lib/components/UpdatedFooter.svelte'
 
   let accounts = $state<Account[]>([])
   let watchedRepos = $state<Repo[]>([])
   let snapshots = $state<Snapshots>({})
-  // Default to problems-only: the popup is a glance for "anything wrong?".
-  let problemsOnly = $state(localStorage.getItem('pipes-problems-only') !== 'false')
-
-  $effect(() => localStorage.setItem('pipes-problems-only', String(problemsOnly)))
-  const branchStates = $derived(problemsOnly ? PROBLEM_STATES : ALL_BRANCH_STATES)
+  let accountHealth = $state<Record<string, AccountHealth>>({})
+  let lastPolledAt = $state(0)
+  let refreshing = $state(false)
 
   $effect(() => {
     storage.get('accounts').then((value) => (accounts = value))
     storage.get('watchedRepos').then((value) => (watchedRepos = value))
     storage.get('snapshots').then((value) => (snapshots = value))
+    storage.get('accountHealth').then((value) => (accountHealth = value))
+    storage.get('lastPolledAt').then((value) => (lastPolledAt = value))
     const unsubscribers = [
       storage.subscribe('accounts', (value) => (accounts = value)),
       storage.subscribe('watchedRepos', (value) => (watchedRepos = value)),
-      storage.subscribe('snapshots', (value) => (snapshots = value))
+      storage.subscribe('snapshots', (value) => (snapshots = value)),
+      storage.subscribe('accountHealth', (value) => (accountHealth = value)),
+      storage.subscribe('lastPolledAt', (value) => (lastPolledAt = value))
     ]
     return () => unsubscribers.forEach((off) => off())
   })
 
-  const groups = $derived(groupByOwner(watchedRepos, snapshots))
+  const groups = $derived(filterGroups(groupByOwner(watchedRepos, snapshots), ALL_BRANCH_STATES))
   const mainFailing = $derived(countDefaultBranchFailures(watchedRepos, snapshots))
   const configured = $derived(accounts.length > 0)
-  const allHealthy = $derived(configured && watchedRepos.length > 0 && mainFailing === 0)
+  const connectionIssues = $derived(
+    accounts
+      .filter((account) => accountHealth[account.id] && !accountHealth[account.id].ok)
+      .map((account) => ({
+        id: account.id,
+        label: account.label,
+        error: accountHealth[account.id].error
+      }))
+  )
 
-  function refresh() {
-    chrome.runtime.sendMessage({ type: 'poll-now' })
+  async function refresh() {
+    refreshing = true
+    try {
+      await chrome.runtime.sendMessage({ type: 'poll-now' })
+    } finally {
+      refreshing = false
+    }
   }
 
   async function openSidePanel() {
@@ -63,30 +79,36 @@
     <span class="wordmark">Pipes</span>
     <div class="actions">
       {#if configured}
-        <button class="icon-button" title="Refresh now" aria-label="Refresh now" onclick={refresh}>
-          <RefreshCw size={17} />
-        </button>
         <button
           class="icon-button"
-          title="Open side panel"
-          aria-label="Open side panel"
-          onclick={openSidePanel}
+          class:spinning={refreshing}
+          title="Refresh now"
+          aria-label="Refresh now"
+          onclick={refresh}
         >
-          <PanelRight size={17} />
+          <RefreshCw size={17} />
         </button>
       {/if}
+      <button
+        class="icon-button"
+        title="Open side panel"
+        aria-label="Open side panel"
+        onclick={openSidePanel}
+      >
+        <PanelRight size={17} />
+      </button>
       <button class="icon-button" title="Settings" aria-label="Settings" onclick={openOptions}>
         <Settings size={17} />
       </button>
     </div>
   </header>
 
-  {#if mainFailing > 0}
-    <div class="alarm">
-      <span class="blip"></span>
-      <strong>{mainFailing} failing on main</strong>
-    </div>
-  {/if}
+  <TopAlerts
+    {connectionIssues}
+    {mainFailing}
+    ready={configured && watchedRepos.length > 0}
+    onOpenSettings={openOptions}
+  />
 
   {#if !configured}
     <div class="empty">
@@ -101,51 +123,19 @@
       <button class="empty-action" onclick={openOptions}>Choose repos</button>
     </div>
   {:else}
-    <div class="filter-bar">
-      <button
-        class="toggle"
-        class:on={problemsOnly}
-        aria-pressed={problemsOnly}
-        onclick={() => (problemsOnly = !problemsOnly)}
-      >
-        Problems only
-      </button>
-    </div>
     <main class="body">
-      {#if allHealthy}
-        <div class="healthy">All clear</div>
-      {/if}
-      {#each groups as group (group.owner)}
-        <section>
-          <div class="owner">
-            <span class="owner-name">{group.owner}</span>
-            <span class="count">{group.repos.length}</span>
-          </div>
-          {#each group.repos as view (view.repo.id)}
-            {#if view.primary}
-              <Row name={view.displayName} pipeline={view.primary} />
-            {/if}
-            {#each visibleBranches(view, branchStates) as branch (branch.id)}
-              <Row name={view.displayName} pipeline={branch} child />
-            {/each}
-          {/each}
-        </section>
-      {/each}
+      <RepoList {groups} allowed={ALL_BRANCH_STATES} storageKey="pipes-popup" defaultCollapsed />
     </main>
   {/if}
 
-  <footer class="footer">
-    {#if configured}
-      <span class="live"><span class="pulse"></span> updated just now</span>
-    {:else}
-      <span class="live"><span class="pulse idle"></span> Waiting for connection</span>
-    {/if}
-  </footer>
+  <UpdatedFooter {lastPolledAt} {configured} />
 </div>
 
 <style>
   .popup {
-    width: 380px;
+    width: 440px;
+    /* Cap at Chrome's max popup height so only .body scrolls (no double scrollbar). */
+    max-height: 600px;
     display: flex;
     flex-direction: column;
     background: var(--bg);
@@ -158,7 +148,7 @@
     gap: var(--space-md);
     padding: var(--space-md) var(--space-lg);
     background: var(--appbar);
-    border-bottom: 2px solid var(--brand);
+    border-bottom: 1px solid var(--border);
   }
   .logo {
     display: block;
@@ -193,99 +183,24 @@
     background: var(--appbar-hover);
     color: var(--appbar-text);
   }
-
-  .alarm {
-    display: flex;
-    align-items: center;
-    gap: var(--space-md);
-    padding: var(--space-md) var(--space-xl);
-    background: var(--alarm-strip);
-    color: var(--alarm-ink);
-    border-bottom: 1px solid var(--alarm-line);
-    font-weight: var(--weight-semibold);
-    font-size: var(--font-size-base);
+  .icon-button.spinning :global(svg) {
+    animation: spin 0.8s linear infinite;
   }
-  .blip {
-    width: 9px;
-    height: 9px;
-    border-radius: 50%;
-    background: var(--failed);
-    animation: pulse 2s infinite;
-  }
-  @keyframes pulse {
-    0% {
-      box-shadow: 0 0 0 0 color-mix(in srgb, var(--failed) 50%, transparent);
-    }
-    70% {
-      box-shadow: 0 0 0 7px transparent;
-    }
-    100% {
-      box-shadow: 0 0 0 0 transparent;
+  @keyframes spin {
+    to {
+      transform: rotate(360deg);
     }
   }
   @media (prefers-reduced-motion: reduce) {
-    .blip {
+    .icon-button.spinning :global(svg) {
       animation: none;
     }
   }
 
-  .filter-bar {
-    display: flex;
-    padding: var(--space-sm) var(--space-lg);
-    border-bottom: 1px solid var(--border);
-  }
-  .toggle {
-    padding: var(--space-xs) var(--space-md);
-    border: 1px solid var(--border-2);
-    border-radius: var(--radius);
-    background: transparent;
-    color: var(--text-3);
-    font: var(--weight-semibold) var(--font-size-sm) / var(--leading-none) var(--font-sans);
-    cursor: pointer;
-  }
-  .toggle.on {
-    background: var(--brand);
-    color: var(--brand-ink);
-    border-color: var(--brand);
-  }
-
   .body {
-    max-height: 520px;
+    flex: 1;
+    min-height: 0;
     overflow-y: auto;
-  }
-
-  .healthy {
-    padding: var(--space-md) var(--space-xl);
-    background: var(--success-bg);
-    color: var(--success);
-    border-bottom: 1px solid var(--success-line);
-    font-weight: var(--weight-semibold);
-    font-size: var(--font-size-base);
-  }
-
-  .owner {
-    position: sticky;
-    top: 0;
-    z-index: 1;
-    display: flex;
-    align-items: center;
-    gap: var(--space-sm);
-    padding: var(--space-md) var(--space-xl) var(--space-xs);
-    background: var(--surface);
-    border-bottom: 1px solid var(--border);
-  }
-  .owner-name {
-    font: var(--weight-bold) var(--font-size-2xs) / var(--leading-none) var(--font-mono);
-    letter-spacing: 0.07em;
-    color: var(--text-2);
-  }
-  .count {
-    margin-left: auto;
-    font: var(--weight-semibold) var(--font-size-2xs) / var(--leading-none) var(--font-mono);
-    color: var(--text-3);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-pill);
-    padding: var(--space-3xs) var(--space-sm);
   }
 
   .empty {
@@ -311,45 +226,5 @@
     color: var(--brand-ink);
     font: var(--weight-semibold) var(--font-size-base) / var(--leading-none) var(--font-sans);
     cursor: pointer;
-  }
-
-  .footer {
-    display: flex;
-    align-items: center;
-    padding: var(--space-sm) var(--space-xl);
-    border-top: 1px solid var(--border);
-    background: var(--surface);
-    font: var(--weight-medium) var(--font-size-xs) / var(--leading-none) var(--font-mono);
-    color: var(--text-3);
-  }
-  .live {
-    display: inline-flex;
-    align-items: center;
-    gap: var(--space-xs);
-  }
-  .pulse {
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    background: var(--success);
-    animation: live-pulse 1.6s ease-in-out infinite;
-  }
-  .pulse.idle {
-    background: var(--text-3);
-    animation: none;
-  }
-  @keyframes live-pulse {
-    0%,
-    100% {
-      opacity: 1;
-    }
-    50% {
-      opacity: 0.35;
-    }
-  }
-  @media (prefers-reduced-motion: reduce) {
-    .pulse {
-      animation: none;
-    }
   }
 </style>

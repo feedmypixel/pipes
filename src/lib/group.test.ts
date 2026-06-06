@@ -3,6 +3,10 @@ import {
   groupReposByOwner,
   sortGroups,
   visibleBranches,
+  primaryVisible,
+  hasVisibleRows,
+  failingCount,
+  filterGroups,
   PROBLEM_STATES,
   ALL_BRANCH_STATES,
   countDefaultBranchFailures
@@ -86,6 +90,60 @@ test('visibleBranches: filters non-default branches by state, newest first', () 
     'feat-run',
     'feat-skip'
   ])
+})
+
+test('primaryVisible: the status filter applies to the default branch too', () => {
+  const snapshots: Snapshots = { 'o/r': [pipe('main', 'success', true, '2026-06-06T10:00:00Z')] }
+  const view = groupByOwner([repo('o/r', 'o/r')], snapshots)[0].repos[0]
+  expect(primaryVisible(view, ALL_BRANCH_STATES)).toBe(true)
+  expect(primaryVisible(view, PROBLEM_STATES)).toBe(false)
+})
+
+test('hasVisibleRows: false when neither default branch nor any branch passes the filter', () => {
+  const snapshots: Snapshots = {
+    'o/r': [
+      pipe('main', 'success', true, '2026-06-06T10:00:00Z'),
+      pipe('feat', 'success', false, '2026-06-06T09:00:00Z')
+    ]
+  }
+  const view = groupByOwner([repo('o/r', 'o/r')], snapshots)[0].repos[0]
+  expect(hasVisibleRows(view, ALL_BRANCH_STATES)).toBe(true)
+  expect(hasVisibleRows(view, PROBLEM_STATES)).toBe(false)
+})
+
+test('hasVisibleRows: true when a non-default branch passes even if the default is filtered out', () => {
+  const snapshots: Snapshots = {
+    'o/r': [
+      pipe('main', 'success', true, '2026-06-06T10:00:00Z'),
+      pipe('feat', 'failed', false, '2026-06-06T09:00:00Z')
+    ]
+  }
+  const view = groupByOwner([repo('o/r', 'o/r')], snapshots)[0].repos[0]
+  expect(hasVisibleRows(view, PROBLEM_STATES)).toBe(true)
+})
+
+test('failingCount: counts failed pipelines across default + other branches', () => {
+  const snapshots: Snapshots = {
+    'o/r': [
+      pipe('main', 'failed', true, '2026-06-06T10:00:00Z'),
+      pipe('feat-a', 'failed', false, '2026-06-06T09:00:00Z'),
+      pipe('feat-b', 'success', false, '2026-06-06T08:00:00Z')
+    ]
+  }
+  const view = groupByOwner([repo('o/r', 'o/r')], snapshots)[0].repos[0]
+  expect(failingCount(view)).toBe(2)
+})
+
+test('filterGroups: drops filtered-out repos and then empties owner groups', () => {
+  const snapshots: Snapshots = {
+    'alpha/api': [pipe('main', 'failed', true, '2026-06-06T10:00:00Z')],
+    'alpha/web': [pipe('main', 'success', true, '2026-06-06T10:00:00Z')],
+    'zeta/cli': [pipe('main', 'success', true, '2026-06-06T10:00:00Z')]
+  }
+  const groups = groupByOwner([repo('alpha/api'), repo('alpha/web'), repo('zeta/cli')], snapshots)
+  const filtered = filterGroups(groups, PROBLEM_STATES)
+  expect(filtered.map((g) => g.owner)).toEqual(['alpha'])
+  expect(filtered[0].repos.map((r) => r.displayName)).toEqual(['api'])
 })
 
 test('splits primary, active (live/broken), and collapsed (settled), newest first', () => {

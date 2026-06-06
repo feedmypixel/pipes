@@ -14,7 +14,7 @@
   }: {
     name: string
     label: string
-    hint?: string
+    hint?: string | Snippet
     error?: string
     optional?: boolean
     mono?: boolean
@@ -33,7 +33,11 @@
   <label for={name}>
     {label}{#if optional}<span class="optional-tag"> (optional)</span>{/if}
   </label>
-  {#if hint}<p class="hint" id={hintId}>{hint}</p>{/if}
+  {#if typeof hint === 'string'}
+    <p class="hint" id={hintId}>{hint}</p>
+  {:else if hint}
+    <div class="hint" id={hintId}>{@render hint()}</div>
+  {/if}
   {#if error}<p class="field-error" id={errorId}>{error}</p>{/if}
   {@render children()}
   {#if below}<p class="below {below.state}" aria-live="polite">{below.text}</p>{/if}

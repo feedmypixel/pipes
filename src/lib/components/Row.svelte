@@ -1,46 +1,37 @@
 <script lang="ts">
   import type { Pipeline } from '../../providers/types'
-  import ExternalLink from '@lucide/svelte/icons/external-link'
+  import GitBranch from '@lucide/svelte/icons/git-branch'
+  import Star from '@lucide/svelte/icons/star'
   import StatusIcon from './StatusIcon.svelte'
-  import RefChip from './RefChip.svelte'
   import RelativeTime from './RelativeTime.svelte'
 
   let {
     pipeline,
-    name,
-    dense = false,
-    child = false
-  }: { pipeline: Pipeline; name: string; dense?: boolean; child?: boolean } = $props()
-
-  const headline = $derived(pipeline.isDefaultBranch && pipeline.status === 'failed')
+    primary = false,
+    dim = false
+  }: { pipeline: Pipeline; primary?: boolean; dim?: boolean } = $props()
 </script>
 
 <a
   class="row"
-  class:dense
-  class:child
-  class:headline
+  class:primary
+  class:dim
   data-status={pipeline.status}
   href={pipeline.webUrl}
   target="_blank"
   rel="noopener noreferrer"
+  title={pipeline.title}
 >
-  <StatusIcon status={pipeline.status} size={dense || child ? 18 : 20} />
-
-  {#if child}
-    <span class="branch"><RefChip ref={pipeline.ref} /></span>
-    <RelativeTime iso={pipeline.updatedAt} />
-  {:else}
-    <span class="main">
-      <span class="name">{name}</span>
-      <span class="meta">
-        <RefChip ref={pipeline.ref} />
-        <span class="separator" aria-hidden="true"></span>
-        <RelativeTime iso={pipeline.updatedAt} />
-      </span>
-    </span>
-    <span class="external"><ExternalLink size={14} aria-hidden="true" /></span>
-  {/if}
+  <StatusIcon status={pipeline.status} size={16} />
+  <span class="ref">
+    {#if pipeline.isDefaultBranch}
+      <Star class="default-mark" size={12} aria-label="Default branch" />
+    {:else}
+      <GitBranch class="branch-mark" size={12} aria-hidden="true" />
+    {/if}
+    <span class="name">{pipeline.ref}</span>
+  </span>
+  <RelativeTime iso={pipeline.updatedAt} />
 </a>
 
 <style>
@@ -49,7 +40,8 @@
     grid-template-columns: auto 1fr auto;
     align-items: center;
     gap: var(--space-md);
-    padding: var(--space-md) var(--space-xl);
+    /* indented: these rows always sit under a repo-name header */
+    padding: var(--space-sm) var(--space-xl) var(--space-sm) var(--space-3xl);
     border-bottom: 1px solid var(--border);
     color: inherit;
     text-decoration: none;
@@ -58,60 +50,48 @@
   .row:hover {
     background: var(--hover);
   }
-  .row.dense {
-    padding: var(--space-sm) var(--space-xl);
-  }
-  .row.child {
-    /* 40px left = parent padding + icon + gap, so the child branch aligns under the name */
-    padding: var(--space-sm) var(--space-xl) var(--space-sm) 40px;
-    background: var(--surface-2);
+  .row.primary {
+    border-top: 1px solid var(--border);
   }
   .row[data-status='failed'] {
     box-shadow: inset 2px 0 0 var(--failed);
+    background: var(--failed-bg);
   }
   .row[data-status='running'] {
     box-shadow: inset 2px 0 0 var(--running);
   }
-  .row.headline {
-    background: var(--failed-bg);
-    box-shadow: inset 3px 0 0 var(--failed);
+  .row.dim {
+    opacity: 0.5;
   }
-
-  .main {
+  .ref {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-xs);
     min-width: 0;
+    color: var(--text-2);
+  }
+  .ref :global(svg) {
+    flex: none;
+    opacity: 0.6;
+  }
+  .ref :global(.default-mark) {
+    fill: var(--star);
+    opacity: 1;
+    color: var(--star);
+  }
+  .ref :global(.branch-mark) {
+    opacity: 1;
+    color: var(--text-2);
   }
   .name {
-    display: block;
     overflow: hidden;
-    font-weight: var(--weight-semibold);
-    font-size: var(--font-size-base);
     text-overflow: ellipsis;
     white-space: nowrap;
+    font: var(--weight-medium) var(--font-size-base) / var(--leading-none) var(--font-mono);
+    color: var(--text);
   }
-  .meta {
-    display: flex;
-    align-items: center;
-    gap: var(--space-sm);
-    min-width: 0;
-    margin-top: var(--space-3xs);
-  }
-  .branch {
-    min-width: 0;
-  }
-  .separator {
-    flex: none;
-    width: 2px;
-    height: 2px;
-    background: var(--text-3);
-    border-radius: 50%;
-  }
-  .external {
-    justify-self: end;
-    color: var(--text-3);
-    opacity: 0;
-    transition: opacity 0.12s;
-  }
-  .row:hover .external {
-    opacity: 1;
+  .row:hover .name {
+    text-decoration: underline;
+    text-underline-offset: 2px;
   }
 </style>

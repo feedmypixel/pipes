@@ -3,7 +3,8 @@
   import StatusIcon from '../lib/components/StatusIcon.svelte'
   import RefChip from '../lib/components/RefChip.svelte'
   import RelativeTime from '../lib/components/RelativeTime.svelte'
-  import Row from '../lib/components/Row.svelte'
+  import RepoCard from '../lib/components/RepoCard.svelte'
+  import { ALL_BRANCH_STATES, type RepoView } from '../lib/group'
   import Field from '../lib/components/forms/Field.svelte'
   import Input from '../lib/components/forms/Input.svelte'
   import PasswordInput from '../lib/components/forms/PasswordInput.svelte'
@@ -78,15 +79,30 @@
     }
   }
 
-  const rows: { name: string; pipeline: Pipeline; dense?: boolean }[] = [
-    { name: 'marketing-site', pipeline: pipeline('success', 'main', true, 90) },
-    { name: 'status-api', pipeline: pipeline('failed', 'main', true, 4) },
-    { name: 'pixel-cli', pipeline: pipeline('running', 'main', true, 1) },
-    { name: 'status-api', pipeline: pipeline('failed', 'pr/210-retry', false, 9) },
-    { name: 'status-api', pipeline: pipeline('success', 'fix/timeout', false, 120) },
-    { name: 'pixel-cli', pipeline: pipeline('running', 'main', true, 1), dense: true },
-    { name: 'database', pipeline: pipeline('failed', 'main', true, 30), dense: true }
+  function view(displayName: string, primary: Pipeline, branches: Pipeline[] = []): RepoView {
+    return {
+      repo: {
+        id: `o/${displayName}`,
+        accountId: 'a',
+        name: `o/${displayName}`,
+        defaultBranch: 'main',
+        webUrl: 'https://example.test'
+      },
+      displayName,
+      primary,
+      active: branches.filter((p) => p.status === 'failed' || p.status === 'running'),
+      collapsed: branches.filter((p) => p.status !== 'failed' && p.status !== 'running')
+    }
+  }
+  const repoViews: RepoView[] = [
+    view('status-api', pipeline('failed', 'main', true, 4), [
+      pipeline('failed', 'pr/210-retry', false, 9),
+      pipeline('success', 'fix/timeout', false, 120)
+    ]),
+    view('marketing-site', pipeline('success', 'main', true, 90)),
+    view('pixel-cli', pipeline('running', 'main', true, 1))
   ]
+  let repoCollapsed = $state<Record<string, boolean>>({})
 
   let goodHost = $state('github.com')
   let goodToken = $state('ghp_xxxxxxxxxxxx')
@@ -170,10 +186,15 @@
   </section>
 
   <section>
-    <p class="eyebrow">Row</p>
+    <p class="eyebrow">RepoCard</p>
     <div class="rows">
-      {#each rows as row (row.name + row.pipeline.id + (row.dense ? '-d' : ''))}
-        <Row name={row.name} pipeline={row.pipeline} dense={row.dense} />
+      {#each repoViews as repoView (repoView.repo.id)}
+        <RepoCard
+          view={repoView}
+          allowed={ALL_BRANCH_STATES}
+          collapsed={repoCollapsed[repoView.repo.id] ?? false}
+          onToggle={() => (repoCollapsed[repoView.repo.id] = !repoCollapsed[repoView.repo.id])}
+        />
       {/each}
     </div>
   </section>

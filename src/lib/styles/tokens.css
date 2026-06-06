@@ -40,6 +40,9 @@
   --neutral-bg: oklch(0.95 0.008 256);
   --neutral-line: oklch(0.88 0.012 256);
 
+  /* default-branch star marker (decorative, not a status) */
+  --star: oklch(0.78 0.15 85);
+
   /* alarm strip (default branch broken) */
   --alarm-strip: oklch(0.96 0.035 27);
   --alarm-ink: oklch(0.52 0.2 27);
@@ -89,16 +92,22 @@
   --leading-relaxed: 1.55;
 
   /* Font weights */
+  --weight-regular: 400;
   --weight-medium: 500;
   --weight-semibold: 600;
   --weight-bold: 650;
   --weight-heavy: 700;
 
-  /* dark app-bar (popup / side-panel header, dark in both themes) */
-  --appbar: #0d1219;
-  --appbar-text: #f4f6fb;
-  --appbar-muted: #9aa3b2;
-  --appbar-hover: rgb(255 255 255 / 8%);
+  /* app-bar (popup / side-panel header) — light here, dark in the dark blocks */
+  --appbar: var(--surface-2);
+  --appbar-text: var(--text);
+  --appbar-muted: var(--text-3);
+  --appbar-hover: var(--hover);
+
+  /* selected control fill (toggle pills, sort) — neutral; colour stays on status rows */
+  --control-on: var(--hover);
+  --control-on-ink: var(--text);
+  --control-on-edge: var(--border-2);
 
   /* toasts */
   --toast-z: 2147483000;
@@ -155,9 +164,14 @@
     --neutral: oklch(0.72 0.025 256);
     --neutral-bg: oklch(0.28 0.012 256);
     --neutral-line: oklch(0.4 0.02 256);
+    --star: oklch(0.85 0.14 85);
     --alarm-strip: oklch(0.3 0.1 27);
     --alarm-ink: oklch(0.82 0.13 27);
     --alarm-line: oklch(0.45 0.11 27);
+    --appbar: #0d1219;
+    --appbar-text: #f4f6fb;
+    --appbar-muted: #9aa3b2;
+    --appbar-hover: rgb(255 255 255 / 8%);
     --shadow: 0 0 0 1px rgba(0, 0, 0, 0.2), 0 2px 6px rgba(0, 0, 0, 0.4);
     --shadow-lg: 0 12px 36px rgba(0, 0, 0, 0.55);
   }
@@ -196,9 +210,14 @@
   --neutral: oklch(0.72 0.025 256);
   --neutral-bg: oklch(0.28 0.012 256);
   --neutral-line: oklch(0.4 0.02 256);
+  --star: oklch(0.85 0.14 85);
   --alarm-strip: oklch(0.3 0.1 27);
   --alarm-ink: oklch(0.82 0.13 27);
   --alarm-line: oklch(0.45 0.11 27);
+  --appbar: #0d1219;
+  --appbar-text: #f4f6fb;
+  --appbar-muted: #9aa3b2;
+  --appbar-hover: rgb(255 255 255 / 8%);
   --shadow: 0 0 0 1px rgba(0, 0, 0, 0.2), 0 2px 6px rgba(0, 0, 0, 0.4);
   --shadow-lg: 0 12px 36px rgba(0, 0, 0, 0.55);
   --toast-success-fill: var(--success-bg);
