@@ -110,12 +110,12 @@ Each surface is an HTML page, reachable two ways: loaded into Chrome (with real
 
 **Dev-server URLs** (`pnpm dev` running):
 
-| Surface            | URL                                              | Renders in a plain tab?                  |
-| ------------------ | ------------------------------------------------ | ---------------------------------------- |
-| Component showcase | `http://localhost:5173/src/showcase/`            | ✅ yes — no `chrome.*`, best for styling |
-| Popup              | `http://localhost:5173/src/popup/index.html`     | shell only                               |
-| Side panel         | `http://localhost:5173/src/sidepanel/index.html` | shell only                               |
-| Options            | `http://localhost:5173/src/options/index.html`   | shell only                               |
+| Surface            | URL                                                                                              | Renders in a plain tab?                  |
+| ------------------ | ------------------------------------------------------------------------------------------------ | ---------------------------------------- |
+| Component showcase | [http://localhost:5173/src/showcase/](http://localhost:5173/src/showcase/)                       | ✅ yes — no `chrome.*`, best for styling |
+| Popup              | [http://localhost:5173/src/popup/index.html](http://localhost:5173/src/popup/index.html)         | shell only                               |
+| Side panel         | [http://localhost:5173/src/sidepanel/index.html](http://localhost:5173/src/sidepanel/index.html) | shell only                               |
+| Options            | [http://localhost:5173/src/options/index.html](http://localhost:5173/src/options/index.html)     | shell only                               |
 
 The real surfaces call `chrome.storage` / `alarms`, which are **undefined in a plain
 tab**, so the shell loads but storage-driven content is empty. Load unpacked for the
