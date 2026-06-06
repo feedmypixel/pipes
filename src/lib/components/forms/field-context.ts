@@ -4,6 +4,7 @@ export interface FieldContext {
   id: string
   describedBy: string | undefined
   invalid: boolean
+  mono: boolean
 }
 
 const KEY = Symbol('pipes-field')
