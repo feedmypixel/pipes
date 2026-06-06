@@ -31,10 +31,10 @@
 
 <div class="field" class:has-error={Boolean(error)}>
   <label for={name}>
-    {label}{#if optional}<span class="opt"> (optional)</span>{/if}
+    {label}{#if optional}<span class="optional-tag"> (optional)</span>{/if}
   </label>
   {#if hint}<p class="hint" id={hintId}>{hint}</p>{/if}
-  {#if error}<p class="ferror" id={errorId}>{error}</p>{/if}
+  {#if error}<p class="field-error" id={errorId}>{error}</p>{/if}
   {@render children()}
   {#if below}<p class="below {below.state}" aria-live="polite">{below.text}</p>{/if}
 </div>
@@ -50,7 +50,7 @@
     font-weight: var(--weight-bold);
     color: var(--text);
   }
-  .opt {
+  .optional-tag {
     font-weight: var(--weight-medium);
     color: var(--text-3);
   }
@@ -60,7 +60,7 @@
     line-height: var(--leading-normal);
     color: var(--text-3);
   }
-  .ferror {
+  .field-error {
     margin: 0;
     font-size: var(--font-size-sm);
     line-height: var(--leading-normal);

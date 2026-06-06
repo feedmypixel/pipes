@@ -35,11 +35,11 @@
       <span class="name">{name}</span>
       <span class="meta">
         <RefChip ref={pipeline.ref} />
-        <span class="sep" aria-hidden="true"></span>
+        <span class="separator" aria-hidden="true"></span>
         <RelativeTime iso={pipeline.updatedAt} />
       </span>
     </span>
-    <span class="go"><ExternalLink size={14} aria-hidden="true" /></span>
+    <span class="external"><ExternalLink size={14} aria-hidden="true" /></span>
   {/if}
 </a>
 
@@ -98,20 +98,20 @@
   .branch {
     min-width: 0;
   }
-  .sep {
+  .separator {
     flex: none;
     width: 2px;
     height: 2px;
     background: var(--text-3);
     border-radius: 50%;
   }
-  .go {
+  .external {
     justify-self: end;
     color: var(--text-3);
     opacity: 0;
     transition: opacity 0.12s;
   }
-  .row:hover .go {
+  .row:hover .external {
     opacity: 1;
   }
 </style>

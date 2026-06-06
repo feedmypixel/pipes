@@ -194,7 +194,7 @@
   }
 </script>
 
-<div class="opt">
+<div class="options">
   <div class="inner">
     <header class="masthead">
       <img src="/icons/icon-48.png" alt="" width="34" height="34" />
@@ -207,19 +207,19 @@
     <section class="card">
       <h2><Plug size={16} /> Connections</h2>
       {#if accounts.length > 0}
-        <ul class="conn-list">
+        <ul class="connection-list">
           {#each accounts as account (account.id)}
-            <li class="conn">
+            <li class="connection">
               <span class="dot ok" aria-hidden="true"></span>
-              <span class="conn-main">
-                <span class="conn-label">{account.label}</span>
-                <span class="conn-host">{account.host}</span>
+              <span class="connection-main">
+                <span class="connection-label">{account.label}</span>
+                <span class="connection-host">{account.host}</span>
               </span>
               <span class="token-state ok"><Check size={14} /> token saved</span>
               <button
-                class="icon-btn"
+                class="icon-button"
                 title="Remove"
-                aria-label="Remove connection"
+                aria-label="Remove connectionection"
                 onclick={() => removeAccount(account)}
               >
                 <Trash2 size={15} />
@@ -229,8 +229,8 @@
         </ul>
       {/if}
 
-      <div class="pad">
-        <h3>Add a connection</h3>
+      <div class="card-body">
+        <h3>Add a connectionection</h3>
         {#if addResult}
           <Banner variant={addResult.variant}>{addResult.text}</Banner>
         {/if}
@@ -271,7 +271,7 @@
         <div class="button-group">
           <Button variant="primary" {submitting} onclick={addConnection}>
             <Plus size={14} />
-            {submitting ? 'Adding connection…' : 'Add connection'}
+            {submitting ? 'Adding connectionection…' : 'Add connectionection'}
           </Button>
           <Button variant="secondary" disabled={submitting} onclick={validate}>
             <Zap size={14} /> Validate
@@ -283,14 +283,14 @@
     {#if accounts.length > 0}
       <section class="card">
         <h2><Search size={16} /> Watched repositories</h2>
-        <div class="pad">
+        <div class="card-body">
           <div class="repo-search">
             <Search size={15} />
             <input type="text" placeholder="Filter repositories…" bind:value={search} />
           </div>
           {#each accounts as account (account.id)}
             <div class="repo-group">
-              <div class="repo-grouphdr">{account.label}</div>
+              <div class="repo-group-header">{account.label}</div>
               {#if loadingRepos[account.id]}
                 <p class="repo-empty">Loading…</p>
               {:else if reposByAccount[account.id] === undefined}
@@ -309,8 +309,8 @@
                     <span class="checkbox">
                       {#if watchedIds.has(repo.id)}<Check size={11} />{/if}
                     </span>
-                    <span class="rn">{repo.name}</span>
-                    <span class="rb"><GitBranch size={13} /> {repo.defaultBranch}</span>
+                    <span class="repo-name">{repo.name}</span>
+                    <span class="repo-branch"><GitBranch size={13} /> {repo.defaultBranch}</span>
                   </button>
                 {/each}
               {/if}
@@ -322,11 +322,11 @@
 
     <section class="card">
       <h2>Settings</h2>
-      <div class="pad">
+      <div class="card-body">
         <div class="set-row">
-          <span class="si">
-            <span class="t">Poll interval</span>
-            <span class="d">How often Pipes checks (minimum 0.5 min).</span>
+          <span class="setting-item">
+            <span class="title">Poll interval</span>
+            <span class="description">How often Pipes checks (minimum 0.5 min).</span>
           </span>
           <span class="stepper">
             <button onclick={() => setPoll(settings.pollMinutes - 0.5)} aria-label="Less often"
@@ -339,9 +339,9 @@
           </span>
         </div>
         <div class="set-row">
-          <span class="si">
-            <span class="t">Notify when a pipeline recovers</span>
-            <span class="d">A toast when a broken pipeline goes green again.</span>
+          <span class="setting-item">
+            <span class="title">Notify when a pipeline recovers</span>
+            <span class="description">A toast when a broken pipeline goes green again.</span>
           </span>
           <button
             class="toggle"
@@ -367,7 +367,7 @@
 <ToastHost />
 
 <style>
-  .opt {
+  .options {
     min-height: 100vh;
     background: var(--canvas);
     color: var(--text);
@@ -415,20 +415,20 @@
   .card > h2 :global(svg) {
     color: var(--text-2);
   }
-  .pad {
+  .card-body {
     padding: var(--space-2xl) var(--space-3xl);
   }
-  .pad h3 {
+  .card-body h3 {
     margin: 0 0 var(--space-xl);
     font-size: var(--font-size-base);
   }
 
-  .conn-list {
+  .connection-list {
     margin: 0;
     padding: 0;
     list-style: none;
   }
-  .conn {
+  .connection {
     display: flex;
     align-items: center;
     gap: var(--space-lg);
@@ -444,15 +444,15 @@
   .dot.ok {
     background: var(--success);
   }
-  .conn-main {
+  .connection-main {
     min-width: 0;
   }
-  .conn-label {
+  .connection-label {
     display: block;
     font-weight: var(--weight-bold);
     font-size: var(--font-size-md);
   }
-  .conn-host {
+  .connection-host {
     font: var(--weight-medium) var(--font-size-sm) / var(--leading-snug) var(--font-mono);
     color: var(--text-3);
   }
@@ -467,7 +467,7 @@
   .token-state.ok {
     color: var(--success);
   }
-  .icon-btn {
+  .icon-button {
     display: grid;
     place-items: center;
     width: 30px;
@@ -478,7 +478,7 @@
     color: var(--text-2);
     cursor: pointer;
   }
-  .icon-btn:hover {
+  .icon-button:hover {
     background: var(--hover);
     color: var(--text);
   }
@@ -520,7 +520,7 @@
     overflow: hidden;
     margin-bottom: var(--space-lg);
   }
-  .repo-grouphdr {
+  .repo-group-header {
     padding: var(--space-sm) var(--space-xl);
     background: var(--surface-2);
     border-bottom: 1px solid var(--border);
@@ -568,11 +568,11 @@
     border-color: var(--brand);
     color: var(--brand-ink);
   }
-  .rn {
+  .repo-name {
     font-weight: var(--weight-semibold);
     font-size: var(--font-size-base);
   }
-  .rb {
+  .repo-branch {
     display: inline-flex;
     align-items: center;
     gap: var(--space-2xs);
@@ -584,7 +584,7 @@
     font: var(--weight-medium) var(--font-size-xs) / var(--leading-none) var(--font-mono);
     color: var(--text-2);
   }
-  .rb :global(svg) {
+  .repo-branch :global(svg) {
     opacity: 0.7;
   }
 
@@ -598,12 +598,12 @@
   .set-row:last-child {
     border-bottom: 0;
   }
-  .si .t {
+  .setting-item .title {
     display: block;
     font-weight: var(--weight-semibold);
     font-size: var(--font-size-md);
   }
-  .si .d {
+  .setting-item .description {
     font-size: var(--font-size-sm);
     color: var(--text-3);
   }

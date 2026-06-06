@@ -17,7 +17,7 @@ describe('Field', () => {
     const screen = render(Field, {
       props: { name: 'label', label: 'Label', optional: true, children: inputSnippet }
     })
-    expect(screen.container.querySelector('.opt')?.textContent).toContain('optional')
+    expect(screen.container.querySelector('.optional-tag')?.textContent).toContain('optional')
   })
 
   test('renders the hint with an id for aria-describedby', () => {
@@ -36,7 +36,7 @@ describe('Field', () => {
     const field = screen.container.querySelector('.field')!
     expect(field.classList.contains('has-error')).toBe(true)
 
-    const error = screen.container.querySelector('.ferror')!
+    const error = screen.container.querySelector('.field-error')!
     expect(error.id).toBe('host-error')
     expect(error.textContent).toBe('Enter a host')
 

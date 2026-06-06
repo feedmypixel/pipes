@@ -14,7 +14,7 @@
   <MessageIcon variant={iconVariant} size={22} />
   <div class="toast-main">
     <div class="toast-title">{item.title}</div>
-    {#if item.message}<div class="toast-msg">{item.message}</div>{/if}
+    {#if item.message}<div class="toast-message">{item.message}</div>{/if}
     {#if item.action}
       {@const action = item.action}
       <button
@@ -71,7 +71,7 @@
     color: var(--text);
     line-height: var(--leading-snug);
   }
-  .toast-msg {
+  .toast-message {
     margin-top: var(--space-3xs);
     font-size: var(--font-size-sm);
     color: var(--text-2);

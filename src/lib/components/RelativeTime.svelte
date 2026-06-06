@@ -15,10 +15,10 @@
   const label = $derived(relativeTime(iso, now))
 </script>
 
-<time class="rel" datetime={iso}>{label}</time>
+<time class="relative-time" datetime={iso}>{label}</time>
 
 <style>
-  .rel {
+  .relative-time {
     font: var(--weight-medium) var(--font-size-xs) / var(--leading-none) var(--font-mono);
     color: var(--text-3);
     white-space: nowrap;

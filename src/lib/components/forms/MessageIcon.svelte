@@ -4,7 +4,7 @@
     $props()
 </script>
 
-<span class="mi" style="--mi: {size}px">
+<span class="message-icon" style="--size: {size}px">
   <svg viewBox="0 0 24 24" aria-hidden="true">
     {#if variant === 'success'}
       <circle cx="12" cy="12" r="11" fill="var(--success)" />
@@ -35,12 +35,12 @@
 </span>
 
 <style>
-  .mi {
+  .message-icon {
     display: inline-grid;
     place-items: center;
     flex: none;
-    width: var(--mi);
-    height: var(--mi);
+    width: var(--size);
+    height: var(--size);
   }
   svg {
     width: 100%;

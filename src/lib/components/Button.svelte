@@ -18,12 +18,18 @@
   } = $props()
 </script>
 
-<button {type} class="btn {variant}" class:submitting disabled={disabled || submitting} {onclick}>
+<button
+  {type}
+  class="button {variant}"
+  class:submitting
+  disabled={disabled || submitting}
+  {onclick}
+>
   {@render children()}
 </button>
 
 <style>
-  .btn {
+  .button {
     display: inline-flex;
     align-items: center;
     gap: var(--space-sm);
@@ -48,16 +54,16 @@
   .secondary:hover {
     background: var(--hover);
   }
-  .btn[disabled] {
+  .button[disabled] {
     opacity: 0.6;
     cursor: default;
   }
   /* in-flight: hide the label (still read by AT) and spin */
-  .btn.submitting {
+  .button.submitting {
     position: relative;
     color: transparent;
   }
-  .btn.submitting::after {
+  .button.submitting::after {
     content: '';
     position: absolute;
     inset: 0;
@@ -67,15 +73,15 @@
     border: 2px solid color-mix(in srgb, var(--brand-ink) 70%, transparent);
     border-right-color: transparent;
     border-radius: 50%;
-    animation: btn-spin 0.8s linear infinite;
+    animation: button-spin 0.8s linear infinite;
   }
-  @keyframes btn-spin {
+  @keyframes button-spin {
     to {
       transform: rotate(360deg);
     }
   }
   @media (prefers-reduced-motion: reduce) {
-    .btn.submitting::after {
+    .button.submitting::after {
       animation: none;
     }
   }
