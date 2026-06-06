@@ -37,6 +37,17 @@ product). Captured so nothing is lost.
   unintended-shift class of bug (e.g. the CSS-arch snaps) that unit tests can't. Pin to the
   `browser` vitest project's Chromium so CI has one browser. Gate at a tolerance, not pixel-exact.
 
+## Layout
+
+- **`Stack` layout primitive (vertical rhythm)** — TBD. Rhythm is currently delivered by
+  scattered per-component outer margins (`.field` margin-bottom, Banner/FormSummary
+  margin-bottom, `.card` margin-top, `.button-group` margin-top). Consolidate into one
+  gap-owned flow container (a `Stack` component or a `.stack` object) so children carry no
+  outer margins — the "a repeated layout primitive earns an objects layer" trigger from
+  `docs/css.md`. Migrate options + forms onto it. (Spacing is already rhythm-correct via the
+  `--space-*` tokens; this is the consolidation, not a correctness fix.) No 2D grid needed —
+  surfaces are 1D stacks.
+
 ## Code structure (from the earlier hardening discussion)
 
 - **Central config** (`src/lib/config.ts`) — pull the scattered constants (page sizes,
