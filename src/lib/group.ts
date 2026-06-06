@@ -82,6 +82,41 @@ export function groupReposByOwner(repos: Repo[]): RepoOwnerGroup[] {
     .sort((a, b) => a.owner.localeCompare(b.owner))
 }
 
+/** Sort priority of a repo by its default-branch state: trouble first. */
+const STATUS_RANK: Record<PipelineStatus, number> = {
+  failed: 0,
+  running: 1,
+  pending: 2,
+  canceled: 3,
+  skipped: 3,
+  unknown: 3,
+  success: 4
+}
+
+function viewRank(view: RepoView): number {
+  return view.primary ? STATUS_RANK[view.primary.status] : 5
+}
+
+export type SortMode = 'name' | 'status'
+
+/**
+ * Re-order owner groups for the side panel. `name` keeps the A-Z grouping;
+ * `status` floats troubled repos (and the groups containing them) to the top.
+ */
+export function sortGroups(groups: OwnerGroup[], mode: SortMode): OwnerGroup[] {
+  if (mode === 'name') {
+    return groups
+  }
+  return groups
+    .map((group) => ({
+      owner: group.owner,
+      repos: [...group.repos].sort(
+        (a, b) => viewRank(a) - viewRank(b) || a.displayName.localeCompare(b.displayName)
+      )
+    }))
+    .sort((a, b) => viewRank(a.repos[0]) - viewRank(b.repos[0]) || a.owner.localeCompare(b.owner))
+}
+
 /** Count default-branch pipelines currently failing (drives the alarm strip). */
 export function countDefaultBranchFailures(repos: Repo[], snapshots: Snapshots): number {
   let count = 0
