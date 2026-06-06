@@ -186,6 +186,7 @@
   display: flex;
   gap: 10px;
   align-items: center;
+  margin-top: 16px;
 }
 .btn {
   display: inline-flex;
@@ -203,7 +204,7 @@
   color: var(--brand-ink);
 }
 .btn-primary:hover {
-  filter: brightness(1.06);
+  background: color-mix(in oklab, var(--brand) 88%, black);
 }
 .btn-secondary {
   background: var(--surface);
@@ -270,21 +271,18 @@
     transform: translateY(8px) scale(0.98);
   }
 }
-.toast.success,
-.toast.error,
-.toast.info {
-  border-top-left-radius: 0;
-  border-bottom-left-radius: 0;
-  border-left-width: 3px;
-}
+/* tinted fill derived from the status colour, whitened into the surface */
 .toast.success {
-  border-left-color: var(--success);
+  background: var(--toast-success-fill);
+  border-color: var(--toast-success-edge);
 }
 .toast.error {
-  border-left-color: var(--failed);
+  background: var(--toast-error-fill);
+  border-color: var(--toast-error-edge);
 }
 .toast.info {
-  border-left-color: var(--brand);
+  background: var(--toast-info-fill);
+  border-color: var(--toast-info-edge);
 }
 .toast-main {
   min-width: 0;
@@ -317,9 +315,13 @@
 }
 .toast-close {
   flex: none;
-  padding: 2px;
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  padding: 0;
   border: 0;
-  border-radius: var(--radius);
+  border-radius: var(--radius-pill);
   background: transparent;
   color: var(--text-3);
   line-height: 0;

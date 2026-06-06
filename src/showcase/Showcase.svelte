@@ -10,7 +10,9 @@
   import FormSummary from '../lib/components/forms/FormSummary.svelte'
   import Banner from '../lib/components/Banner.svelte'
   import ToastHost from '../lib/components/ToastHost.svelte'
+  import Toast from '../lib/components/Toast.svelte'
   import { toastSuccess, toastError, toastInfo, toastUndo } from '../lib/toasts.svelte'
+  import type { ToastItem } from '../lib/toasts.svelte'
   import Lock from '@lucide/svelte/icons/lock'
 
   type ThemeChoice = 'auto' | 'light' | 'dark'
@@ -123,6 +125,20 @@
     demoDone = true
     toastSuccess('Saved')
   }
+
+  // Static toasts so every variant is visible at once (live ones auto-dismiss).
+  const staticToasts: ToastItem[] = [
+    { id: -1, variant: 'success', title: 'Connection added', message: 'github.com · feedmypixel' },
+    { id: -2, variant: 'error', title: 'Validation failed', message: 'Host did not respond' },
+    { id: -3, variant: 'info', title: 'Permission requested' },
+    {
+      id: -4,
+      variant: 'info',
+      title: 'Connection removed',
+      undo: true,
+      action: { label: 'Undo', run: () => {} }
+    }
+  ]
 </script>
 
 <div class="page">
@@ -263,6 +279,11 @@
 
   <section>
     <p class="eyebrow">Toasts</p>
+    <div class="toast-statics">
+      {#each staticToasts as item (item.id)}
+        <Toast {item} onclose={() => {}} />
+      {/each}
+    </div>
     <div class="inline">
       <button type="button" class="demo" onclick={() => toastSuccess('Settings saved')}>
         success
@@ -385,6 +406,12 @@
     display: flex;
     flex-direction: column;
     gap: 12px;
+  }
+  .toast-statics {
+    display: flex;
+    flex-direction: column;
+    gap: var(--toast-gap);
+    margin-bottom: 16px;
   }
   .demo {
     padding: 7px 14px;
