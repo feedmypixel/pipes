@@ -294,9 +294,11 @@
               {#if loadingRepos[account.id]}
                 <p class="repo-empty">Loading…</p>
               {:else if reposByAccount[account.id] === undefined}
-                <button class="btn btn-secondary small" onclick={() => loadRepos(account)}>
-                  Load repositories
-                </button>
+                <div class="repo-load">
+                  <Button variant="secondary" onclick={() => loadRepos(account)}>
+                    Load repositories
+                  </Button>
+                </div>
               {:else}
                 {#each (reposByAccount[account.id] ?? []).filter(matches) as repo (repo.id)}
                   <button
@@ -369,9 +371,10 @@
     min-height: 100vh;
     background: var(--canvas);
     color: var(--text);
-    font-size: 14px;
+    font-size: var(--font-size-md);
   }
   .inner {
+    /* page frame — generous one-off gutters, not scale spacing */
     max-width: 720px;
     margin: 0 auto;
     padding: 28px 24px 64px;
@@ -379,20 +382,20 @@
   .masthead {
     display: flex;
     align-items: center;
-    gap: 12px;
-    margin-bottom: 8px;
+    gap: var(--space-lg);
+    margin-bottom: var(--space-sm);
   }
   .masthead h1 {
     margin: 0;
-    font-size: 21px;
+    font-size: var(--font-size-2xl);
   }
   .masthead .tag {
-    margin: 2px 0 0;
-    font-size: 12.5px;
+    margin: var(--space-3xs) 0 0;
+    font-size: var(--font-size-base);
     color: var(--text-3);
   }
   .card {
-    margin-top: 22px;
+    margin-top: var(--space-4xl);
     background: var(--surface);
     border: 1px solid var(--border);
     border-radius: var(--radius);
@@ -402,22 +405,22 @@
   .card > h2 {
     display: flex;
     align-items: center;
-    gap: 9px;
+    gap: var(--space-md);
     margin: 0;
-    padding: 15px 20px;
+    padding: var(--space-2xl) var(--space-3xl);
     border-bottom: 1px solid var(--border);
-    font-size: 13px;
-    font-weight: 680;
+    font-size: var(--font-size-base);
+    font-weight: var(--weight-heavy);
   }
   .card > h2 :global(svg) {
     color: var(--text-2);
   }
   .pad {
-    padding: 18px 20px;
+    padding: var(--space-2xl) var(--space-3xl);
   }
   .pad h3 {
-    margin: 0 0 14px;
-    font-size: 13px;
+    margin: 0 0 var(--space-xl);
+    font-size: var(--font-size-base);
   }
 
   .conn-list {
@@ -428,8 +431,8 @@
   .conn {
     display: flex;
     align-items: center;
-    gap: 12px;
-    padding: 13px 20px;
+    gap: var(--space-lg);
+    padding: var(--space-xl) var(--space-3xl);
     border-bottom: 1px solid var(--border);
   }
   .dot {
@@ -446,20 +449,20 @@
   }
   .conn-label {
     display: block;
-    font-weight: 650;
-    font-size: 13.5px;
+    font-weight: var(--weight-bold);
+    font-size: var(--font-size-md);
   }
   .conn-host {
-    font: 500 11.5px/1.3 var(--font-mono);
+    font: var(--weight-medium) var(--font-size-sm) / var(--leading-snug) var(--font-mono);
     color: var(--text-3);
   }
   .token-state {
     display: inline-flex;
     align-items: center;
-    gap: 6px;
+    gap: var(--space-xs);
     margin-left: auto;
-    font-size: 12px;
-    font-weight: 600;
+    font-size: var(--font-size-sm);
+    font-weight: var(--weight-semibold);
   }
   .token-state.ok {
     color: var(--success);
@@ -481,24 +484,24 @@
   }
 
   .note-row {
-    margin-top: 12px;
+    margin-top: var(--space-lg);
   }
   .button-group {
     display: flex;
-    gap: 10px;
+    gap: var(--space-md);
     align-items: center;
-    margin-top: 16px;
+    margin-top: var(--space-2xl);
   }
 
   .repo-search {
     display: flex;
     align-items: center;
-    gap: 9px;
-    padding: 10px 14px;
+    gap: var(--space-md);
+    padding: var(--space-md) var(--space-xl);
     border: 1px solid var(--border-2);
     border-radius: var(--radius);
     background: var(--bg);
-    margin-bottom: 12px;
+    margin-bottom: var(--space-lg);
   }
   .repo-search :global(svg) {
     color: var(--text-3);
@@ -509,36 +512,36 @@
     background: transparent;
     outline: 0;
     color: var(--text);
-    font: 500 13px/1 var(--font-sans);
+    font: var(--weight-medium) var(--font-size-base) / var(--leading-none) var(--font-sans);
   }
   .repo-group {
     border: 1px solid var(--border);
     border-radius: var(--radius);
     overflow: hidden;
-    margin-bottom: 12px;
+    margin-bottom: var(--space-lg);
   }
   .repo-grouphdr {
-    padding: 8px 14px;
+    padding: var(--space-sm) var(--space-xl);
     background: var(--surface-2);
     border-bottom: 1px solid var(--border);
-    font: 600 11px/1 var(--font-mono);
+    font: var(--weight-semibold) var(--font-size-xs) / var(--leading-none) var(--font-mono);
     color: var(--text-2);
   }
   .repo-empty {
     margin: 0;
-    padding: 12px 14px;
-    font-size: 12.5px;
+    padding: var(--space-lg) var(--space-xl);
+    font-size: var(--font-size-base);
     color: var(--text-3);
   }
-  .repo-group :global(.btn) {
-    margin: 10px 14px;
+  .repo-load {
+    padding: var(--space-md) var(--space-xl);
   }
   .repo-item {
     display: flex;
     align-items: center;
-    gap: 11px;
+    gap: var(--space-lg);
     width: 100%;
-    padding: 10px 14px;
+    padding: var(--space-md) var(--space-xl);
     border: 0;
     border-bottom: 1px solid var(--border);
     background: transparent;
@@ -566,19 +569,19 @@
     color: var(--brand-ink);
   }
   .rn {
-    font-weight: 600;
-    font-size: 13px;
+    font-weight: var(--weight-semibold);
+    font-size: var(--font-size-base);
   }
   .rb {
     display: inline-flex;
     align-items: center;
-    gap: 5px;
+    gap: var(--space-2xs);
     margin-left: auto;
     flex: none;
-    padding: 4px 8px;
+    padding: var(--space-2xs) var(--space-sm);
     border: 1px solid var(--border);
     border-radius: var(--radius);
-    font: 500 11px/1 var(--font-mono);
+    font: var(--weight-medium) var(--font-size-xs) / var(--leading-none) var(--font-mono);
     color: var(--text-2);
   }
   .rb :global(svg) {
@@ -588,8 +591,8 @@
   .set-row {
     display: flex;
     align-items: center;
-    gap: 16px;
-    padding: 15px 0;
+    gap: var(--space-2xl);
+    padding: var(--space-2xl) 0;
     border-bottom: 1px solid var(--border);
   }
   .set-row:last-child {
@@ -597,11 +600,11 @@
   }
   .si .t {
     display: block;
-    font-weight: 600;
-    font-size: 13.5px;
+    font-weight: var(--weight-semibold);
+    font-size: var(--font-size-md);
   }
   .si .d {
-    font-size: 12px;
+    font-size: var(--font-size-sm);
     color: var(--text-3);
   }
   .stepper {
@@ -617,7 +620,7 @@
     border: 0;
     background: var(--bg);
     color: var(--text-2);
-    font-size: 16px;
+    font-size: var(--font-size-xl);
     cursor: pointer;
   }
   .stepper button:hover {
@@ -626,12 +629,12 @@
   .stepper .val {
     min-width: 64px;
     text-align: center;
-    font: 600 13px/34px var(--font-mono);
+    font: var(--weight-semibold) var(--font-size-base) / 34px var(--font-mono);
     border-left: 1px solid var(--border);
     border-right: 1px solid var(--border);
   }
   .stepper .val small {
-    font-size: 10px;
+    font-size: var(--font-size-2xs);
     color: var(--text-3);
   }
   .toggle {
@@ -666,15 +669,15 @@
 
   .security {
     display: flex;
-    gap: 11px;
+    gap: var(--space-lg);
     align-items: flex-start;
-    margin-top: 22px;
-    padding: 14px 16px;
+    margin-top: var(--space-4xl);
+    padding: var(--space-xl) var(--space-2xl);
     border: 1px solid var(--border);
     border-radius: var(--radius);
     background: var(--surface);
-    font-size: 12.5px;
-    line-height: 1.55;
+    font-size: var(--font-size-base);
+    line-height: var(--leading-relaxed);
     color: var(--text-2);
   }
   .security :global(svg) {

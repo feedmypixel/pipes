@@ -146,25 +146,25 @@
   .appbar {
     display: flex;
     align-items: center;
-    gap: 9px;
-    padding: 10px 12px;
+    gap: var(--space-md);
+    padding: var(--space-md) var(--space-lg);
     background: var(--appbar);
     border-bottom: 2px solid var(--brand);
   }
   .logo {
     display: block;
-    border-radius: 4px;
+    border-radius: var(--radius);
   }
   .wordmark {
-    font-weight: 700;
-    font-size: 15px;
+    font-weight: var(--weight-heavy);
+    font-size: var(--font-size-lg);
     letter-spacing: -0.01em;
     color: var(--appbar-text);
   }
   .actions {
     margin-left: auto;
     display: flex;
-    gap: 2px;
+    gap: var(--space-3xs);
   }
   .icon-btn {
     display: grid;
@@ -188,13 +188,13 @@
   .alarm {
     display: flex;
     align-items: center;
-    gap: 9px;
-    padding: 9px 14px;
+    gap: var(--space-md);
+    padding: var(--space-md) var(--space-xl);
     background: var(--alarm-strip);
     color: var(--alarm-ink);
     border-bottom: 1px solid var(--alarm-line);
-    font-weight: 600;
-    font-size: 12.5px;
+    font-weight: var(--weight-semibold);
+    font-size: var(--font-size-base);
   }
   .blip {
     width: 9px;
@@ -226,12 +226,12 @@
   }
 
   .healthy {
-    padding: 9px 14px;
+    padding: var(--space-md) var(--space-xl);
     background: var(--success-bg);
     color: var(--success);
     border-bottom: 1px solid var(--success-line);
-    font-weight: 600;
-    font-size: 12.5px;
+    font-weight: var(--weight-semibold);
+    font-size: var(--font-size-base);
   }
 
   .owner {
@@ -240,36 +240,36 @@
     z-index: 1;
     display: flex;
     align-items: center;
-    gap: 8px;
-    padding: 9px 14px 6px;
+    gap: var(--space-sm);
+    padding: var(--space-md) var(--space-xl) var(--space-xs);
     background: var(--surface);
     border-bottom: 1px solid var(--border);
   }
   .owner-name {
-    font: 650 10.5px/1 var(--font-mono);
+    font: var(--weight-bold) var(--font-size-2xs) / var(--leading-none) var(--font-mono);
     letter-spacing: 0.07em;
     color: var(--text-2);
   }
   .count {
     margin-left: auto;
-    font: 600 10px/1 var(--font-mono);
+    font: var(--weight-semibold) var(--font-size-2xs) / var(--leading-none) var(--font-mono);
     color: var(--text-3);
     border: 1px solid var(--border);
     border-radius: var(--radius-pill);
-    padding: 2px 7px;
+    padding: var(--space-3xs) var(--space-sm);
   }
 
   .more {
     display: flex;
     align-items: center;
-    gap: 6px;
+    gap: var(--space-xs);
     width: 100%;
-    padding: 6px 14px 6px 46px;
+    padding: var(--space-xs) var(--space-xl) var(--space-xs) 46px;
     border: 0;
     border-bottom: 1px solid var(--border);
     background: var(--bg);
     color: var(--text-3);
-    font: 500 11px/1 var(--font-sans);
+    font: var(--weight-medium) var(--font-size-xs) / var(--leading-none) var(--font-sans);
     text-align: left;
     cursor: pointer;
   }
@@ -279,43 +279,43 @@
   }
 
   .empty {
-    padding: 40px 28px;
+    padding: var(--space-5xl) var(--space-4xl);
     text-align: center;
   }
   .empty h2 {
-    margin: 0 0 6px;
-    font-size: 15px;
+    margin: 0 0 var(--space-xs);
+    font-size: var(--font-size-lg);
   }
   .empty p {
-    margin: 0 auto 16px;
+    margin: 0 auto var(--space-2xl);
     max-width: 240px;
-    font-size: 12.5px;
-    line-height: 1.5;
+    font-size: var(--font-size-base);
+    line-height: var(--leading-relaxed);
     color: var(--text-2);
   }
   .cta {
-    padding: 9px 15px;
+    padding: var(--space-md) var(--space-2xl);
     border: 0;
     border-radius: var(--radius);
     background: var(--brand);
     color: var(--brand-ink);
-    font: 600 12.5px/1 var(--font-sans);
+    font: var(--weight-semibold) var(--font-size-base) / var(--leading-none) var(--font-sans);
     cursor: pointer;
   }
 
   .foot {
     display: flex;
     align-items: center;
-    padding: 8px 14px;
+    padding: var(--space-sm) var(--space-xl);
     border-top: 1px solid var(--border);
     background: var(--surface);
-    font: 500 11px/1 var(--font-mono);
+    font: var(--weight-medium) var(--font-size-xs) / var(--leading-none) var(--font-mono);
     color: var(--text-3);
   }
   .live {
     display: inline-flex;
     align-items: center;
-    gap: 6px;
+    gap: var(--space-xs);
   }
   .ring {
     width: 9px;

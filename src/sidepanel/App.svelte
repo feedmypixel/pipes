@@ -7,15 +7,15 @@
 
 <style>
   main {
-    padding: 16px;
+    padding: var(--space-2xl);
   }
   h1 {
-    margin: 0 0 4px;
-    font-size: 16px;
+    margin: 0 0 var(--space-2xs);
+    font-size: var(--font-size-xl);
   }
   p {
     margin: 0;
-    font-size: 13px;
+    font-size: var(--font-size-base);
     color: var(--text-2);
   }
 </style>

@@ -34,13 +34,15 @@ Authoritative reference: `docs/css.md`.
    tokens. ✅
 3. **`docs/css.md`** — layers, units (rem rationale), the scales, vertical rhythm, readability,
    conventions. ✅
-4. **Migrate component styles** off magic numbers onto tokens, per area:
+4. **Migrate component styles** off magic numbers onto tokens, per area: ✅
    - Form + notification components (`forms/`, Button, Banner, Toast, ToastHost, PermissionNote,
-     MessageIcon).
-   - Shared primitives (`Row`, `StatusIcon`, `RefChip`, `RelativeTime`, …).
-   - Surfaces (`popup`, `options`, `sidepanel`, `showcase` App/Showcase).
-5. **Visual check** each migrated surface (showcase + popup + options + sidepanel, light + dark);
-   values are near-1:1 so diffs flag missed/mis-snapped conversions.
+     MessageIcon). ✅
+   - Shared primitives (`Row`, `StatusIcon`, `RefChip`, `RelativeTime`). ✅
+   - Surfaces (`popup`, `options`, `sidepanel`, `showcase`). ✅
+     (Also fixed a forms-PR regression: the "Load repositories" button was a raw `.btn` left
+     unstyled when `forms.css` was deleted — now a `<Button>`.)
+5. **Visual check** — popup + options + showcase screenshotted light + dark; design unchanged
+   bar intended rhythm snaps. ✅
 
 ## Technical Considerations
 
