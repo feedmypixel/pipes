@@ -1,11 +1,11 @@
 <script lang="ts">
   import Plug from '@lucide/svelte/icons/plug'
-  import Plus from '@lucide/svelte/icons/plus'
   import Trash2 from '@lucide/svelte/icons/trash-2'
   import Check from '@lucide/svelte/icons/check'
   import Search from '@lucide/svelte/icons/search'
+  import X from '@lucide/svelte/icons/x'
   import RefreshCw from '@lucide/svelte/icons/refresh-cw'
-  import Zap from '@lucide/svelte/icons/zap'
+  import BadgeCheck from '@lucide/svelte/icons/badge-check'
   import GitBranch from '@lucide/svelte/icons/git-branch'
   import * as storage from '../lib/storage'
   import type { Settings } from '../lib/storage'
@@ -16,7 +16,7 @@
   import Input from '../lib/components/forms/Input.svelte'
   import PasswordInput from '../lib/components/forms/PasswordInput.svelte'
   import FormSummary from '../lib/components/forms/FormSummary.svelte'
-  import MessageIcon from '../lib/components/forms/MessageIcon.svelte'
+  import ChevronRight from '@lucide/svelte/icons/chevron-right'
   import Banner from '../lib/components/Banner.svelte'
   import Button from '../lib/components/Button.svelte'
   import PermissionNote from '../lib/components/PermissionNote.svelte'
@@ -50,6 +50,14 @@
     storage.get('watchedRepos').then((value) => (watchedRepos = value))
     storage.get('availableRepos').then((value) => (reposByAccount = value))
     storage.get('settings').then((value) => (settings = value))
+  })
+
+  // Success banners are confirmations, not state — let them fade after a few seconds.
+  $effect(() => {
+    if (addResult?.variant === 'ok') {
+      const id = setTimeout(() => (addResult = null), 5000)
+      return () => clearTimeout(id)
+    }
   })
 
   const watchedIds = $derived(new Set(watchedRepos.map((r) => r.id)))
@@ -91,11 +99,13 @@
   async function validate(): Promise<boolean> {
     const origin = normaliseHost(host)
     if (!origin) {
-      availability = { state: 'bad', text: 'Enter a valid host' }
+      errors.host = 'Enter a valid host'
+      document.getElementById('host')?.focus()
       return false
     }
     if (!token) {
-      availability = { state: 'bad', text: 'Enter a token' }
+      errors.token = 'Enter a token'
+      document.getElementById('token')?.focus()
       return false
     }
     availability = { state: 'busy', text: 'Validating…' }
@@ -114,7 +124,7 @@
         availability = { state: 'ok', text: `Signed in as ${result.user}` }
         addResult = {
           variant: 'ok',
-          text: `${name} validated, signed in as ${result.user}. Add the connection below.`
+          text: `Signed in as ${result.user} on ${name}, add the connection below`
         }
         return true
       }
@@ -211,6 +221,33 @@
     return repo.name.toLowerCase().includes(search.trim().toLowerCase())
   }
 
+  function allWatched(repos: Repo[]): boolean {
+    return repos.length > 0 && repos.every((repo) => watchedIds.has(repo.id))
+  }
+
+  async function toggleWatchAll(repos: Repo[]) {
+    const turnOn = !allWatched(repos)
+    const ids = new Set(repos.map((repo) => repo.id))
+    watchedRepos = turnOn
+      ? [...watchedRepos, ...repos.filter((repo) => !watchedIds.has(repo.id))]
+      : watchedRepos.filter((repo) => !ids.has(repo.id))
+    await storage.set('watchedRepos', watchedRepos)
+    toastSuccess(turnOn ? `Watching ${repos.length} repos` : `Unwatched ${repos.length} repos`)
+  }
+
+  async function clearAllWatched() {
+    if (watchedRepos.length === 0) {
+      return
+    }
+    const previous = watchedRepos
+    watchedRepos = []
+    await storage.set('watchedRepos', [])
+    toastUndo('Cleared all watched repositories', async () => {
+      watchedRepos = previous
+      await storage.set('watchedRepos', previous)
+    })
+  }
+
   async function setPoll(next: number) {
     settings = { ...settings, pollMinutes: Math.max(0.5, Math.round(next * 2) / 2) }
     await storage.set('settings', settings)
@@ -282,10 +319,25 @@
             oninput={clearHostIfValid}
           />
         </Field>
+        {#snippet tokenHint()}
+          <details class="token-help">
+            <summary>
+              <ChevronRight class="chevron" size={14} />
+              <span>What permissions does my token need?</span>
+            </summary>
+            <ul>
+              <li>
+                <b>GitHub</b>: fine-grained token with <b>Actions: read-only</b>. Grant the repos or
+                orgs you want to watch.
+              </li>
+              <li><b>GitLab</b>: personal access token with the <b>read_api</b> scope.</li>
+            </ul>
+          </details>
+        {/snippet}
         <Field
           name="token"
           label="Personal access token"
-          hint="read-only scope; never synced, never logged"
+          hint={tokenHint}
           error={errors.token}
           mono
           below={availability ?? undefined}
@@ -297,27 +349,14 @@
             oninput={clearTokenIfValid}
           />
         </Field>
-        <details class="token-help">
-          <summary>
-            <MessageIcon variant="info" size={14} />
-            <span>What permissions does my token need?</span>
-          </summary>
-          <ul>
-            <li>
-              <b>GitHub</b>: fine-grained token with <b>Actions: read-only</b>. Grant the repos or
-              orgs you want to watch.
-            </li>
-            <li><b>GitLab</b>: personal access token with the <b>read_api</b> scope.</li>
-          </ul>
-        </details>
         <div class="note-row"><PermissionNote /></div>
         <div class="button-group">
           <Button variant="primary" {submitting} onclick={addConnection}>
-            <Plus size={14} />
+            <Plug size={14} />
             {submitting ? 'Adding connection…' : 'Add connection'}
           </Button>
           <Button variant="secondary" disabled={submitting} onclick={validate}>
-            <Zap size={14} /> Validate
+            <BadgeCheck size={14} /> Validate
           </Button>
         </div>
       </div>
@@ -330,7 +369,18 @@
           <div class="repo-search">
             <Search size={15} />
             <input type="text" placeholder="Filter repositories…" bind:value={search} />
+            {#if search}
+              <button class="repo-clear" aria-label="Clear search" onclick={() => (search = '')}>
+                <X size={15} />
+              </button>
+            {/if}
           </div>
+          {#if watchedRepos.length > 0}
+            <div class="repo-toolbar">
+              <span>{watchedRepos.length} watched</span>
+              <button class="watch-all" onclick={clearAllWatched}>Clear all selections</button>
+            </div>
+          {/if}
           {#each accounts as account (account.id)}
             {@const repos = reposByAccount[account.id]}
             {@const host = account.host.replace(/^https?:\/\//, '')}
@@ -352,6 +402,9 @@
                   <div class="repo-group">
                     <div class="repo-group-header">
                       <span>{host} / {group.owner}</span>
+                      <button class="watch-all" onclick={() => toggleWatchAll(group.repos)}>
+                        {allWatched(group.repos) ? 'Unwatch all' : 'Watch all'}
+                      </button>
                       <button
                         class="icon-button refresh"
                         class:spinning={loadingRepos[account.id]}
@@ -556,7 +609,7 @@
   .token-help summary {
     display: flex;
     align-items: center;
-    gap: var(--space-sm);
+    gap: var(--space-2xs);
     cursor: pointer;
     color: var(--text-3);
     font-size: var(--font-size-xs);
@@ -565,8 +618,17 @@
   .token-help summary::-webkit-details-marker {
     display: none;
   }
-  .token-help summary :global(.message-icon) {
-    margin-left: -2px;
+  .token-help summary :global(.chevron) {
+    flex: none;
+    transition: transform 0.12s;
+  }
+  .token-help[open] summary :global(.chevron) {
+    transform: rotate(90deg);
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .token-help summary :global(.chevron) {
+      transition: none;
+    }
   }
   .token-help summary span {
     text-decoration: underline;
@@ -619,6 +681,23 @@
     color: var(--text);
     font: var(--weight-medium) var(--font-size-base) / var(--leading-none) var(--font-sans);
   }
+  .repo-clear {
+    display: grid;
+    place-items: center;
+    flex: none;
+    width: 22px;
+    height: 22px;
+    padding: 0;
+    border: 0;
+    border-radius: var(--radius-pill);
+    background: transparent;
+    color: var(--text-3);
+    cursor: pointer;
+  }
+  .repo-clear:hover {
+    background: var(--hover);
+    color: var(--text);
+  }
   .repo-group {
     border: 1px solid var(--border);
     border-radius: var(--radius);
@@ -628,13 +707,41 @@
   .repo-group-header {
     display: flex;
     align-items: center;
-    justify-content: space-between;
     gap: var(--space-sm);
     padding: var(--space-xs) var(--space-sm) var(--space-xs) var(--space-xl);
     background: var(--surface-2);
     border-bottom: 1px solid var(--border);
     font: var(--weight-semibold) var(--font-size-xs) / var(--leading-none) var(--font-mono);
     color: var(--text-2);
+  }
+  .repo-group-header > span {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .watch-all {
+    flex: none;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: var(--link);
+    font: var(--weight-semibold) var(--font-size-xs) / var(--leading-none) var(--font-sans);
+    cursor: pointer;
+  }
+  .watch-all:hover {
+    text-decoration: underline;
+    text-underline-offset: 2px;
+  }
+  .repo-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-sm);
+    margin-bottom: var(--space-lg);
+    color: var(--text-3);
+    font: var(--weight-medium) var(--font-size-xs) / var(--leading-none) var(--font-sans);
   }
   .refresh {
     width: 26px;

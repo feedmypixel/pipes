@@ -1,12 +1,12 @@
 <script lang="ts">
-  import Lock from '@lucide/svelte/icons/lock'
+  import ShieldCheck from '@lucide/svelte/icons/shield-check'
   import type { Snippet } from 'svelte'
 
   let { children }: { children?: Snippet } = $props()
 </script>
 
 <p class="permission-note">
-  <Lock size={15} />
+  <ShieldCheck size={15} />
   {#if children}{@render children()}{:else}
     Self-hosted hosts request permission when you validate. Tokens stay on this device.
   {/if}
@@ -29,6 +29,6 @@
   .permission-note :global(svg) {
     flex: none;
     margin-top: 1px;
-    color: var(--pending);
+    color: var(--text-3);
   }
 </style>

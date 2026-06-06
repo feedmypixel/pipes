@@ -139,6 +139,35 @@ export function visibleBranches(view: RepoView, allowed: ReadonlySet<PipelineSta
   return [...view.active, ...view.collapsed].filter((p) => allowed.has(p.status)).sort(newestFirst)
 }
 
+/** Does the default branch pass the status filter? */
+export function primaryVisible(view: RepoView, allowed: ReadonlySet<PipelineStatus>): boolean {
+  return Boolean(view.primary && allowed.has(view.primary.status))
+}
+
+/** Failing pipelines in a repo (default branch + every other branch), for the row badge. */
+export function failingCount(view: RepoView): number {
+  const all = [view.primary, ...view.active, ...view.collapsed]
+  return all.filter((pipeline) => pipeline?.status === 'failed').length
+}
+
+/** A repo has rows to show when its default branch or any branch passes the filter. */
+export function hasVisibleRows(view: RepoView, allowed: ReadonlySet<PipelineStatus>): boolean {
+  return primaryVisible(view, allowed) || visibleBranches(view, allowed).length > 0
+}
+
+/** Drop repos with no rows under the current filter, then drop emptied owner groups. */
+export function filterGroups(
+  groups: OwnerGroup[],
+  allowed: ReadonlySet<PipelineStatus>
+): OwnerGroup[] {
+  return groups
+    .map((group) => ({
+      owner: group.owner,
+      repos: group.repos.filter((view) => hasVisibleRows(view, allowed))
+    }))
+    .filter((group) => group.repos.length > 0)
+}
+
 /** Count default-branch pipelines currently failing (drives the alarm strip). */
 export function countDefaultBranchFailures(repos: Repo[], snapshots: Snapshots): number {
   let count = 0
@@ -146,6 +175,19 @@ export function countDefaultBranchFailures(repos: Repo[], snapshots: Snapshots):
     const primary = (snapshots[repo.id] ?? []).find((p) => p.isDefaultBranch)
     if (primary?.status === 'failed') {
       count++
+    }
+  }
+  return count
+}
+
+/** Count every failing branch across all repos (default + feature) — sum of the row badges. */
+export function countFailingBranches(repos: Repo[], snapshots: Snapshots): number {
+  let count = 0
+  for (const repo of repos) {
+    for (const pipeline of snapshots[repo.id] ?? []) {
+      if (pipeline.status === 'failed') {
+        count++
+      }
     }
   }
   return count

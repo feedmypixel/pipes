@@ -15,6 +15,13 @@ export const DEFAULT_SETTINGS: Settings = {
 /** Latest pipeline per ref, keyed by repo id. The single source for UI + diffing. */
 export type Snapshots = Record<string, Pipeline[]>
 
+/** Per-connection reachability/auth, refreshed each poll. Drives the issue banner. */
+export interface AccountHealth {
+  ok: boolean
+  /** Why it failed, when not ok (e.g. token invalid or host unreachable). */
+  error?: string
+}
+
 interface StorageShape {
   accounts: Account[]
   watchedRepos: Repo[]
@@ -28,6 +35,10 @@ interface StorageShape {
   rateLimitPausedUntil: Record<string, number>
   /** notificationId → web URL, so a click can open the right pipeline. */
   notifLinks: Record<string, string>
+  /** Epoch ms of the last completed poll cycle, for the "updated … ago" footer. */
+  lastPolledAt: number
+  /** Connection health per accountId, refreshed each poll. */
+  accountHealth: Record<string, AccountHealth>
 }
 
 const DEFAULTS: StorageShape = {
@@ -38,7 +49,9 @@ const DEFAULTS: StorageShape = {
   snapshots: {},
   repoEtags: {},
   rateLimitPausedUntil: {},
-  notifLinks: {}
+  notifLinks: {},
+  lastPolledAt: 0,
+  accountHealth: {}
 }
 
 /**
@@ -66,7 +79,10 @@ export async function set<K extends keyof StorageShape>(
   key: K,
   value: StorageShape[K]
 ): Promise<void> {
-  await chrome.storage.local.set({ [key]: value })
+  // Callers pass Svelte $state, which is a Proxy. chrome.storage serializes via
+  // structured clone, which throws on a Proxy — strip to a plain value first.
+  // Our stored shapes are all JSON-safe, so a JSON round-trip does it.
+  await chrome.storage.local.set({ [key]: JSON.parse(JSON.stringify(value)) })
 }
 
 /**

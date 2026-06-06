@@ -13,7 +13,7 @@
 <style>
   .form-message {
     display: flex;
-    align-items: flex-start;
+    align-items: center;
     gap: var(--space-md);
     margin-bottom: var(--space-2xl);
     padding: var(--space-lg) var(--space-xl);

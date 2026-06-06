@@ -38,3 +38,13 @@ test('set round-trips through get', async () => {
   await storage.set('watchedRepos', [{ id: 'r' }] as never)
   expect(await storage.get('watchedRepos')).toEqual([{ id: 'r' }])
 })
+
+test('set stores a plain clone, not the live reference (strips Svelte $state proxies)', async () => {
+  const live = [{ id: 'a' }]
+  await storage.set('accounts', live as never)
+  live[0].id = 'mutated'
+  // Stored value is decoupled from the caller's (proxied) object.
+  expect((await storage.get('accounts'))[0].id).toBe('a')
+  // And it survives the array shape guard (a proxy cloned as an object would not).
+  expect(Array.isArray(await storage.get('accounts'))).toBe(true)
+})
