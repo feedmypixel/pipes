@@ -12,7 +12,9 @@ authored in `~/Projects/status/status-ui/principles` and will be referenced from
 ready. The previous in-repo `css.md` and `forms.md` were removed in favour of that single
 source of truth.
 
-Planned, being created:
+Being created:
 
 - **CSS** — tokens, scales, vertical rhythm, scoped-component rules.
 - **Forms** — field order, validation, banners/toasts, ARIA wiring.
+- **Progressive enhancement** — works-without, layer-on-top.
+- **UX** — interaction + content conventions (no disabled buttons, sentence case, etc.).
