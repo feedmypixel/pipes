@@ -106,5 +106,6 @@ Set with the reader in mind: tighter for headings, looser for running copy.
 - **Tokens are the only shared surface** between components — never a shared class.
 - Scoped `<style>` per component; a component must render with zero global classes.
 
-> **Migration status.** The scales + reset are in place. Component styles are migrating off
-> magic numbers onto the tokens — see `tasks/prd-css-arch.md` for what's done and what remains.
+> **Migration status.** Done — scales + reset in place, and all component + surface styles use
+> the tokens. The only remaining raw px are device-pixel values (borders, focus/shadow geometry),
+> fixed control boxes (icon buttons, toggle, stepper), and layout `max-width`s.

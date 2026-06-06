@@ -338,29 +338,29 @@
   header {
     display: flex;
     align-items: center;
-    gap: 16px;
-    margin-bottom: 24px;
+    gap: var(--space-2xl);
+    margin-bottom: var(--space-4xl);
   }
   h1 {
     margin: 0;
-    font-size: 21px;
+    font-size: var(--font-size-2xl);
   }
   .themes {
     display: inline-flex;
-    gap: 2px;
+    gap: var(--space-3xs);
     margin-left: auto;
-    padding: 3px;
+    padding: var(--space-3xs);
     background: var(--surface);
     border: 1px solid var(--border-2);
     border-radius: var(--radius);
   }
   .themes button {
-    padding: 6px 12px;
+    padding: var(--space-xs) var(--space-lg);
     border: 0;
     border-radius: var(--radius);
     background: transparent;
     color: var(--text-2);
-    font-size: 12px;
+    font-size: var(--font-size-sm);
     cursor: pointer;
   }
   .themes button[aria-pressed='true'] {
@@ -368,31 +368,31 @@
     color: var(--brand-ink);
   }
   section {
-    margin-bottom: 28px;
-    padding: 18px 20px;
+    margin-bottom: var(--space-5xl);
+    padding: var(--space-2xl) var(--space-3xl);
     background: var(--surface);
     border: 1px solid var(--border);
     border-radius: var(--radius);
   }
   .eyebrow {
-    margin: 0 0 14px;
-    font: 600 11px/1 var(--font-mono);
+    margin: 0 0 var(--space-xl);
+    font: var(--weight-semibold) var(--font-size-xs) / var(--leading-none) var(--font-mono);
     letter-spacing: 0.08em;
     color: var(--text-3);
   }
   .icons {
     display: flex;
     flex-wrap: wrap;
-    gap: 20px;
+    gap: var(--space-3xl);
   }
   .icon-cell {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 8px;
+    gap: var(--space-sm);
   }
   .icon-cell code {
-    font: 500 10px/1 var(--font-mono);
+    font: var(--weight-medium) var(--font-size-2xs) / var(--leading-none) var(--font-mono);
     color: var(--text-3);
   }
   .rows {
@@ -404,44 +404,44 @@
     display: flex;
     flex-wrap: wrap;
     align-items: center;
-    gap: 16px;
+    gap: var(--space-2xl);
   }
   .stack {
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: var(--space-lg);
   }
   .button-group {
     display: flex;
     flex-wrap: wrap;
-    gap: 10px;
+    gap: var(--space-md);
     align-items: center;
-    margin-top: 16px;
+    margin-top: var(--space-2xl);
   }
   .toast-statics {
     display: flex;
     flex-direction: column;
     gap: var(--toast-gap);
-    margin-bottom: 16px;
+    margin-bottom: var(--space-2xl);
   }
   .demo {
-    padding: 7px 14px;
+    padding: var(--space-sm) var(--space-xl);
     border: 1px solid var(--border-2);
     border-radius: var(--radius);
     background: var(--surface-2);
     color: var(--text);
-    font-size: 12px;
+    font-size: var(--font-size-sm);
     cursor: pointer;
   }
   .swatches {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-    gap: 10px;
+    gap: var(--space-md);
   }
   .swatch {
     display: flex;
     align-items: center;
-    gap: 9px;
+    gap: var(--space-md);
   }
   .swatch .chip {
     width: 28px;
@@ -451,7 +451,7 @@
     flex: none;
   }
   .swatch code {
-    font: 500 11px/1 var(--font-mono);
+    font: var(--weight-medium) var(--font-size-xs) / var(--leading-none) var(--font-mono);
     color: var(--text-2);
   }
 </style>
