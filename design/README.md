@@ -20,9 +20,10 @@ HTML + CSS + JS prototypes intended as the visual brief for re-implementation as
 
 ## Status
 
-**`v1/` is the current locked direction** (handoff 2026-06-05). Read its `README.md`
-first, it documents tokens, the logo, status vocabulary, behaviour, and every surface
-in light + dark. `BRIEF.md` is the brief that produced it.
+**`v2/` is the current locked direction** (handoff 2026-06-06). It is `v1` plus the
+forms + in-app notifications spec: read `v2/FORMS.md` (the implementation contract) and
+`v2/assets/forms.css` (exact values) for forms, toasts, banners, and the undo pattern.
+`v1` remains the surface handoff (popup / side panel / options / notifications).
 
 ## What you'll find in a bundle
 
