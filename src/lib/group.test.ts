@@ -30,24 +30,40 @@ test('groups by owner, owners and repos A-Z', () => {
   expect(groups[0].repos.map((r) => r.displayName)).toEqual(['api', 'cli'])
 })
 
-test('splits default-branch primary from other refs, newest first', () => {
+test('splits primary, active (live/broken), and collapsed (settled), newest first', () => {
   const snapshots: Snapshots = {
     'o/r': [
       pipe('main', 'failed', true, '2026-06-06T10:00:00Z'),
-      pipe('feat-a', 'success', false, '2026-06-06T08:00:00Z'),
-      pipe('feat-b', 'running', false, '2026-06-06T09:00:00Z')
+      pipe('feat-pass', 'success', false, '2026-06-06T09:00:00Z'),
+      pipe('feat-run', 'running', false, '2026-06-06T08:00:00Z'),
+      pipe('feat-fail', 'failed', false, '2026-06-06T07:00:00Z')
     ]
   }
   const view = groupByOwner([repo('o/r', 'o/r')], snapshots)[0].repos[0]
   expect(view.displayName).toBe('r')
   expect(view.primary?.ref).toBe('main')
-  expect(view.others.map((p) => p.ref)).toEqual(['feat-b', 'feat-a'])
+  expect(view.active.map((p) => p.ref)).toEqual(['feat-run', 'feat-fail'])
+  expect(view.collapsed.map((p) => p.ref)).toEqual(['feat-pass'])
 })
 
-test('repo with no snapshot has no primary and no others', () => {
+test('pending branches are active; canceled and skipped collapse', () => {
+  const snapshots: Snapshots = {
+    'o/r': [
+      pipe('queued', 'pending', false, '2026-06-06T03:00:00Z'),
+      pipe('cancelled-one', 'canceled', false, '2026-06-06T02:00:00Z'),
+      pipe('skipped-one', 'skipped', false, '2026-06-06T01:00:00Z')
+    ]
+  }
+  const view = groupByOwner([repo('o/r', 'o/r')], snapshots)[0].repos[0]
+  expect(view.active.map((p) => p.ref)).toEqual(['queued'])
+  expect(view.collapsed.map((p) => p.ref)).toEqual(['cancelled-one', 'skipped-one'])
+})
+
+test('repo with no snapshot has empty primary/active/collapsed', () => {
   const view = groupByOwner([repo('o/r', 'o/r')], {})[0].repos[0]
   expect(view.primary).toBeUndefined()
-  expect(view.others).toEqual([])
+  expect(view.active).toEqual([])
+  expect(view.collapsed).toEqual([])
 })
 
 test('a name with no slash uses the whole name as owner and display', () => {
