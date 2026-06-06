@@ -14,13 +14,13 @@
   .form-message {
     display: flex;
     align-items: flex-start;
-    gap: 9px;
-    margin-bottom: 16px;
-    padding: 11px 14px;
+    gap: var(--space-md);
+    margin-bottom: var(--space-2xl);
+    padding: var(--space-lg) var(--space-xl);
     border: 1px solid;
     border-radius: var(--radius);
-    font-size: 12.5px;
-    line-height: 1.45;
+    font-size: var(--font-size-base);
+    line-height: var(--leading-normal);
   }
   .form-message.ok {
     background: var(--success-bg);

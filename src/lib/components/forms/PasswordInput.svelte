@@ -26,14 +26,14 @@
   }
   .pw-toggle {
     position: absolute;
-    right: 6px;
+    right: var(--space-xs);
     top: 50%;
     transform: translateY(-50%);
-    padding: 6px 8px;
+    padding: var(--space-xs) var(--space-sm);
     border: 0;
     background: transparent;
     color: var(--link);
-    font: 600 12px/1 var(--font-sans);
+    font: var(--weight-semibold) var(--font-size-sm) / var(--leading-none) var(--font-sans);
     cursor: pointer;
   }
   .pw-toggle:hover {

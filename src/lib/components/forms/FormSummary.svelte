@@ -15,28 +15,28 @@
 
 <style>
   .form-summary {
-    margin-bottom: 18px;
-    padding: 14px 16px;
+    margin-bottom: var(--space-3xl);
+    padding: var(--space-xl) var(--space-2xl);
     border: 1px solid var(--failed-line);
     border-radius: var(--radius);
     background: var(--failed-bg);
   }
   h4 {
-    margin: 0 0 8px;
-    font-size: 13px;
-    font-weight: 680;
+    margin: 0 0 var(--space-sm);
+    font-size: var(--font-size-base);
+    font-weight: var(--weight-heavy);
     color: var(--failed);
   }
   ul {
     display: grid;
-    gap: 5px;
+    gap: var(--space-xs);
     margin: 0;
     padding-left: 0;
     list-style: none;
   }
   a {
     color: var(--failed);
-    font-size: 12.5px;
+    font-size: var(--font-size-base);
     text-decoration: underline;
   }
   a:hover {

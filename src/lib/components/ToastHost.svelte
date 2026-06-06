@@ -12,8 +12,8 @@
 <style>
   .toast-stack {
     position: fixed;
-    right: 16px;
-    bottom: 16px;
+    right: var(--space-2xl);
+    bottom: var(--space-2xl);
     z-index: var(--toast-z);
     display: flex;
     flex-direction: column-reverse;

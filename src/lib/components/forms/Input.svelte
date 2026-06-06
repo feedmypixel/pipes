@@ -25,12 +25,12 @@
 <style>
   input {
     width: 100%;
-    padding: 10px 12px;
+    padding: var(--space-md) var(--space-lg);
     border: 1px solid var(--border-2);
     border-radius: var(--radius);
     background: var(--bg);
     color: var(--text);
-    font: 500 13px/1.2 var(--font-sans);
+    font: var(--weight-medium) var(--font-size-base) / var(--leading-tight) var(--font-sans);
     transition:
       border-color 0.12s,
       box-shadow 0.12s;
@@ -51,6 +51,6 @@
   }
   input.mono {
     font-family: var(--font-mono);
-    font-size: 12px;
+    font-size: var(--font-size-sm);
   }
 </style>
