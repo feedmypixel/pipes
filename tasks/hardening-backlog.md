@@ -48,6 +48,18 @@ product). Captured so nothing is lost.
   `--space-*` tokens; this is the consolidation, not a correctness fix.) No 2D grid needed —
   surfaces are 1D stacks.
 
+- **Shared surface chrome (DRY + parity)** — TBD. The surface `.svelte` files duplicate
+  scoped styles that should live in a shared layer, for DRY + parity across popup / options /
+  side panel:
+  - `.icon-button` — duplicated in **popup + options** → an `IconButton` component (interactive,
+    has hover/focus).
+  - `.button-group` — duplicated in **options + showcase** → a `Cluster` / button-group object.
+  - `.card` / `.card-body` (options) + the popup app-bar → a `Card` component/pattern the side
+    panel will also want.
+    Categorise each as component (markup + behaviour) vs object (classless layout) per
+    `docs/css.md`; pairs with the `Stack` primitive above. Do before/with the side panel so it
+    reuses them rather than re-duplicating.
+
 ## Code structure (from the earlier hardening discussion)
 
 - **Central config** (`src/lib/config.ts`) — pull the scattered constants (page sizes,
