@@ -2,14 +2,29 @@
   import RefreshCw from '@lucide/svelte/icons/refresh-cw'
   import Settings from '@lucide/svelte/icons/settings'
   import Search from '@lucide/svelte/icons/search'
-  import ArrowDownUp from '@lucide/svelte/icons/arrow-down-up'
-  import ChevronDown from '@lucide/svelte/icons/chevron-down'
   import ChevronRight from '@lucide/svelte/icons/chevron-right'
   import * as storage from '../lib/storage'
   import type { Snapshots } from '../lib/storage'
-  import { groupByOwner, sortGroups, countDefaultBranchFailures, type SortMode } from '../lib/group'
-  import type { Account, Repo } from '../providers/types'
+  import {
+    groupByOwner,
+    sortGroups,
+    visibleBranches,
+    ALL_BRANCH_STATES,
+    countDefaultBranchFailures,
+    type SortMode
+  } from '../lib/group'
+  import type { Account, PipelineStatus, Repo } from '../providers/types'
+  import { SvelteSet } from 'svelte/reactivity'
   import Row from '../lib/components/Row.svelte'
+
+  const BRANCH_STATES: PipelineStatus[] = [
+    'failed',
+    'running',
+    'pending',
+    'success',
+    'canceled',
+    'skipped'
+  ]
 
   const POLL_INTERVAL_MS = 10_000
 
@@ -19,7 +34,7 @@
   let search = $state('')
   let sort = $state<SortMode>(readSort())
   let collapsed = $state<Record<string, boolean>>(readCollapsed())
-  let expanded = $state<Record<string, boolean>>({})
+  const allowed = new SvelteSet<PipelineStatus>(readAllowed())
 
   // View prefs are panel-local, so they live in localStorage, not chrome.storage.
   function readSort(): SortMode {
@@ -32,8 +47,28 @@
       return {}
     }
   }
+  function readAllowed(): PipelineStatus[] {
+    const saved = localStorage.getItem('pipes-branch-states')
+    if (!saved) {
+      return [...ALL_BRANCH_STATES]
+    }
+    try {
+      return JSON.parse(saved) as PipelineStatus[]
+    } catch {
+      return [...ALL_BRANCH_STATES]
+    }
+  }
   $effect(() => localStorage.setItem('pipes-sort', sort))
   $effect(() => localStorage.setItem('pipes-collapsed', JSON.stringify(collapsed)))
+  $effect(() => localStorage.setItem('pipes-branch-states', JSON.stringify([...allowed])))
+
+  function toggleState(state: PipelineStatus) {
+    if (allowed.has(state)) {
+      allowed.delete(state)
+    } else {
+      allowed.add(state)
+    }
+  }
 
   $effect(() => {
     storage.get('accounts').then((value) => (accounts = value))
@@ -106,14 +141,22 @@
         <Search size={14} />
         <input type="text" placeholder="Filter repositories…" bind:value={search} />
       </span>
-      <button
-        class="sort"
-        title="Sort by {sort === 'status' ? 'name' : 'status'}"
-        onclick={() => (sort = sort === 'status' ? 'name' : 'status')}
-      >
-        <ArrowDownUp size={13} />
-        {sort}
-      </button>
+      <div class="segmented" role="group" aria-label="Sort">
+        <button class:active={sort === 'name'} onclick={() => (sort = 'name')}>Name</button>
+        <button class:active={sort === 'status'} onclick={() => (sort = 'status')}>Status</button>
+      </div>
+    </div>
+    <div class="filters" role="group" aria-label="Show branch states">
+      {#each BRANCH_STATES as state (state)}
+        <button
+          class="chip {state}"
+          class:on={allowed.has(state)}
+          aria-pressed={allowed.has(state)}
+          onclick={() => toggleState(state)}
+        >
+          {state}
+        </button>
+      {/each}
     </div>
 
     <main class="list">
@@ -133,25 +176,9 @@
               {#if view.primary}
                 <Row name={view.displayName} pipeline={view.primary} dense />
               {/if}
-              {#each view.active as branch (branch.id)}
+              {#each visibleBranches(view, allowed) as branch (branch.id)}
                 <Row name={view.displayName} pipeline={branch} child />
               {/each}
-              {#if view.collapsed.length > 0}
-                <button
-                  class="more"
-                  aria-expanded={expanded[view.repo.id] ?? false}
-                  onclick={() => (expanded[view.repo.id] = !expanded[view.repo.id])}
-                >
-                  <ChevronDown size={11} />
-                  {expanded[view.repo.id] ? 'Hide' : 'Show'}
-                  {view.collapsed.length} more branch{view.collapsed.length > 1 ? 'es' : ''}
-                </button>
-                {#if expanded[view.repo.id]}
-                  {#each view.collapsed as branch (branch.id)}
-                    <Row name={view.displayName} pipeline={branch} child />
-                  {/each}
-                {/if}
-              {/if}
             {/each}
           {/if}
         </section>
@@ -275,21 +302,54 @@
     color: var(--text);
     font: var(--weight-medium) var(--font-size-base) / var(--leading-none) var(--font-sans);
   }
-  .sort {
+  .segmented {
     display: inline-flex;
-    align-items: center;
-    gap: var(--space-xs);
-    padding: var(--space-xs) var(--space-md);
+    flex: none;
     border: 1px solid var(--border-2);
     border-radius: var(--radius);
+    overflow: hidden;
+  }
+  .segmented button {
+    padding: var(--space-xs) var(--space-md);
+    border: 0;
     background: var(--surface);
     color: var(--text-2);
     font: var(--weight-semibold) var(--font-size-xs) / var(--leading-none) var(--font-sans);
-    text-transform: capitalize;
     cursor: pointer;
   }
-  .sort:hover {
+  .segmented button + button {
+    border-left: 1px solid var(--border-2);
+  }
+  .segmented button:hover {
     background: var(--hover);
+  }
+  .segmented button.active {
+    background: var(--brand);
+    color: var(--brand-ink);
+  }
+
+  .filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-xs);
+    padding: var(--space-sm) var(--space-md);
+    border-bottom: 1px solid var(--border);
+  }
+  .chip {
+    padding: var(--space-3xs) var(--space-sm);
+    border: 1px solid var(--border-2);
+    border-radius: var(--radius-pill);
+    background: transparent;
+    color: var(--text-3);
+    font: var(--weight-semibold) var(--font-size-2xs) / var(--leading-none) var(--font-sans);
+    text-transform: capitalize;
+    cursor: pointer;
+    opacity: 0.55;
+  }
+  .chip.on {
+    opacity: 1;
+    color: var(--text);
+    border-color: var(--text-3);
   }
 
   .list {
@@ -334,25 +394,6 @@
     border-radius: var(--radius-pill);
     padding: var(--space-3xs) var(--space-sm);
   }
-  .more {
-    display: flex;
-    align-items: center;
-    gap: var(--space-xs);
-    width: 100%;
-    padding: var(--space-xs) var(--space-md) var(--space-xs) var(--space-5xl);
-    border: 0;
-    border-bottom: 1px solid var(--border);
-    background: var(--bg);
-    color: var(--text-3);
-    font: var(--weight-medium) var(--font-size-xs) / var(--leading-none) var(--font-sans);
-    text-align: left;
-    cursor: pointer;
-  }
-  .more:hover {
-    background: var(--hover);
-    color: var(--text);
-  }
-
   .empty {
     padding: var(--space-5xl) var(--space-4xl);
     text-align: center;

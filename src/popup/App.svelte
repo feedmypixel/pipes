@@ -2,17 +2,26 @@
   import RefreshCw from '@lucide/svelte/icons/refresh-cw'
   import PanelRight from '@lucide/svelte/icons/panel-right'
   import Settings from '@lucide/svelte/icons/settings'
-  import ChevronDown from '@lucide/svelte/icons/chevron-down'
   import * as storage from '../lib/storage'
   import type { Snapshots } from '../lib/storage'
-  import { groupByOwner, countDefaultBranchFailures } from '../lib/group'
+  import {
+    groupByOwner,
+    visibleBranches,
+    PROBLEM_STATES,
+    ALL_BRANCH_STATES,
+    countDefaultBranchFailures
+  } from '../lib/group'
   import type { Account, Repo } from '../providers/types'
   import Row from '../lib/components/Row.svelte'
 
   let accounts = $state<Account[]>([])
   let watchedRepos = $state<Repo[]>([])
   let snapshots = $state<Snapshots>({})
-  let expanded = $state<Record<string, boolean>>({})
+  // Default to problems-only: the popup is a glance for "anything wrong?".
+  let problemsOnly = $state(localStorage.getItem('pipes-problems-only') !== 'false')
+
+  $effect(() => localStorage.setItem('pipes-problems-only', String(problemsOnly)))
+  const branchStates = $derived(problemsOnly ? PROBLEM_STATES : ALL_BRANCH_STATES)
 
   $effect(() => {
     storage.get('accounts').then((value) => (accounts = value))
@@ -90,6 +99,16 @@
       <button class="empty-action" onclick={openOptions}>Choose repos</button>
     </div>
   {:else}
+    <div class="filter-bar">
+      <button
+        class="toggle"
+        class:on={problemsOnly}
+        aria-pressed={problemsOnly}
+        onclick={() => (problemsOnly = !problemsOnly)}
+      >
+        Problems only
+      </button>
+    </div>
     <main class="body">
       {#if allHealthy}
         <div class="healthy">All clear</div>
@@ -104,25 +123,9 @@
             {#if view.primary}
               <Row name={view.displayName} pipeline={view.primary} />
             {/if}
-            {#each view.active as branch (branch.id)}
+            {#each visibleBranches(view, branchStates) as branch (branch.id)}
               <Row name={view.displayName} pipeline={branch} child />
             {/each}
-            {#if view.collapsed.length > 0}
-              <button
-                class="more"
-                aria-expanded={expanded[view.repo.id] ?? false}
-                onclick={() => (expanded[view.repo.id] = !expanded[view.repo.id])}
-              >
-                <ChevronDown size={11} />
-                {expanded[view.repo.id] ? 'Hide' : 'Show'}
-                {view.collapsed.length} more branch{view.collapsed.length > 1 ? 'es' : ''}
-              </button>
-              {#if expanded[view.repo.id]}
-                {#each view.collapsed as branch (branch.id)}
-                  <Row name={view.displayName} pipeline={branch} child />
-                {/each}
-              {/if}
-            {/if}
           {/each}
         </section>
       {/each}
@@ -220,6 +223,26 @@
     }
   }
 
+  .filter-bar {
+    display: flex;
+    padding: var(--space-sm) var(--space-lg);
+    border-bottom: 1px solid var(--border);
+  }
+  .toggle {
+    padding: var(--space-3xs) var(--space-md);
+    border: 1px solid var(--border-2);
+    border-radius: var(--radius-pill);
+    background: transparent;
+    color: var(--text-3);
+    font: var(--weight-semibold) var(--font-size-2xs) / var(--leading-none) var(--font-sans);
+    cursor: pointer;
+  }
+  .toggle.on {
+    background: var(--brand);
+    color: var(--brand-ink);
+    border-color: var(--brand);
+  }
+
   .body {
     max-height: 520px;
     overflow-y: auto;
@@ -257,25 +280,6 @@
     border: 1px solid var(--border);
     border-radius: var(--radius-pill);
     padding: var(--space-3xs) var(--space-sm);
-  }
-
-  .more {
-    display: flex;
-    align-items: center;
-    gap: var(--space-xs);
-    width: 100%;
-    padding: var(--space-xs) var(--space-xl) var(--space-xs) 46px;
-    border: 0;
-    border-bottom: 1px solid var(--border);
-    background: var(--bg);
-    color: var(--text-3);
-    font: var(--weight-medium) var(--font-size-xs) / var(--leading-none) var(--font-sans);
-    text-align: left;
-    cursor: pointer;
-  }
-  .more:hover {
-    background: var(--hover);
-    color: var(--text);
   }
 
   .empty {

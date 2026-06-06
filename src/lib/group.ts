@@ -117,6 +117,28 @@ export function sortGroups(groups: OwnerGroup[], mode: SortMode): OwnerGroup[] {
     .sort((a, b) => viewRank(a.repos[0]) - viewRank(b.repos[0]) || a.owner.localeCompare(b.owner))
 }
 
+/** Branch states that mean "needs attention" — the popup's problems-only set. */
+export const PROBLEM_STATES: ReadonlySet<PipelineStatus> = new Set(['failed', 'running', 'pending'])
+
+/** Every branch state — the side panel's default (show all). */
+export const ALL_BRANCH_STATES: ReadonlySet<PipelineStatus> = new Set([
+  'failed',
+  'running',
+  'pending',
+  'success',
+  'canceled',
+  'skipped',
+  'unknown'
+])
+
+/**
+ * Non-default branch pipelines for a repo whose status is in `allowed`, newest first.
+ * Replaces the active/collapsed split — the default branch (primary) is never filtered.
+ */
+export function visibleBranches(view: RepoView, allowed: ReadonlySet<PipelineStatus>): Pipeline[] {
+  return [...view.active, ...view.collapsed].filter((p) => allowed.has(p.status)).sort(newestFirst)
+}
+
 /** Count default-branch pipelines currently failing (drives the alarm strip). */
 export function countDefaultBranchFailures(repos: Repo[], snapshots: Snapshots): number {
   let count = 0
