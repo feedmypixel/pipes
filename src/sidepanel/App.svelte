@@ -336,18 +336,20 @@
     border-bottom: 1px solid var(--border);
   }
   .chip {
-    padding: var(--space-3xs) var(--space-sm);
+    padding: var(--space-xs) var(--space-md);
     border: 1px solid var(--border-2);
-    border-radius: var(--radius-pill);
+    border-radius: var(--radius);
     background: transparent;
     color: var(--text-3);
-    font: var(--weight-semibold) var(--font-size-2xs) / var(--leading-none) var(--font-sans);
+    font: var(--weight-semibold) var(--font-size-sm) / var(--leading-none) var(--font-sans);
     text-transform: capitalize;
     cursor: pointer;
-    opacity: 0.55;
+  }
+  .chip:hover {
+    background: var(--hover);
   }
   .chip.on {
-    opacity: 1;
+    background: var(--hover);
     color: var(--text);
     border-color: var(--text-3);
   }

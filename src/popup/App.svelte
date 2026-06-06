@@ -229,12 +229,12 @@
     border-bottom: 1px solid var(--border);
   }
   .toggle {
-    padding: var(--space-3xs) var(--space-md);
+    padding: var(--space-xs) var(--space-md);
     border: 1px solid var(--border-2);
-    border-radius: var(--radius-pill);
+    border-radius: var(--radius);
     background: transparent;
     color: var(--text-3);
-    font: var(--weight-semibold) var(--font-size-2xs) / var(--leading-none) var(--font-sans);
+    font: var(--weight-semibold) var(--font-size-sm) / var(--leading-none) var(--font-sans);
     cursor: pointer;
   }
   .toggle.on {
