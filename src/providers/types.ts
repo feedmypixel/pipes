@@ -68,6 +68,18 @@ export interface ValidationResult {
   error?: string
 }
 
+/** Result of a conditional pipeline fetch. */
+export interface PipelinesResult {
+  /** Latest pipeline per ref, newest first. Empty when notModified. */
+  pipelines: Pipeline[]
+  /** ETag to send next time (null if the provider gave none). */
+  etag: string | null
+  /** True on a 304 — caller should keep its cached snapshot. */
+  notModified: boolean
+  /** Rate-limit budget from the response, if the provider exposes it. */
+  rateLimit: { remaining: number; reset: number } | null
+}
+
 /**
  * One adapter per provider. Stateless: every call takes the account so the
  * service worker never has to hold provider instances across its short life.
@@ -75,6 +87,9 @@ export interface ValidationResult {
 export interface Provider {
   validateToken(account: Account): Promise<ValidationResult>
   listRepos(account: Account): Promise<Repo[]>
-  /** Latest pipeline per ref, newest first. */
-  listPipelines(account: Account, repo: Repo): Promise<Pipeline[]>
+  /**
+   * Latest pipeline per ref, newest first. Pass the prior `etag` for a
+   * conditional request; a 304 returns `notModified` with the same etag.
+   */
+  listPipelines(account: Account, repo: Repo, etag?: string | null): Promise<PipelinesResult>
 }
