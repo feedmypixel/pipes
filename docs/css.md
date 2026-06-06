@@ -19,6 +19,33 @@ There is no single global stylesheet — an extension has a separate HTML entry 
 4. **Component scoped `<style>`** — everything else. Each component owns its chrome, built from
    tokens. No global utility classes inside components; no global form/toast stylesheet.
 
+## Components vs global CSS — the sweet spot
+
+status-ui/portal run a full ITCSS stack (`objects.css`, `utilities.css`, `patterns.css`).
+Pipes deliberately does **not** — and that is the right call for an extension this size:
+
+- **Scoped components + tokens cover it.** Every visual is a Svelte component with scoped
+  styles; shared values flow through tokens. There's no repetition that a utility/object layer
+  would dry up, so adding one would be speculative (YAGNI).
+- **Buttons, banners, toasts, fields are components, not utility classes.** That's the
+  componentisation line: anything with markup + behaviour is a component (`<Button>`,
+  `<Banner>`, `<Field>`); tokens carry the shared _values_. We don't apply global classes inside
+  components.
+
+**When to introduce a global layer** (revisit, don't pre-build):
+
+- A genuinely classless, repeated layout primitive used across many surfaces (e.g. a `.stack`
+  / `.cluster` object) — then a small `objects.css` earns its place.
+- A utility repeated verbatim in 3+ components that _can't_ be a token (rare).
+
+Until then: component or token. Nothing global but `tokens` / `base` / `a11y`.
+
+## Icons
+
+The toolbar/extension icons (`icons/*.png`) are **PNG because Chrome MV3 requires raster** for
+`action.default_icon` + `icons` — SVG isn't accepted there. They're generated from the SVG logo
+via `pnpm icons` (sharp). So the source is vector; only the shipped extension icon must be PNG.
+
 ## Units — rem, not px
 
 **Scale values use rem** (root = 16px), so the UI scales with the user's browser font-size
