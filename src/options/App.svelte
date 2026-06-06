@@ -353,8 +353,11 @@
     </section>
 
     <p class="security">
-      <Check size={18} /> Tokens are stored on this device via <b>chrome.storage.local</b>, used
-      read-only, and never synced or logged.
+      <Check size={18} />
+      <span
+        >Tokens are stored on this device via <b>chrome.storage.local</b>, used read-only, and never
+        synced or logged.</span
+      >
     </p>
   </div>
 </div>
