@@ -15,16 +15,16 @@
 <style>
   .permnote {
     display: flex;
-    gap: 9px;
+    gap: var(--space-md);
     align-items: flex-start;
     margin: 0;
-    padding: 10px 12px;
+    padding: var(--space-md) var(--space-lg);
     border: 1px solid var(--border);
     border-radius: var(--radius);
     background: var(--surface-2);
-    font-size: 11.5px;
+    font-size: var(--font-size-sm);
     color: var(--text-2);
-    line-height: 1.5;
+    line-height: var(--leading-relaxed);
   }
   .permnote :global(svg) {
     flex: none;

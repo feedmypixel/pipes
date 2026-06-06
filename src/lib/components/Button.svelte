@@ -26,11 +26,11 @@
   .btn {
     display: inline-flex;
     align-items: center;
-    gap: 7px;
-    padding: 10px 15px;
+    gap: var(--space-sm);
+    padding: var(--space-md) var(--space-2xl);
     border: 1px solid transparent;
     border-radius: var(--radius);
-    font: 650 12.5px/1 var(--font-sans);
+    font: var(--weight-bold) var(--font-size-base) / var(--leading-none) var(--font-sans);
     cursor: pointer;
   }
   .primary {

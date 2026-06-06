@@ -42,34 +42,34 @@
 <style>
   .field {
     display: grid;
-    gap: 6px;
-    margin-bottom: 16px;
+    gap: var(--space-xs);
+    margin-bottom: var(--space-2xl);
   }
   label {
-    font-size: 13px;
-    font-weight: 650;
+    font-size: var(--font-size-base);
+    font-weight: var(--weight-bold);
     color: var(--text);
   }
   .opt {
-    font-weight: 500;
+    font-weight: var(--weight-medium);
     color: var(--text-3);
   }
   .hint {
     margin: 0;
-    font-size: 11.5px;
-    line-height: 1.4;
+    font-size: var(--font-size-xs);
+    line-height: var(--leading-normal);
     color: var(--text-3);
   }
   .ferror {
     margin: 0;
-    font-size: 12px;
-    line-height: 1.4;
+    font-size: var(--font-size-sm);
+    line-height: var(--leading-normal);
     color: var(--failed);
   }
   .below {
     margin: 0;
-    font-size: 11.5px;
-    line-height: 1.4;
+    font-size: var(--font-size-xs);
+    line-height: var(--leading-normal);
   }
   .below.busy {
     color: var(--text-3);

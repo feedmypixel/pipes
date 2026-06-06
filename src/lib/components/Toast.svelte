@@ -33,9 +33,9 @@
   .toast {
     display: flex;
     align-items: flex-start;
-    gap: 11px;
+    gap: var(--space-lg);
     width: var(--toast-width);
-    padding: 12px 13px;
+    padding: var(--space-lg);
     border: 1px solid var(--border);
     border-radius: var(--radius);
     background: var(--surface);
@@ -66,25 +66,25 @@
     flex: 1;
   }
   .toast-title {
-    font-size: 13px;
-    font-weight: 650;
+    font-size: var(--font-size-base);
+    font-weight: var(--weight-bold);
     color: var(--text);
-    line-height: 1.35;
+    line-height: var(--leading-snug);
   }
   .toast-msg {
-    margin-top: 2px;
-    font-size: 12px;
+    margin-top: var(--space-3xs);
+    font-size: var(--font-size-sm);
     color: var(--text-2);
-    line-height: 1.4;
+    line-height: var(--leading-normal);
   }
   .toast-action {
     display: inline-block;
-    margin-top: 8px;
+    margin-top: var(--space-sm);
     padding: 0;
     border: 0;
     background: transparent;
     color: var(--link);
-    font: 650 12px/1 var(--font-sans);
+    font: var(--weight-bold) var(--font-size-sm) / var(--leading-none) var(--font-sans);
     cursor: pointer;
   }
   .toast-action:hover {
@@ -114,7 +114,7 @@
   .toast.undo .toast-main {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: var(--space-sm);
   }
   .toast.undo .toast-title {
     font-weight: 600;
