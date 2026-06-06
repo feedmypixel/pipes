@@ -33,8 +33,11 @@ Authoritative design: `design/v1/README.md` (popup section), `screenshots/01-pop
    `panel-right` (`chrome.sidePanel.open({windowId})` on click), `settings`
    (`chrome.runtime.openOptionsPage()`).
 3. **Group** repos by owner (owner = first segment of `repo.name`); owners A–Z, repos
-   A–Z within. Per repo, show the **default-branch** pipeline as the primary `Row`;
-   collapse other refs under a "Show N other branches" toggle (`chevron-down`).
+   A–Z within. Per repo, show the **default-branch** pipeline as the primary `Row`, plus
+   any non-default branch that is **live or broken** (running / pending / failed) as an
+   always-visible indented child. Collapse only **settled** branches (passed / canceled /
+   skipped) under a "Show N more branches" toggle (`chevron-down`). Rationale: you are
+   usually watching your own feature/PR branch, so it must never be hidden.
 4. **Owner header**: mono lowercase owner + a count chip.
 5. **Alarm strip**: when ≥1 default-branch pipeline is `failed`, a red-tinted strip with
    a pulsing dot + "N failing on `main`" + a "jump" link to the first failing row.
