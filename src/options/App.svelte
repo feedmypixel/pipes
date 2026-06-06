@@ -286,6 +286,16 @@
             oninput={clearTokenIfValid}
           />
         </Field>
+        <details class="token-help">
+          <summary>Minimal token permissions</summary>
+          <ul>
+            <li>
+              <b>GitHub</b> — fine-grained token, <b>Actions: read-only</b> (Metadata is automatic); grant
+              the repos or orgs you want to watch.
+            </li>
+            <li><b>GitLab</b> — personal access token with the <b>read_api</b> scope.</li>
+          </ul>
+        </details>
         <div class="note-row"><PermissionNote /></div>
         <div class="button-group">
           <Button variant="primary" {submitting} onclick={addConnection}>
@@ -524,6 +534,27 @@
     color: var(--text);
   }
 
+  .token-help {
+    margin-top: var(--space-sm);
+    font-size: var(--font-size-sm);
+    color: var(--text-2);
+  }
+  .token-help summary {
+    cursor: pointer;
+    color: var(--text-3);
+    font-size: var(--font-size-xs);
+  }
+  .token-help ul {
+    margin: var(--space-sm) 0 0;
+    padding-left: var(--space-xl);
+    display: grid;
+    gap: var(--space-xs);
+    line-height: var(--leading-normal);
+  }
+  .token-help b {
+    color: var(--text);
+    font-weight: var(--weight-semibold);
+  }
   .note-row {
     margin-top: var(--space-lg);
   }
