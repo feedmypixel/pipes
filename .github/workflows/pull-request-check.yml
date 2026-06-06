@@ -26,6 +26,10 @@ jobs:
 
       - run: pnpm install --frozen-lockfile
 
+      # The browser vitest project renders components in Chromium.
+      - if: matrix.task == 'test'
+        run: pnpm exec playwright install --with-deps chromium
+
       - run: pnpm ${{ matrix.task }}
     # NOTE: `pnpm build` is not a check yet; surface entry points
     # (src/popup/index.html etc.) arrive with the foundation/popup PRDs.
