@@ -13,8 +13,8 @@ There is no single global stylesheet — an extension has a separate HTML entry 
 1. **`tokens.css`** — the single source of truth for _values_: colours (per theme), and the
    rem **scales** (space, font-size, line-height, weight, radii). Nothing else may hard-code a
    scale value.
-2. **`base.css`** — reset + element defaults (Josh Comeau's reset, trimmed for desktop Chrome)
-   - body type from tokens.
+2. **`base.css`** — Josh Comeau's reset (trimmed for desktop Chrome) plus element defaults and
+   body type from tokens.
 3. **`a11y.css`** — accessibility helpers only (`.visually-hidden`).
 4. **Component scoped `<style>`** — everything else. Each component owns its chrome, built from
    tokens. No global utility classes inside components; no global form/toast stylesheet.
