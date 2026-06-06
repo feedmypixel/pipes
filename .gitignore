@@ -5,6 +5,10 @@ node_modules/
 dist/
 *.zip
 
+# Test artifacts (browser-project attachments: screenshots/traces)
+.vitest-attachments/
+coverage/
+
 # Editor / OS
 .DS_Store
 .idea/
