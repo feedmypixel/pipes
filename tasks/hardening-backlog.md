@@ -31,6 +31,11 @@ product). Captured so nothing is lost.
   surface PRD.
 - **E2E** — thin Playwright smoke layer (load built `dist/` via `--load-extension`,
   route-mock the provider APIs, never real tokens). Arrives with the first surface.
+- **Visual regression** — automate the screenshot pass currently done by hand (popup / options /
+  showcase, light + dark). Playwright `toHaveScreenshot` baselines, driven via the showcase +
+  the dev-chrome shim (or `--load-extension`); forces the theme with `data-theme`. Catches the
+  unintended-shift class of bug (e.g. the CSS-arch snaps) that unit tests can't. Pin to the
+  `browser` vitest project's Chromium so CI has one browser. Gate at a tolerance, not pixel-exact.
 
 ## Code structure (from the earlier hardening discussion)
 
