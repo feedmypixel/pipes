@@ -3,7 +3,6 @@
   import Plus from '@lucide/svelte/icons/plus'
   import Trash2 from '@lucide/svelte/icons/trash-2'
   import Check from '@lucide/svelte/icons/check'
-  import Lock from '@lucide/svelte/icons/lock'
   import Search from '@lucide/svelte/icons/search'
   import Zap from '@lucide/svelte/icons/zap'
   import GitBranch from '@lucide/svelte/icons/git-branch'
@@ -16,6 +15,8 @@
   import PasswordInput from '../lib/components/forms/PasswordInput.svelte'
   import FormSummary from '../lib/components/forms/FormSummary.svelte'
   import Banner from '../lib/components/Banner.svelte'
+  import Button from '../lib/components/Button.svelte'
+  import PermissionNote from '../lib/components/PermissionNote.svelte'
   import ToastHost from '../lib/components/ToastHost.svelte'
   import { toastSuccess, toastUndo } from '../lib/toasts.svelte'
 
@@ -266,23 +267,15 @@
             oninput={clearTokenIfValid}
           />
         </Field>
-        <p class="permnote">
-          <Lock size={15} /> Self-hosted hosts request permission when you validate. Tokens stay on this
-          device.
-        </p>
+        <div class="note-row"><PermissionNote /></div>
         <div class="button-group">
-          <button
-            class="btn btn-primary"
-            class:submitting
-            disabled={submitting}
-            onclick={addConnection}
-          >
-            {#if !submitting}<Plus size={14} />{/if}
+          <Button variant="primary" {submitting} onclick={addConnection}>
+            <Plus size={14} />
             {submitting ? 'Adding connection…' : 'Add connection'}
-          </button>
-          <button class="btn btn-secondary" disabled={submitting} onclick={validate}>
+          </Button>
+          <Button variant="secondary" disabled={submitting} onclick={validate}>
             <Zap size={14} /> Validate
-          </button>
+          </Button>
         </div>
       </div>
     </section>
@@ -484,8 +477,14 @@
     color: var(--text);
   }
 
-  .permnote {
-    margin: 4px 0 0;
+  .note-row {
+    margin-top: 12px;
+  }
+  .button-group {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    margin-top: 16px;
   }
 
   .repo-search {

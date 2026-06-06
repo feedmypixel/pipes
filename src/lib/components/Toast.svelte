@@ -28,3 +28,103 @@
   </div>
   <button class="toast-close" aria-label="Dismiss" onclick={onclose}><X size={14} /></button>
 </div>
+
+<style>
+  .toast {
+    display: flex;
+    align-items: flex-start;
+    gap: 11px;
+    width: var(--toast-width);
+    padding: 12px 13px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: var(--surface);
+    box-shadow: var(--shadow-lg);
+    animation: toast-in 0.22s cubic-bezier(0.2, 0.7, 0.3, 1) both;
+  }
+  @keyframes toast-in {
+    from {
+      opacity: 0;
+      transform: translateY(8px) scale(0.98);
+    }
+  }
+  /* tinted fill derived from the status colour (themed in tokens.css) */
+  .toast.success {
+    background: var(--toast-success-fill);
+    border-color: var(--toast-success-edge);
+  }
+  .toast.error {
+    background: var(--toast-error-fill);
+    border-color: var(--toast-error-edge);
+  }
+  .toast.info {
+    background: var(--toast-info-fill);
+    border-color: var(--toast-info-edge);
+  }
+  .toast-main {
+    min-width: 0;
+    flex: 1;
+  }
+  .toast-title {
+    font-size: 13px;
+    font-weight: 650;
+    color: var(--text);
+    line-height: 1.35;
+  }
+  .toast-msg {
+    margin-top: 2px;
+    font-size: 12px;
+    color: var(--text-2);
+    line-height: 1.4;
+  }
+  .toast-action {
+    display: inline-block;
+    margin-top: 8px;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: var(--link);
+    font: 650 12px/1 var(--font-sans);
+    cursor: pointer;
+  }
+  .toast-action:hover {
+    text-decoration: underline;
+  }
+  .toast-close {
+    flex: none;
+    display: grid;
+    place-items: center;
+    width: 22px;
+    height: 22px;
+    padding: 0;
+    border: 0;
+    border-radius: var(--radius-pill);
+    background: transparent;
+    color: var(--text-3);
+    line-height: 0;
+    cursor: pointer;
+  }
+  .toast-close:hover {
+    background: var(--hover);
+    color: var(--text);
+  }
+  .toast.undo {
+    align-items: center;
+  }
+  .toast.undo .toast-main {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .toast.undo .toast-title {
+    font-weight: 600;
+  }
+  .toast.undo .toast-action {
+    margin-top: 0;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .toast {
+      animation: none;
+    }
+  }
+</style>

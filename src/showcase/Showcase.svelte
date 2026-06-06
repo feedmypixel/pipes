@@ -13,7 +13,9 @@
   import Toast from '../lib/components/Toast.svelte'
   import { toastSuccess, toastError, toastInfo, toastUndo } from '../lib/toasts.svelte'
   import type { ToastItem } from '../lib/toasts.svelte'
-  import Lock from '@lucide/svelte/icons/lock'
+  import Button from '../lib/components/Button.svelte'
+  import PermissionNote from '../lib/components/PermissionNote.svelte'
+  import Plus from '@lucide/svelte/icons/plus'
 
   type ThemeChoice = 'auto' | 'light' | 'dark'
   const themeChoices: ThemeChoice[] = ['auto', 'light', 'dark']
@@ -228,23 +230,25 @@
       />
     </Field>
     <div class="button-group">
-      <button
-        type="button"
-        class="btn btn-primary"
-        class:submitting={demoSubmitting}
-        disabled={demoSubmitting}
-        onclick={demoSubmit}
-      >
+      <Button variant="primary" submitting={demoSubmitting} onclick={demoSubmit}>
         {demoSubmitting ? 'Saving…' : 'Submit'}
-      </button>
+      </Button>
+    </div>
+  </section>
+
+  <section>
+    <p class="eyebrow">Buttons</p>
+    <div class="button-group">
+      <Button variant="primary"><Plus size={14} /> Add connection</Button>
+      <Button variant="secondary">Validate</Button>
+      <Button variant="primary" submitting>Adding connection…</Button>
+      <Button variant="primary" disabled>Disabled</Button>
     </div>
   </section>
 
   <section>
     <p class="eyebrow">Permission note</p>
-    <p class="permnote">
-      <Lock size={15} /> Self-hosted hosts request permission when you validate. Tokens stay on this device.
-    </p>
+    <PermissionNote />
   </section>
 
   <section>
@@ -406,6 +410,13 @@
     display: flex;
     flex-direction: column;
     gap: 12px;
+  }
+  .button-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+    margin-top: 16px;
   }
   .toast-statics {
     display: flex;

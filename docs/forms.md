@@ -2,8 +2,8 @@
 
 How Pipes builds forms and feedback. The implementation contract is `design/v2/FORMS.md`
 (the spec) + the portal `forms.md` conventions; this documents what shipped and how to use it.
-Styling lives in `src/lib/styles/forms.css` (a small global system stylesheet — the one place
-form/banner/toast chrome is defined), driven by tokens in `tokens.css`.
+Each component owns its styling in a scoped `<style>` (no global form stylesheet); only design
+tokens in `tokens.css` are shared. A component renders correctly with zero global classes.
 
 See every state live: the component showcase at `http://localhost:5173/src/showcase/`
 (`pnpm dev`), light + dark via the theme switcher.
