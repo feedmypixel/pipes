@@ -59,6 +59,11 @@
   --appbar-text: #f4f6fb;
   --appbar-muted: #9aa3b2;
   --appbar-hover: rgb(255 255 255 / 8%);
+
+  /* toasts */
+  --toast-z: 2147483000;
+  --toast-gap: 10px;
+  --toast-width: 320px;
 }
 
 /* dark, automatic from the OS unless a theme is forced */
