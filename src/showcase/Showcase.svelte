@@ -4,6 +4,13 @@
   import RefChip from '../lib/components/RefChip.svelte'
   import RelativeTime from '../lib/components/RelativeTime.svelte'
   import Row from '../lib/components/Row.svelte'
+  import Field from '../lib/components/forms/Field.svelte'
+  import Input from '../lib/components/forms/Input.svelte'
+  import PasswordInput from '../lib/components/forms/PasswordInput.svelte'
+  import FormSummary from '../lib/components/forms/FormSummary.svelte'
+  import Banner from '../lib/components/Banner.svelte'
+  import ToastHost from '../lib/components/ToastHost.svelte'
+  import { toastSuccess, toastError, toastInfo, toastUndo } from '../lib/toasts.svelte'
 
   type ThemeChoice = 'auto' | 'light' | 'dark'
   const themeChoices: ThemeChoice[] = ['auto', 'light', 'dark']
@@ -75,6 +82,15 @@
     { name: 'pixel-cli', pipeline: pipeline('running', 'main', true, 1), dense: true },
     { name: 'database', pipeline: pipeline('failed', 'main', true, 30), dense: true }
   ]
+
+  let goodHost = $state('github.com')
+  let goodToken = $state('ghp_xxxxxxxxxxxx')
+  let badHost = $state('')
+  let badToken = $state('')
+  const summaryErrors = [
+    { name: 'host', message: 'Enter a host' },
+    { name: 'token', message: 'Enter a token' }
+  ]
 </script>
 
 <div class="page">
@@ -123,6 +139,77 @@
   </section>
 
   <section>
+    <p class="eyebrow">Forms · valid</p>
+    <Field name="host-ok" label="Host" hint="github.com, gitlab.com, or a self-hosted origin">
+      <Input bind:value={goodHost} type="text" placeholder="github.com" />
+    </Field>
+    <Field
+      name="token-ok"
+      label="Personal access token"
+      hint="read-only scope; never synced, never logged"
+      below={{ state: 'ok', text: 'github.com reachable · token valid' }}
+    >
+      <PasswordInput bind:value={goodToken} autocomplete="new-password" />
+    </Field>
+  </section>
+
+  <section>
+    <p class="eyebrow">Forms · errors</p>
+    <FormSummary errors={summaryErrors} />
+    <Field
+      name="host"
+      label="Host"
+      hint="github.com, gitlab.com, or a self-hosted origin"
+      error="Enter a host"
+    >
+      <Input bind:value={badHost} type="text" placeholder="github.com" />
+    </Field>
+    <Field
+      name="token"
+      label="Personal access token"
+      hint="read-only scope; never synced, never logged"
+      error="Enter a token"
+      below={{ state: 'bad', text: 'Host did not respond' }}
+    >
+      <PasswordInput bind:value={badToken} autocomplete="new-password" />
+    </Field>
+  </section>
+
+  <section>
+    <p class="eyebrow">Banners</p>
+    <div class="stack">
+      <Banner variant="ok">Connection added.</Banner>
+      <Banner variant="err">Could not reach host. Check the origin and try again.</Banner>
+    </div>
+  </section>
+
+  <section>
+    <p class="eyebrow">Toasts</p>
+    <div class="inline">
+      <button type="button" class="demo" onclick={() => toastSuccess('Settings saved')}>
+        success
+      </button>
+      <button
+        type="button"
+        class="demo"
+        onclick={() => toastError('Validation failed', 'Host did not respond')}
+      >
+        error
+      </button>
+      <button type="button" class="demo" onclick={() => toastInfo('Permission requested')}>
+        info
+      </button>
+      <button
+        type="button"
+        class="demo"
+        onclick={() => toastUndo('Connection removed', () => toastSuccess('Restored'))}
+      >
+        undo
+      </button>
+    </div>
+  </section>
+
+  <section>
     <p class="eyebrow">Tokens</p>
     <div class="swatches">
       {#each swatches as token (token)}
@@ -134,6 +221,8 @@
     </div>
   </section>
 </div>
+
+<ToastHost />
 
 <style>
   .page {
@@ -213,6 +302,20 @@
     flex-wrap: wrap;
     align-items: center;
     gap: 16px;
+  }
+  .stack {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .demo {
+    padding: 7px 14px;
+    border: 1px solid var(--border-2);
+    border-radius: var(--radius);
+    background: var(--surface-2);
+    color: var(--text);
+    font-size: 12px;
+    cursor: pointer;
   }
   .swatches {
     display: grid;
