@@ -287,7 +287,7 @@
           />
         </Field>
         <details class="token-help">
-          <summary>Minimal token permissions</summary>
+          <summary>What permissions does my token need?</summary>
           <ul>
             <li>
               <b>GitHub</b> — fine-grained token, <b>Actions: read-only</b> (Metadata is automatic); grant
