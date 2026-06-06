@@ -42,3 +42,13 @@ product). Captured so nothing is lost.
 - **Resilience** — provider `request()`: handle 429 / rate-limit + fetch timeouts.
 - **Notification icon** — use the greyscale logo on notifications (not the green tick).
 - **Prod `web_accessible_resources`** — verify crxjs output isn't over-broad (`<all_urls>`).
+
+## Features (post-build, nice-to-have)
+
+- **Token-expiry warning banner** — a third inline-banner variant (amber, neither error nor
+  success) warning "token expires soon" on a connection. Design's inline banner is `ok`/`err`
+  only by intent; this adds a `warn` variant + token + wires the `warning` MessageIcon glyph
+  (already exists). Needs: read the PAT expiry (GitHub exposes it via the
+  `github-authentication-token-expiration` response header; GitLab `/personal_access_tokens`
+  has `expires_at`), threshold, and the banner on the connection row. Own follow-up PRD/task
+  after the core surfaces are built.
