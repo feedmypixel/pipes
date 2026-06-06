@@ -1,4 +1,12 @@
-import { groupByOwner, groupReposByOwner, sortGroups, countDefaultBranchFailures } from './group'
+import {
+  groupByOwner,
+  groupReposByOwner,
+  sortGroups,
+  visibleBranches,
+  PROBLEM_STATES,
+  ALL_BRANCH_STATES,
+  countDefaultBranchFailures
+} from './group'
 import type { Pipeline, PipelineStatus, Repo } from '../providers/types'
 import type { Snapshots } from './storage'
 
@@ -59,6 +67,25 @@ test('sortGroups status floats failing repos + their groups to the top', () => {
     snapshots
   )
   expect(sortGroups(groups, 'status').map((g) => g.owner)).toEqual(['zeta', 'alpha'])
+})
+
+test('visibleBranches: filters non-default branches by state, newest first', () => {
+  const snapshots: Snapshots = {
+    'o/r': [
+      pipe('main', 'failed', true, '2026-06-06T10:00:00Z'),
+      pipe('feat-pass', 'success', false, '2026-06-06T09:00:00Z'),
+      pipe('feat-run', 'running', false, '2026-06-06T08:00:00Z'),
+      pipe('feat-skip', 'skipped', false, '2026-06-06T07:00:00Z')
+    ]
+  }
+  const view = groupByOwner([repo('o/r', 'o/r')], snapshots)[0].repos[0]
+  // problems-only excludes the passing + skipped branches, and never the default branch.
+  expect(visibleBranches(view, PROBLEM_STATES).map((p) => p.ref)).toEqual(['feat-run'])
+  expect(visibleBranches(view, ALL_BRANCH_STATES).map((p) => p.ref)).toEqual([
+    'feat-pass',
+    'feat-run',
+    'feat-skip'
+  ])
 })
 
 test('splits primary, active (live/broken), and collapsed (settled), newest first', () => {
