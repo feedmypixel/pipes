@@ -19,7 +19,7 @@
 
 <style>
   .rel {
-    font: 500 11px/1 var(--font-mono);
+    font: var(--weight-medium) var(--font-size-xs) / var(--leading-none) var(--font-mono);
     color: var(--text-3);
     white-space: nowrap;
   }

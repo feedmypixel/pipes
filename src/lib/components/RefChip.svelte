@@ -13,10 +13,10 @@
   .ref {
     display: inline-flex;
     align-items: center;
-    gap: 4px;
+    gap: var(--space-2xs);
     min-width: 0;
     max-width: 160px;
-    font: 500 11px/1 var(--font-mono);
+    font: var(--weight-medium) var(--font-size-xs) / var(--leading-none) var(--font-mono);
     color: var(--text-2);
   }
   .ref :global(svg) {
