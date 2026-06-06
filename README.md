@@ -69,6 +69,9 @@ Nothing is sent anywhere except your configured GitHub/GitLab hosts.
 **Styling** (tokens, theming, conventions): see
 [`src/lib/styles/README.md`](src/lib/styles/README.md).
 
+**Forms & in-app notifications** (components, validation, banners/toasts): see
+[`docs/forms.md`](docs/forms.md).
+
 ---
 
 ## Develop

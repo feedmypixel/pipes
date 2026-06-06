@@ -129,8 +129,9 @@ and nothing is injected at build time.
 
 - Vitest globals enabled: do not import `describe`/`test`/`expect`. Use `test`, not `it`.
 - Tests sit beside source (`foo.ts` ↔ `foo.test.ts`). Light types in tests.
-- Pure logic is unit-tested (provider status maps, poll decisions). Component tests arrive
-  with `@vitest/browser` when surfaces land; don't add the browser project before then.
+- Two vitest projects: **`unit`** (node) for pure logic (provider status maps, poll decisions),
+  **`browser`** (`@vitest/browser` + Playwright chromium via `vitest-browser-svelte`) for
+  component + rune-store tests, named `*.svelte.test.ts`. `pnpm test` runs both.
 
 ## Styling
 

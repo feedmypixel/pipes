@@ -30,6 +30,12 @@ importers:
       '@types/chrome':
         specifier: 0.1.42
         version: 0.1.42
+      '@vitest/browser':
+        specifier: 4.1.8
+        version: 4.1.8(vite@6.4.3(lightningcss@1.32.0)(yaml@2.9.0))(vitest@4.1.8)
+      '@vitest/browser-playwright':
+        specifier: 4.1.8
+        version: 4.1.8(playwright@1.60.0)(vite@6.4.3(lightningcss@1.32.0)(yaml@2.9.0))(vitest@4.1.8)
       eslint:
         specifier: 10.4.0
         version: 10.4.0
@@ -51,6 +57,9 @@ importers:
       lint-staged:
         specifier: 17.0.7
         version: 17.0.7
+      playwright:
+        specifier: 1.60.0
+        version: 1.60.0
       prettier:
         specifier: 3.8.3
         version: 3.8.3
@@ -77,9 +86,15 @@ importers:
         version: 6.4.3(lightningcss@1.32.0)(yaml@2.9.0)
       vitest:
         specifier: 4.1.8
-        version: 4.1.8(vite@6.4.3(lightningcss@1.32.0)(yaml@2.9.0))
+        version: 4.1.8(@vitest/browser-playwright@4.1.8)(vite@6.4.3(lightningcss@1.32.0)(yaml@2.9.0))
+      vitest-browser-svelte:
+        specifier: 2.1.1
+        version: 2.1.1(svelte@5.56.2(@typescript-eslint/types@8.60.0))(vitest@4.1.8)
 
 packages:
+
+  '@blazediff/core@1.9.1':
+    resolution: {integrity: sha512-ehg3jIkYKulZh+8om/O25vkvSsXXwC+skXmyA87FFx6A/45eqOkZsBltMw/TVteb0mloiGT8oGRTcjRAz66zaA==}
 
   '@crxjs/vite-plugin@2.4.0':
     resolution: {integrity: sha512-bDLdq0W2V1SkMQDJjrcYyjK9/uKtdl4joT7GRImcootCjZdKRiRYt+cv9z8tJoU/tK3o1lX48LTqN7JMsk5AQg==}
@@ -499,6 +514,9 @@ packages:
     resolution: {integrity: sha512-oGB+UxlgWcgQkgwo8GcEGwemoTFt3FIO9ababBmaGwXIoBKZ+GTy0pP185beGg7Llih/NSHSV2XAs1lnznocSg==}
     engines: {node: '>= 8'}
 
+  '@polka/url@1.0.0-next.29':
+    resolution: {integrity: sha512-wwQAWhWSuHaag8c4q/KN/vCoeOJYshAIvMQwD4GpSb3OiZklFfvAgmj0VCBBImRpuF/aFgIRzllXlVX93Jevww==}
+
   '@rollup/pluginutils@4.2.1':
     resolution: {integrity: sha512-iKnFXr7NkdZAIHiIWE+BX5ULi/ucVFYWD6TbAV+rZctiRTY2PL6tsIKhoIOaoskiWAkgu+VsbXgUVDNLHf+InQ==}
     engines: {node: '>= 8.0.0'}
@@ -668,6 +686,12 @@ packages:
       svelte: ^5.0.0
       vite: ^6.0.0
 
+  '@testing-library/svelte-core@1.0.0':
+    resolution: {integrity: sha512-VkUePoLV6oOYwSUvX6ShA8KLnJqZiYMIbP2JW2t0GLWLkJxKGvuH5qrrZBV/X7cXFnLGuFQEC7RheYiZOW68KQ==}
+    engines: {node: '>=16'}
+    peerDependencies:
+      svelte: ^3 || ^4 || ^5 || ^5.0.0-next.0
+
   '@tsconfig/svelte@5.0.8':
     resolution: {integrity: sha512-UkNnw1/oFEfecR8ypyHIQuWYdkPvHiwcQ78sh+ymIiYoF+uc5H1UBetbjyqT+vgGJ3qQN6nhucJviX6HesWtKQ==}
 
@@ -759,6 +783,17 @@ packages:
   '@typescript-eslint/visitor-keys@8.60.0':
     resolution: {integrity: sha512-9WI52t8ZGLVGrPMBet25yAftqY/n95+zmoUUtJBBQTKDSKUu7OsPTroT2op7U9JatkoRccL0YkWDNMFfC4Sjxg==}
     engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
+
+  '@vitest/browser-playwright@4.1.8':
+    resolution: {integrity: sha512-SR7FqgegaexEg73xvf3ArtygXegagMdXnL0EZMpxrWvvhQxvicD/E8p0ib0J91riPRtQUViyh67Xjw3NqvyhVg==}
+    peerDependencies:
+      playwright: '*'
+      vitest: 4.1.8
+
+  '@vitest/browser@4.1.8':
+    resolution: {integrity: sha512-u21VzX07HzlJYpFgkxmjEXar/tG2UqWGgyGG/46SrrPc7rSdCTPw5vuowopO9CIqF8UCUQzDFdbVnNpw6N0BfQ==}
+    peerDependencies:
+      vitest: 4.1.8
 
   '@vitest/expect@4.1.8':
     resolution: {integrity: sha512-h3nDO677RDLEGlBxyQ5CW8RlMThSKSRLUePLOx09gNIWRL40edgA1GCZSZgf1W55MFAG6/Sw14KeaAnqv0NKdQ==}
@@ -1098,6 +1133,11 @@ packages:
     resolution: {integrity: sha512-oRXApq54ETRj4eMiFzGnHWGy+zo5raudjuxN0b8H7s/RU2oW0Wvsx9O0ACRN/kRq9E8Vu/ReskGB5o3ji+FzHQ==}
     engines: {node: '>=12'}
 
+  fsevents@2.3.2:
+    resolution: {integrity: sha512-xiqMQR4xAeHTuB9uWm+fFRcIOgKBMiOBP+eXiyT7jsgVCq1bkVygt00oASowB7EdtpOHaaPgKt812P9ab+DDKA==}
+    engines: {node: ^8.16.0 || ^10.6.0 || >=11.0.0}
+    os: [darwin]
+
   fsevents@2.3.3:
     resolution: {integrity: sha512-5xoDfX+fL7faATnagmWPpbFtwh/R77WmMMqqHGS65C3vvB0YHrgF+B1YmZ3441tMj5n63k0212XNoJwzlhffQw==}
     engines: {node: ^8.16.0 || ^10.6.0 || >=11.0.0}
@@ -1321,6 +1361,10 @@ packages:
     resolution: {integrity: sha512-tzzskb3bG8LvYGFF/mDTpq3jpI6Q9wc3LEmBaghu+DdCssd1FakN7Bc0hVNmEyGq1bq3RgfkCb3cmQLpNPOroA==}
     engines: {node: '>=4'}
 
+  mrmime@2.0.1:
+    resolution: {integrity: sha512-Y3wQdFg2Va6etvQ5I82yUhGdsKrcYox6p7FfL1LbK2J4V01F9TGlepTIhnK24t7koZibmg82KGglhA1XK5IsLQ==}
+    engines: {node: '>=10'}
+
   ms@2.1.3:
     resolution: {integrity: sha512-6FlzubTLZG3J2a/NVCAleEhjzq5oxgHyaCU9yYXvcLsvoVaHJq/s5xXI6/XXP6tz7R9xAOtHnSO/tXtF3WRTlA==}
 
@@ -1379,6 +1423,20 @@ packages:
   picomatch@4.0.4:
     resolution: {integrity: sha512-QP88BAKvMam/3NxH6vj2o21R6MjxZUAd6nlwAS/pnGvN9IVLocLHxGYIzFhg6fUQ+5th6P4dv4eW9jX3DSIj7A==}
     engines: {node: '>=12'}
+
+  playwright-core@1.60.0:
+    resolution: {integrity: sha512-9bW6zvX/m0lEbgTKJ6YppOKx8H3VOPBMOCFh2irXFOT4BbHgrx5hPjwJYLT40Lu+4qtD36qKc/Hn56StUW57IA==}
+    engines: {node: '>=18'}
+    hasBin: true
+
+  playwright@1.60.0:
+    resolution: {integrity: sha512-hheHdokM8cdqCb0lcE3s+zT4t4W+vvjpGxsZlDnikarzx8tSzMebh3UiFtgqwFwnTnjYQcsyMF8ei2mCO/tpeA==}
+    engines: {node: '>=18'}
+    hasBin: true
+
+  pngjs@7.0.0:
+    resolution: {integrity: sha512-LKWqWJRhstyYo9pGvgor/ivk2w94eSjE3RGVuzLGlr3NmD8bf7RcYGze1mNdEHRP6TRP6rMuDHk5t44hnTRyow==}
+    engines: {node: '>=14.19.0'}
 
   postcss-load-config@3.1.4:
     resolution: {integrity: sha512-6DiM4E7v4coTE4uzA8U//WhtPwyhiim3eyjEMFCnUpzbrkK9wJHgKDT2mR+HbtSrd/NubVaYTOpSpjUl8NQeRg==}
@@ -1504,6 +1562,10 @@ packages:
     resolution: {integrity: sha512-bzyZ1e88w9O1iNJbKnOlvYTrWPDl46O1bG0D3XInv+9tkPrxrN8jUUTiFlDkkmKWgn1M6CfIA13SuGqOa9Korw==}
     engines: {node: '>=14'}
 
+  sirv@3.0.2:
+    resolution: {integrity: sha512-2wcC/oGxHis/BoHkkPwldgiPSYcpZK3JU28WoMVv55yHJgcZ8rlXvuG9iZggz+sU1d4bRgIGASwyWqjxu3FM0g==}
+    engines: {node: '>=18'}
+
   slice-ansi@7.1.2:
     resolution: {integrity: sha512-iOBWFgUX7caIZiuutICxVgX1SdxwAVFFKwt1EvMYYec/NWO5meOJ6K5uQxhrYBdQJne4KxiqZc+KptFOWFSI9w==}
     engines: {node: '>=18'}
@@ -1577,6 +1639,10 @@ packages:
   to-regex-range@5.0.1:
     resolution: {integrity: sha512-65P7iz6X5yEr1cwcgvQxbbIw7Uk3gOy5dIdtZ4rDveLqhrdJP+Li/Hx6tyK0NEb+2GCyneCMJiGqrADCSNk8sQ==}
     engines: {node: '>=8.0'}
+
+  totalist@3.0.1:
+    resolution: {integrity: sha512-sf4i37nQ2LBx4m3wB74y+ubopq6W/dIzXg0FDGjsYnZHVa1Da8FH853wlL2gtUhg+xJXjfk3kUZS3BRoQeoQBQ==}
+    engines: {node: '>=6'}
 
   ts-api-utils@2.5.0:
     resolution: {integrity: sha512-OJ/ibxhPlqrMM0UiNHJ/0CKQkoKF243/AEmplt3qpRgkW8VG7IfOS41h7V8TjITqdByHzrjcS/2si+y4lIh8NA==}
@@ -1661,6 +1727,12 @@ packages:
       vite:
         optional: true
 
+  vitest-browser-svelte@2.1.1:
+    resolution: {integrity: sha512-qbunYRSm+N92r9bfTkdDTpBZESLmp4QFz2SluV3n/x8U7ysosfeXYJZ4vXbJ0Y0LzoqqDnV5LHprmFgn4Eo+Ug==}
+    peerDependencies:
+      svelte: ^3 || ^4 || ^5 || ^5.0.0-next.0
+      vitest: ^4.0.0
+
   vitest@4.1.8:
     resolution: {integrity: sha512-flY6ScbCIt9HThs+C5HS7jvGOB560DJtk/Z15IQROTA6zEy49Nh8T/dofWTQL+n3vswqn87sbJNiuqw1SDp5Ig==}
     engines: {node: ^20.0.0 || ^22.0.0 || >=24.0.0}
@@ -1724,6 +1796,18 @@ packages:
     resolution: {integrity: sha512-42AtmgqjV+X1VpdOfyTGOYRi0/zsoLqtXQckTmqTeybT+BDIbM/Guxo7x3pE2vtpr1ok6xRqM9OpBe+Jyoqyww==}
     engines: {node: '>=18'}
 
+  ws@8.21.0:
+    resolution: {integrity: sha512-Vsp28b7DRcimFQvrqu2Wek3z1iYxDCWqHYB8Qsnk/S4RfaCQzPGPyBNuVjJV3cd6UiKtUtp6sNM77gWvzcCH+g==}
+    engines: {node: '>=10.0.0'}
+    peerDependencies:
+      bufferutil: ^4.0.1
+      utf-8-validate: '>=5.0.2'
+    peerDependenciesMeta:
+      bufferutil:
+        optional: true
+      utf-8-validate:
+        optional: true
+
   yaml@1.10.3:
     resolution: {integrity: sha512-vIYeF1u3CjlhAFekPPAk2h/Kv4T3mAkMox5OymRiJQB0spDP10LHvt+K7G9Ny6NuuMAb25/6n1qyUjAcGNf/AA==}
     engines: {node: '>= 6'}
@@ -1741,6 +1825,8 @@ packages:
     resolution: {integrity: sha512-B58NGBEoc8Y9MWWCQGl/gq9xBCe4IiKM0a2x7GZdQKOW5Exr8S1W24J6OgM1njK8xCRGvAJIL/MxXHf6SkmQKQ==}
 
 snapshots:
+
+  '@blazediff/core@1.9.1': {}
 
   '@crxjs/vite-plugin@2.4.0(vite@6.4.3(lightningcss@1.32.0)(yaml@2.9.0))':
     dependencies:
@@ -2034,6 +2120,8 @@ snapshots:
       '@nodelib/fs.scandir': 2.1.5
       fastq: 1.20.1
 
+  '@polka/url@1.0.0-next.29': {}
+
   '@rollup/pluginutils@4.2.1':
     dependencies:
       estree-walker: 2.0.2
@@ -2143,6 +2231,10 @@ snapshots:
       vitefu: 1.1.3(vite@6.4.3(lightningcss@1.32.0)(yaml@2.9.0))
     transitivePeerDependencies:
       - supports-color
+
+  '@testing-library/svelte-core@1.0.0(svelte@5.56.2(@typescript-eslint/types@8.60.0))':
+    dependencies:
+      svelte: 5.56.2(@typescript-eslint/types@8.60.0)
 
   '@tsconfig/svelte@5.0.8': {}
 
@@ -2264,6 +2356,36 @@ snapshots:
     dependencies:
       '@typescript-eslint/types': 8.60.0
       eslint-visitor-keys: 5.0.1
+
+  '@vitest/browser-playwright@4.1.8(playwright@1.60.0)(vite@6.4.3(lightningcss@1.32.0)(yaml@2.9.0))(vitest@4.1.8)':
+    dependencies:
+      '@vitest/browser': 4.1.8(vite@6.4.3(lightningcss@1.32.0)(yaml@2.9.0))(vitest@4.1.8)
+      '@vitest/mocker': 4.1.8(vite@6.4.3(lightningcss@1.32.0)(yaml@2.9.0))
+      playwright: 1.60.0
+      tinyrainbow: 3.1.0
+      vitest: 4.1.8(@vitest/browser-playwright@4.1.8)(vite@6.4.3(lightningcss@1.32.0)(yaml@2.9.0))
+    transitivePeerDependencies:
+      - bufferutil
+      - msw
+      - utf-8-validate
+      - vite
+
+  '@vitest/browser@4.1.8(vite@6.4.3(lightningcss@1.32.0)(yaml@2.9.0))(vitest@4.1.8)':
+    dependencies:
+      '@blazediff/core': 1.9.1
+      '@vitest/mocker': 4.1.8(vite@6.4.3(lightningcss@1.32.0)(yaml@2.9.0))
+      '@vitest/utils': 4.1.8
+      magic-string: 0.30.21
+      pngjs: 7.0.0
+      sirv: 3.0.2
+      tinyrainbow: 3.1.0
+      vitest: 4.1.8(@vitest/browser-playwright@4.1.8)(vite@6.4.3(lightningcss@1.32.0)(yaml@2.9.0))
+      ws: 8.21.0
+    transitivePeerDependencies:
+      - bufferutil
+      - msw
+      - utf-8-validate
+      - vite
 
   '@vitest/expect@4.1.8':
     dependencies:
@@ -2630,6 +2752,9 @@ snapshots:
       jsonfile: 6.2.1
       universalify: 2.0.1
 
+  fsevents@2.3.2:
+    optional: true
+
   fsevents@2.3.3:
     optional: true
 
@@ -2806,6 +2931,8 @@ snapshots:
 
   mri@1.2.0: {}
 
+  mrmime@2.0.1: {}
+
   ms@2.1.3: {}
 
   nanoid@3.3.12: {}
@@ -2855,6 +2982,16 @@ snapshots:
   picomatch@2.3.2: {}
 
   picomatch@4.0.4: {}
+
+  playwright-core@1.60.0: {}
+
+  playwright@1.60.0:
+    dependencies:
+      playwright-core: 1.60.0
+    optionalDependencies:
+      fsevents: 2.3.2
+
+  pngjs@7.0.0: {}
 
   postcss-load-config@3.1.4(postcss@8.5.15):
     dependencies:
@@ -3004,6 +3141,12 @@ snapshots:
 
   signal-exit@4.1.0: {}
 
+  sirv@3.0.2:
+    dependencies:
+      '@polka/url': 1.0.0-next.29
+      mrmime: 2.0.1
+      totalist: 3.0.1
+
   slice-ansi@7.1.2:
     dependencies:
       ansi-styles: 6.2.3
@@ -3098,6 +3241,8 @@ snapshots:
     dependencies:
       is-number: 7.0.0
 
+  totalist@3.0.1: {}
+
   ts-api-utils@2.5.0(typescript@6.0.3):
     dependencies:
       typescript: 6.0.3
@@ -3146,7 +3291,13 @@ snapshots:
     optionalDependencies:
       vite: 6.4.3(lightningcss@1.32.0)(yaml@2.9.0)
 
-  vitest@4.1.8(vite@6.4.3(lightningcss@1.32.0)(yaml@2.9.0)):
+  vitest-browser-svelte@2.1.1(svelte@5.56.2(@typescript-eslint/types@8.60.0))(vitest@4.1.8):
+    dependencies:
+      '@testing-library/svelte-core': 1.0.0(svelte@5.56.2(@typescript-eslint/types@8.60.0))
+      svelte: 5.56.2(@typescript-eslint/types@8.60.0)
+      vitest: 4.1.8(@vitest/browser-playwright@4.1.8)(vite@6.4.3(lightningcss@1.32.0)(yaml@2.9.0))
+
+  vitest@4.1.8(@vitest/browser-playwright@4.1.8)(vite@6.4.3(lightningcss@1.32.0)(yaml@2.9.0)):
     dependencies:
       '@vitest/expect': 4.1.8
       '@vitest/mocker': 4.1.8(vite@6.4.3(lightningcss@1.32.0)(yaml@2.9.0))
@@ -3168,6 +3319,8 @@ snapshots:
       tinyrainbow: 3.1.0
       vite: 6.4.3(lightningcss@1.32.0)(yaml@2.9.0)
       why-is-node-running: 2.3.0
+    optionalDependencies:
+      '@vitest/browser-playwright': 4.1.8(playwright@1.60.0)(vite@6.4.3(lightningcss@1.32.0)(yaml@2.9.0))(vitest@4.1.8)
     transitivePeerDependencies:
       - msw
 
@@ -3193,6 +3346,8 @@ snapshots:
       ansi-styles: 6.2.3
       string-width: 7.2.0
       strip-ansi: 7.2.0
+
+  ws@8.21.0: {}
 
   yaml@1.10.3: {}
 
