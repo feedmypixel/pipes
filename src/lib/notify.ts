@@ -20,6 +20,11 @@ interface NotifyArgs {
   pipeline: Pipeline
 }
 
+/** Repo name without the owner prefix — the notification is already short on space. */
+function shortName(repo: Repo): string {
+  return repo.name.split('/').pop() ?? repo.name
+}
+
 /** Default-branch failure: sticky, high priority, you can't miss it. */
 export async function notifyMainFailed({ repo, pipeline }: NotifyArgs): Promise<void> {
   const id = `pw-fail-${repo.id}-${pipeline.id}`
@@ -27,8 +32,8 @@ export async function notifyMainFailed({ repo, pipeline }: NotifyArgs): Promise<
   await chrome.notifications.create(id, {
     type: 'basic',
     iconUrl: '/icons/icon-128.png',
-    title: `🔴 ${repo.name} · ${pipeline.ref} failed`,
-    message: pipeline.title,
+    title: `🔴 ${shortName(repo)} · ${pipeline.ref}`,
+    message: 'Default branch failed',
     priority: 2,
     requireInteraction: true
   })
@@ -41,8 +46,8 @@ export async function notifyBranchFailed({ repo, pipeline }: NotifyArgs): Promis
   await chrome.notifications.create(id, {
     type: 'basic',
     iconUrl: '/icons/icon-128.png',
-    title: `❌ ${repo.name} · ${pipeline.ref} failed`,
-    message: pipeline.title,
+    title: `❌ ${shortName(repo)} · ${pipeline.ref}`,
+    message: 'Failed',
     priority: 1
   })
 }
@@ -54,8 +59,8 @@ export async function notifyRecovered({ repo, pipeline }: NotifyArgs): Promise<v
   await chrome.notifications.create(id, {
     type: 'basic',
     iconUrl: '/icons/icon-128.png',
-    title: `✅ ${repo.name} · ${pipeline.ref} passed`,
-    message: pipeline.title,
+    title: `✅ ${shortName(repo)} · ${pipeline.ref}`,
+    message: 'Passed',
     priority: 0
   })
 }

@@ -36,8 +36,8 @@ none over **sound** or **visual style** — the rest is the OS.
 
 | Aspect               | Control | Notes                                                                                                                                                                   |
 | -------------------- | ------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `title`              | full    | We send `<emoji> <repo> · <ref> failed`. The 🔴/❌/✅ emoji are our only "colour".                                                                                      |
-| `message`            | full    | The pipeline title (commit message / workflow name).                                                                                                                    |
+| `title`              | full    | We send `<emoji> <repo> · <ref>` (repo without owner). The 🔴/❌/✅ emoji carry the state.                                                                              |
+| `message`            | full    | One short status line: `Default branch failed` / `Failed` / `Passed`.                                                                                                   |
 | `contextMessage`     | full    | A third greyed line. Unused today (could be `GitHub Actions · 2m ago`).                                                                                                 |
 | `buttons`            | full    | Up to 2 action buttons. Unused today (e.g. Open run / Mute repo).                                                                                                       |
 | `type`               | full    | `basic` today; `list` could group several failures, `image`/`progress` also exist.                                                                                      |
