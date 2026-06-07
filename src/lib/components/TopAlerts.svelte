@@ -1,18 +1,27 @@
 <script lang="ts">
   import TriangleAlert from '@lucide/svelte/icons/triangle-alert'
+  import Clock from '@lucide/svelte/icons/clock'
   import Check from '@lucide/svelte/icons/check'
 
   let {
     connectionIssues,
+    rateLimited = [],
     mainFailing,
     ready,
     onOpenSettings
   }: {
     connectionIssues: { id: string; label: string; error?: string }[]
+    /** Accounts the provider rate-limited; `resumesAt` is epoch seconds. */
+    rateLimited?: { id: string; label: string; resumesAt: number }[]
     mainFailing: number
     ready: boolean
     onOpenSettings: () => void
   } = $props()
+
+  function resumesIn(resumesAt: number): string {
+    const minutes = Math.max(1, Math.ceil((resumesAt * 1000 - Date.now()) / 60_000))
+    return `~${minutes}m`
+  }
 </script>
 
 {#each connectionIssues as issue (issue.id)}
@@ -20,6 +29,13 @@
     <TriangleAlert size={15} />
     <span>{issue.label} connection problem{issue.error ? `: ${issue.error}` : ''}</span>
   </button>
+{/each}
+
+{#each rateLimited as account (account.id)}
+  <div class="rate-limited">
+    <Clock size={15} />
+    <span>{account.label} rate limited — resumes in {resumesIn(account.resumesAt)}</span>
+  </div>
 {/each}
 
 {#if mainFailing > 0}
@@ -38,6 +54,7 @@
 
 <style>
   .issue,
+  .rate-limited,
   .alarm,
   .all-clear {
     display: flex;
@@ -47,8 +64,15 @@
     font-size: var(--font-size-base);
   }
   .issue :global(svg),
+  .rate-limited :global(svg),
   .all-clear :global(svg) {
     flex: none;
+  }
+  .rate-limited {
+    border-bottom: 1px solid var(--neutral-line);
+    background: var(--neutral-bg);
+    color: var(--neutral);
+    font-weight: var(--weight-semibold);
   }
   .issue {
     width: 100%;

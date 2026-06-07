@@ -228,6 +228,17 @@
           onOpenSettings={() => {}}
         />
       </div>
+      <div class="surface-frame">
+        <TopAlerts
+          connectionIssues={[]}
+          rateLimited={[
+            { id: 'r', label: 'work', resumesAt: Math.floor(Date.now() / 1000) + 8 * 60 }
+          ]}
+          mainFailing={0}
+          ready={false}
+          onOpenSettings={() => {}}
+        />
+      </div>
     </div>
   </section>
 
