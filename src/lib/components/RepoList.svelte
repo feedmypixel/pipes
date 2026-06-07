@@ -4,6 +4,7 @@
   import FolderGit2 from '@lucide/svelte/icons/folder-git-2'
   import type { OwnerGroup } from '../group'
   import type { PipelineStatus } from '../../providers/types'
+  import { tooltip } from '../tooltip'
   import RepoCard from './RepoCard.svelte'
 
   let {
@@ -77,7 +78,7 @@
       >
         <ChevronRight class="owner-caret" size={13} />
         <span class="owner-name">{group.owner}</span>
-        <span class="count" title="{group.repos.length} repositories">
+        <span class="count" use:tooltip={`${group.repos.length} repositories`}>
           <FolderGit2 size={12} />
           {group.repos.length}
         </span>
