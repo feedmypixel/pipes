@@ -24,12 +24,20 @@
   import PermissionNote from '../lib/components/PermissionNote.svelte'
   import ToastHost from '../lib/components/ToastHost.svelte'
   import { toastSuccess, toastInfo, toastUndo } from '../lib/toasts.svelte'
+  import {
+    hostForChoice,
+    validateForm,
+    hasErrors,
+    summaryErrors as toSummaryErrors,
+    candidateProviders,
+    accountLabel,
+    type HostChoice
+  } from './account-form'
 
   let accounts = $state<Account[]>([])
   let watchedRepos = $state<Repo[]>([])
   let settings = $state<Settings>({ pollMinutes: 1, notifyOnSuccess: true })
 
-  type HostChoice = 'github' | 'gitlab' | 'self'
   let label = $state('')
   let hostChoice = $state<HostChoice>('github')
   let host = $state<string>(SAAS_HOST.github)
@@ -65,16 +73,11 @@
   })
 
   const watchedIds = $derived(new Set(watchedRepos.map((r) => r.id)))
-  const summaryErrors = $derived(
-    [
-      errors.host ? { name: 'host', message: errors.host } : null,
-      errors.token ? { name: 'token', message: errors.token } : null
-    ].filter((e): e is { name: string; message: string } => e !== null)
-  )
+  const summaryErrors = $derived(toSummaryErrors(errors))
 
   // The select picks the SaaS origin for us; only self-hosted needs the URL field.
   function syncHost() {
-    host = hostChoice === 'self' ? '' : SAAS_HOST[hostChoice]
+    host = hostForChoice(hostChoice)
     errors.host = undefined
     availability = null
     detected = null
@@ -125,8 +128,7 @@
       availability = { state: 'bad', text: 'Permission for this host was declined' }
       return false
     }
-    const saas = saasProvider(origin)
-    const candidates: ProviderId[] = saas ? [saas] : ['github', 'gitlab']
+    const candidates = candidateProviders(saasProvider(origin))
     for (const id of candidates) {
       const result = await getProvider(id).validateToken(tempAccount(id))
       if (result.ok) {
@@ -150,9 +152,8 @@
   }
 
   async function addConnection() {
-    checkHost()
-    checkToken()
-    if (errors.host || errors.token) {
+    errors = validateForm(host, token)
+    if (hasErrors(errors)) {
       document.getElementById(errors.host ? 'host' : 'token')?.focus()
       return
     }
@@ -168,7 +169,7 @@
     const account: Account = {
       id: crypto.randomUUID(),
       provider: detected,
-      label: label.trim() || origin.replace(/^https?:\/\//, ''),
+      label: accountLabel(label, origin),
       host: origin,
       token
     }
