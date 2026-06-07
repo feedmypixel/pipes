@@ -23,15 +23,15 @@ test('maps terminal + in-flight statuses to colour, symbol, label', () => {
   })
 })
 
-test('canceled is neutral, skipped is purple, each with its own symbol', () => {
+test('canceled is neutral; skipped is the ink invert, each with its own symbol', () => {
   expect(statusVisual('canceled').colour).toBe('var(--neutral)')
   expect(statusVisual('canceled').symbol).toBe('slash')
-  expect(statusVisual('skipped').colour).toBe('var(--skipped)')
+  expect(statusVisual('skipped').colour).toBe('var(--text)')
+  expect(statusVisual('skipped').ink).toBe('var(--bg)')
   expect(statusVisual('skipped').symbol).toBe('chevrons')
 })
 
-test('unknown is an ink circle (flips per theme) with a question mark', () => {
-  expect(statusVisual('unknown').colour).toBe('var(--text)')
-  expect(statusVisual('unknown').ink).toBe('var(--bg)')
+test('unknown is a purple question mark', () => {
+  expect(statusVisual('unknown').colour).toBe('var(--unknown)')
   expect(statusVisual('unknown').symbol).toBe('question')
 })

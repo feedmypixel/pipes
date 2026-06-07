@@ -18,10 +18,10 @@ const VISUALS: Record<PipelineStatus, StatusVisual> = {
   running: { colour: 'var(--running)', symbol: 'arc', label: 'running' },
   pending: { colour: 'var(--pending)', symbol: 'pause', label: 'pending' },
   canceled: { colour: 'var(--neutral)', symbol: 'slash', label: 'canceled' },
-  skipped: { colour: 'var(--skipped)', symbol: 'chevrons', label: 'skipped' },
   // Ink circle (flips black/near-white per theme) with a glyph in the surface colour, so it
-  // reads as "black" in light + stays visible in dark — distinct from canceled + skipped.
-  unknown: { colour: 'var(--text)', ink: 'var(--bg)', symbol: 'question', label: 'unknown' }
+  // reads as "black" in light + stays visible in dark — distinct from the others.
+  skipped: { colour: 'var(--text)', ink: 'var(--bg)', symbol: 'chevrons', label: 'skipped' },
+  unknown: { colour: 'var(--unknown)', symbol: 'question', label: 'unknown' }
 }
 
 export function statusVisual(status: PipelineStatus): StatusVisual {
