@@ -129,10 +129,14 @@ full surface. (Loaded, the same pages live at `chrome-extension://<id>/src/...`.
 
 ## Tokens
 
-| Provider | Scope                                                                      | Header                  |
-| -------- | -------------------------------------------------------------------------- | ----------------------- |
-| GitLab   | `read_api` only                                                            | `PRIVATE-TOKEN`         |
-| GitHub   | read-only fine-grained (Actions + metadata read), or classic `repo:status` | `Authorization: Bearer` |
+| Provider | Scope                                                                   | Header                  |
+| -------- | ----------------------------------------------------------------------- | ----------------------- |
+| GitLab   | `read_api` (covers pipelines + branches)                                | `PRIVATE-TOKEN`         |
+| GitHub   | fine-grained: **Actions: Read** + **Contents: Read**, or classic `repo` | `Authorization: Bearer` |
+
+GitHub needs **Contents: Read** for the branch list — that's how Pipes drops merged/deleted
+branches (workflow runs persist after a branch is gone; the branch list is the only signal it
+still exists). Without it, runs for deleted branches linger.
 
 Add accounts in the options page; each token is validated against the host before
 it's saved. For a client/employer instance, confirm storing an instance token in a

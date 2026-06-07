@@ -328,8 +328,9 @@
             </summary>
             <ul>
               <li>
-                <b>GitHub</b>: fine-grained token with <b>Actions: read-only</b>. Grant the repos or
-                orgs you want to watch. Add <b>Contents: read</b> to hide merged/deleted branches.
+                <b>GitHub</b>: fine-grained token with <b>Actions: read</b> and
+                <b>Contents: read</b> (Contents lets Pipes drop merged/deleted branches). Grant the repos
+                or orgs you want to watch.
               </li>
               <li><b>GitLab</b>: personal access token with the <b>read_api</b> scope.</li>
             </ul>
