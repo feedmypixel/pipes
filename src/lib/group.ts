@@ -1,10 +1,18 @@
-import type { Change, Pipeline, PipelineStatus, Repo } from '../providers/types'
+import type {
+  Account,
+  Change,
+  Pipeline,
+  PipelineStatus,
+  ProviderId,
+  Repo
+} from '../providers/types'
 import type { Snapshots } from './storage'
 
 export interface RepoView {
   repo: Repo
   /** Repo name without the owner prefix. */
   displayName: string
+  providerId?: ProviderId
   /** Default-branch headline (pinned), or null if never seen. */
   default: Pipeline | null
   /** Open PRs/MRs, newest number first. */
@@ -25,8 +33,13 @@ function splitName(name: string): { owner: string; displayName: string } {
 }
 
 /** Owner groups (A-Z), each repo split into its default-branch headline + open PRs/MRs. */
-export function groupByOwner(repos: Repo[], snapshots: Snapshots): OwnerGroup[] {
+export function groupByOwner(
+  repos: Repo[],
+  snapshots: Snapshots,
+  accounts: Account[] = []
+): OwnerGroup[] {
   const byOwner = new Map<string, RepoView[]>()
+  const providerByAccount = new Map(accounts.map((account) => [account.id, account.provider]))
 
   for (const repo of repos) {
     const snapshot = snapshots[repo.id] ?? { default: null, changes: [] }
@@ -34,6 +47,7 @@ export function groupByOwner(repos: Repo[], snapshots: Snapshots): OwnerGroup[] 
     const view: RepoView = {
       repo,
       displayName,
+      providerId: providerByAccount.get(repo.accountId),
       default: snapshot.default,
       changes: [...snapshot.changes].sort((a, b) => b.number - a.number)
     }

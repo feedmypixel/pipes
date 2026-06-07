@@ -53,6 +53,15 @@ test('groups by owner, owners and repos A-Z', () => {
   expect(groups[0].repos.map((r) => r.displayName)).toEqual(['api', 'cli'])
 })
 
+test('resolves each repo provider from its account, for PR vs MR wording', () => {
+  const accounts = [{ id: 'a', provider: 'gitlab' as const, label: '', host: '', token: '' }]
+  const view = groupByOwner([repo('o/r')], {}, accounts)[0].repos[0]
+  expect(view.providerId).toBe('gitlab')
+
+  const unknown = groupByOwner([repo('o/r')], {})[0].repos[0]
+  expect(unknown.providerId).toBeUndefined()
+})
+
 test('groupReposByOwner: owners + repos A-Z, across owners', () => {
   const groups = groupReposByOwner([repo('zeta/web'), repo('alpha/cli'), repo('alpha/api')])
   expect(groups.map((g) => g.owner)).toEqual(['alpha', 'zeta'])
