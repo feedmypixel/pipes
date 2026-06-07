@@ -58,17 +58,23 @@ export async function notifyChangeFailed({
   })
 }
 
-/** Recovery: a previously-failing default branch or PR/MR went green again. */
+/**
+ * Recovery: a previously-failing default branch or PR/MR went green again. `key` mirrors the
+ * failure id's suffix (`default` / `pr-{number}`) so a thing's fail + recover ids are a stable
+ * pair; `label` is the human-readable name shown in the toast.
+ */
 export async function notifyRecovered({
   repo,
+  key,
   label,
   url
 }: {
   repo: Repo
+  key: string
   label: string
   url: string
 }): Promise<void> {
-  const id = `${NOTIF_PREFIX.recover}${repo.id}-${label}`
+  const id = `${NOTIF_PREFIX.recover}${repo.id}-${key}`
   await rememberLink(id, url)
   await chrome.notifications.create(id, {
     type: 'basic',

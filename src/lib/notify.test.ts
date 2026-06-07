@@ -103,7 +103,7 @@ test('opening an unknown notification id is a no-op', async () => {
 })
 
 test('forgetNotificationLink drops a stored link', async () => {
-  await notify.notifyRecovered({ repo, label: 'main', url: 'https://x/run/1' })
+  await notify.notifyRecovered({ repo, key: 'default', label: 'main', url: 'https://x/run/1' })
   const id = created[0].id
   await notify.forgetNotificationLink(id)
   expect(store.notifLinks[id]).toBeUndefined()
