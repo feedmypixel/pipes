@@ -18,8 +18,7 @@
   import RepoList from '../lib/components/RepoList.svelte'
   import TopAlerts from '../lib/components/TopAlerts.svelte'
   import UpdatedFooter from '../lib/components/UpdatedFooter.svelte'
-
-  const POLL_INTERVAL_MS = 10_000
+  import { LIVE_PORT } from '../lib/config'
 
   let accounts = $state<Account[]>([])
   let watchedRepos = $state<Repo[]>([])
@@ -82,12 +81,12 @@
     return () => unsubscribers.forEach((off) => off())
   })
 
-  // Active poll while the panel is open: ask the worker to poll on an interval.
-  // The worker stays the single owner of notifications + the badge.
+  // While the panel is open, hold a live port so the worker drives a fast fresh poll loop. A
+  // panel-side setInterval gets throttled to ~1/min when the panel isn't the focused document; the
+  // worker's timer doesn't. The worker stays the single owner of notifications + the badge.
   $effect(() => {
-    pollNow()
-    const id = setInterval(pollNow, POLL_INTERVAL_MS)
-    return () => clearInterval(id)
+    const port = chrome.runtime.connect({ name: LIVE_PORT })
+    return () => port.disconnect()
   })
 
   const matched = $derived(
@@ -116,10 +115,6 @@
       }))
   )
 
-  function pollNow() {
-    // Panel is open and watched — poll fresh (no ETag) so status is real-time, not a cached 304.
-    chrome.runtime.sendMessage({ type: 'poll-now', fresh: true })
-  }
   async function refresh() {
     refreshing = true
     try {
