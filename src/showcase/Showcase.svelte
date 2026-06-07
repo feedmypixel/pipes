@@ -101,7 +101,7 @@
       pipeline('success', 'fix/timeout', false, 120)
     ]),
     view('marketing-site', pipeline('success', 'main', true, 90)),
-    view('pixel-cli', pipeline('running', 'main', true, 1))
+    view('cli', pipeline('running', 'main', true, 1))
   ]
   let repoCollapsed = $state<Record<string, boolean>>({})
 
@@ -147,7 +147,7 @@
 
   // Static toasts so every variant is visible at once (live ones auto-dismiss).
   const staticToasts: ToastItem[] = [
-    { id: -1, variant: 'success', title: 'Connection added', message: 'github.com · feedmypixel' },
+    { id: -1, variant: 'success', title: 'Connection added', message: 'github.com · octo-org' },
     { id: -2, variant: 'error', title: 'Validation failed', message: 'Host did not respond' },
     { id: -3, variant: 'info', title: 'Permission requested' },
     {
