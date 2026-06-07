@@ -1,0 +1,73 @@
+version: 2
+
+updates:
+  - package-ecosystem: npm
+    directory: /
+    open-pull-requests-limit: 10
+
+    groups:
+      svelte:
+        patterns:
+          - 'svelte'
+          - 'svelte-check'
+          - '@sveltejs/*'
+          - '@tsconfig/svelte'
+          - 'vitest-browser-svelte'
+      build:
+        patterns:
+          - 'vite'
+          - '@crxjs/*'
+      lint:
+        patterns:
+          - 'prettier'
+          - 'prettier-plugin-svelte'
+          - 'eslint'
+          - 'eslint-*'
+          - '@eslint/*'
+          - 'globals'
+      typescript:
+        patterns:
+          - 'typescript'
+          - 'typescript-eslint'
+      vitest:
+        patterns:
+          - 'vitest'
+          - '@vitest/*'
+          - 'playwright'
+      logging:
+        patterns:
+          - 'pino'
+          - 'pino-*'
+      tools:
+        patterns:
+          - 'husky'
+          - 'lint-staged'
+          - 'sharp'
+          - '@lucide/svelte'
+      types:
+        patterns:
+          - '@types/*'
+
+    # Let releases settle before bumping; majors get the longest soak.
+    cooldown:
+      default-days: 5
+      semver-major-days: 20
+      semver-minor-days: 7
+      semver-patch-days: 3
+
+    schedule:
+      interval: cron
+      cronjob: '0 9 1 * *'
+      timezone: 'Europe/London'
+
+    versioning-strategy: increase
+
+    allow:
+      - dependency-type: direct
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: cron
+      cronjob: '0 9 1 * *'
+      timezone: 'Europe/London'
