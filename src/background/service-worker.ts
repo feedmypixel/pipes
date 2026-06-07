@@ -1,6 +1,6 @@
 import { poll } from './poll'
 import * as storage from '../lib/storage'
-import { POLL_ALARM, MIN_POLL_MINUTES } from '../lib/config'
+import { POLL_ALARM, MIN_POLL_MINUTES, LIVE_PORT, LIVE_POLL_MS } from '../lib/config'
 import { openNotificationLink, forgetNotificationLink } from '../lib/notify'
 
 async function scheduleAlarm(): Promise<void> {
@@ -9,6 +9,36 @@ async function scheduleAlarm(): Promise<void> {
     periodInMinutes: Math.max(MIN_POLL_MINUTES, pollMinutes)
   })
 }
+
+// Live polling, driven from here (not a panel's setInterval, which Chrome throttles to ~1/min when
+// the panel document is backgrounded). An open surface holds a LIVE_PORT; while ≥1 is connected the
+// worker stays alive and self-schedules a fast fresh poll. These globals only live as long as a port
+// keeps the worker alive, so they don't need to survive a worker restart.
+let liveConnections = 0
+let liveTimer: ReturnType<typeof setTimeout> | undefined
+
+function liveLoop(): void {
+  poll(false, true).catch((err) => console.warn('Live poll failed:', err))
+  liveTimer = setTimeout(liveLoop, LIVE_POLL_MS)
+}
+
+chrome.runtime.onConnect.addListener((port) => {
+  if (port.name !== LIVE_PORT) {
+    return
+  }
+  liveConnections++
+  if (!liveTimer) {
+    liveLoop() // poll immediately on the first open surface, then every LIVE_POLL_MS
+  }
+  port.onDisconnect.addListener(() => {
+    liveConnections--
+    if (liveConnections <= 0) {
+      liveConnections = 0
+      clearTimeout(liveTimer)
+      liveTimer = undefined
+    }
+  })
+})
 
 // --- All listeners registered synchronously at top level (SW may restart). ---
 

@@ -17,6 +17,13 @@ export const POLL_ALARM = 'pw-poll'
  * stepper clamps to. Keep these reading the same constant so they can't drift. */
 export const MIN_POLL_MINUTES = 0.5
 
+/** Long-lived port a surface opens while visible, so the worker drives a fast live poll loop
+ * (immune to the ~1 min Chrome clamps a backgrounded document's timers to). */
+export const LIVE_PORT = 'pw-live'
+
+/** Live poll interval (ms) while a surface is open — far tighter than the alarm floor. */
+export const LIVE_POLL_MS = 10_000
+
 /** Toolbar badge background for the failing count. */
 export const BADGE_FAIL_COLOR = '#db3b21'
 

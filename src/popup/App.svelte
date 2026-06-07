@@ -14,6 +14,7 @@
   import RepoList from '../lib/components/RepoList.svelte'
   import TopAlerts from '../lib/components/TopAlerts.svelte'
   import UpdatedFooter from '../lib/components/UpdatedFooter.svelte'
+  import { LIVE_PORT } from '../lib/config'
 
   let accounts = $state<Account[]>([])
   let watchedRepos = $state<Repo[]>([])
@@ -39,6 +40,12 @@
       storage.subscribe('lastPolledAt', (value) => (lastPolledAt = value))
     ]
     return () => unsubscribers.forEach((off) => off())
+  })
+
+  // Hold a live port while open so the worker drives a fast fresh poll loop.
+  $effect(() => {
+    const port = chrome.runtime.connect({ name: LIVE_PORT })
+    return () => port.disconnect()
   })
 
   const groups = $derived(filterGroups(groupByOwner(watchedRepos, snapshots), ALL_BRANCH_STATES))
