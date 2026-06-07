@@ -1,7 +1,6 @@
-# PRD: PR/MR-centric model (DRAFT)
+# PRD: PR/MR-centric model
 
-> Status: **draft for review.** Generated as the next-big-piece outline. Per the ai-dev-tasks
-> flow, parent tasks come next only after Ben gives a "Go" on this PRD.
+> Status: **finalized.** Open questions resolved (see Decisions). Task list: `tasks-pr-mr-model.md`.
 
 ## Why
 
@@ -67,16 +66,16 @@ Per repo, show:
   headline). No per-arbitrary-branch view returns.
 - No PR review state, comments, or merge actions — status only.
 
-## Open questions (for Ben)
+## Decisions
 
-- **Draft PRs:** dim (recommended), hide, or full-show?
-- **Default-branch checks:** keep the runs API, or also fold main into the "changes" model for one
-  code path?
-- **Many open PRs:** cap displayed count per repo? Rate cost is `/pulls` (1) + one status call per
-  open PR — bounded but larger than today for busy repos. ETag mitigates.
-- **PRs from forks / bots (Dependabot):** include? (Lean: include, they have CI too.)
-- **Migration:** clear old `snapshots`/`branchCache` on upgrade, or tolerate both shapes for one
-  release?
+- **Draft PRs:** shown but **dimmed** (lower contrast). Still see their CI; they don't shout.
+- **Bot PRs (Dependabot, Renovate):** **included** — they have CI like any other PR.
+- **Many open PRs:** **show all**, no per-repo cap. Rate cost is `/pulls` (1) + one status call per
+  open PR; bounded by open-PR count, and the existing back-off pauses before exhaustion.
+- **Default branch:** kept as its **own pinned row** via the runs API (the "is main green"
+  headline), PRs listed below. Least churn; preserves the headline.
+- **Migration:** on upgrade, **clear the old `snapshots` + `branchCache`** (shape changes). First
+  poll reseeds; no notification storm because first-sight seeds silently.
 
 ## Technical notes
 
