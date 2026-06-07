@@ -12,11 +12,19 @@ const ICON_SUCCESS = '/icons/status-success.png'
  * notifications fire only on transitions (handled by the poll loop).
  */
 
+// Serialise notifLinks writes: a poll cycle fires notifications from repos polled concurrently,
+// and a bare get→set would let two of them race and drop a link. Chaining keeps each
+// read-modify-write atomic. Transient state — only needs to hold across one cycle.
+let linkWrites: Promise<void> = Promise.resolve()
+
 /** Persist the link so a click on the (possibly much later) notification opens it. */
-async function rememberLink(notifId: string, url: string): Promise<void> {
-  const links = await storage.get('notifLinks')
-  links[notifId] = url
-  await storage.set('notifLinks', links)
+function rememberLink(notifId: string, url: string): Promise<void> {
+  linkWrites = linkWrites.then(async () => {
+    const links = await storage.get('notifLinks')
+    links[notifId] = url
+    await storage.set('notifLinks', links)
+  })
+  return linkWrites
 }
 
 /** Repo name without the owner prefix — the notification is already short on space. */

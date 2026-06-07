@@ -23,6 +23,21 @@ export interface HttpResponse<T> {
   rateLimit: RateLimit | null
 }
 
+/**
+ * A provider-supplied URL, but only if it's http(s); '' otherwise. Self-hosted/Enterprise
+ * hosts are user-added and not fully trusted: a malicious or MITM'd instance could return a
+ * `javascript:` link that would run in our extension origin once clicked. Validate at the
+ * adapter boundary so no such URL reaches an href or chrome.tabs.create.
+ */
+export function httpUrl(raw: string): string {
+  try {
+    const url = new URL(raw)
+    return url.protocol === 'https:' || url.protocol === 'http:' ? url.href : ''
+  } catch {
+    return ''
+  }
+}
+
 export function parseRateLimit(headers: Headers, names: RateLimitHeaders): RateLimit | null {
   const remaining = headers.get(names.remaining)
   const reset = headers.get(names.reset)

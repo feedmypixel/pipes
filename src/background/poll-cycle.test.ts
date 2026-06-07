@@ -41,7 +41,7 @@ vi.mock('../lib/storage', () => ({
   setMany: async (values: Record<string, unknown>) => Object.assign(h.store, values)
 }))
 vi.mock('../lib/notify', () => h.notify)
-vi.mock('../providers', () => ({ providerFor: () => h.provider }))
+vi.mock('../providers', () => ({ getProvider: () => h.provider }))
 
 const account = {
   id: 'a1',

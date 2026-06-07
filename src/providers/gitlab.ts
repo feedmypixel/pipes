@@ -9,7 +9,7 @@ import type {
   Repo,
   ValidationResult
 } from './types'
-import { fetchJson, type RateLimitHeaders } from './http'
+import { fetchJson, httpUrl, type RateLimitHeaders } from './http'
 
 const REPO_PAGES = 3 // up to 300 projects
 // Enough recent pipelines to cover every active ref (default + open MR source branches) in one fetch.
@@ -85,8 +85,8 @@ export const gitlab: Provider = {
     try {
       const user = await request<{ username: string }>(account, '/user')
       return { ok: true, user: user.username }
-    } catch (err) {
-      return { ok: false, error: (err as Error).message }
+    } catch (error) {
+      return { ok: false, error: (error as Error).message }
     }
   },
 
@@ -97,13 +97,13 @@ export const gitlab: Provider = {
         account,
         `/projects?membership=true&simple=true&per_page=100&page=${page}&order_by=last_activity_at&min_access_level=20`
       )
-      for (const p of batch) {
+      for (const project of batch) {
         repos.push({
-          id: String(p.id),
+          id: String(project.id),
           accountId: account.id,
-          name: p.path_with_namespace,
-          defaultBranch: p.default_branch ?? 'main',
-          webUrl: `${p.web_url}/-/pipelines`
+          name: project.path_with_namespace,
+          defaultBranch: project.default_branch ?? 'main',
+          webUrl: httpUrl(`${project.web_url}/-/pipelines`)
         })
       }
       if (batch.length < 100) {
@@ -135,20 +135,20 @@ export const gitlab: Provider = {
     // Newest pipeline per ref. The API already returns newest first.
     const seen = new Set<string>()
     const pipelines: Pipeline[] = []
-    for (const p of data) {
-      if (seen.has(p.ref)) {
+    for (const pipeline of data) {
+      if (seen.has(pipeline.ref)) {
         continue
       }
-      seen.add(p.ref)
+      seen.add(pipeline.ref)
       pipelines.push({
-        id: String(p.id),
-        ref: p.ref,
-        isDefaultBranch: p.ref === repo.defaultBranch,
-        status: mapGitlabStatus(p.status),
-        webUrl: p.web_url,
-        sha: p.sha,
-        title: `#${p.id}`,
-        updatedAt: p.updated_at
+        id: String(pipeline.id),
+        ref: pipeline.ref,
+        isDefaultBranch: pipeline.ref === repo.defaultBranch,
+        status: mapGitlabStatus(pipeline.status),
+        webUrl: httpUrl(pipeline.web_url),
+        sha: pipeline.sha,
+        title: `#${pipeline.id}`,
+        updatedAt: pipeline.updated_at
       })
     }
     return { pipelines, etag: newEtag, notModified: false, rateLimit }
@@ -179,7 +179,7 @@ export const gitlab: Provider = {
       title: mr.title,
       headRef: mr.source_branch,
       headSha: mr.sha,
-      webUrl: mr.web_url,
+      webUrl: httpUrl(mr.web_url),
       isDraft: mr.draft,
       isBot: mr.author?.bot ?? false
     }))

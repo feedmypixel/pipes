@@ -86,9 +86,6 @@ export function groupReposByOwner(repos: Repo[]): RepoOwnerGroup[] {
     .sort((a, b) => a.owner.localeCompare(b.owner))
 }
 
-/** Branch states that mean "needs attention" — the popup's problems-only set. */
-export const PROBLEM_STATES: ReadonlySet<PipelineStatus> = new Set(['failed', 'running', 'pending'])
-
 /** Branch states in display order — single source for the side-panel pills + the "all" set. */
 export const BRANCH_STATE_ORDER: PipelineStatus[] = [
   'failed',

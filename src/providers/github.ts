@@ -9,7 +9,7 @@ import type {
   Repo,
   ValidationResult
 } from './types'
-import { fetchJson, type RateLimitHeaders } from './http'
+import { fetchJson, httpUrl, type RateLimitHeaders } from './http'
 import { SAAS_HOST } from '../lib/config'
 
 const SAAS_API = 'https://api.github.com'
@@ -95,8 +95,8 @@ export const github: Provider = {
     try {
       const user = await request<{ login: string }>(account, '/user')
       return { ok: true, user: user.login }
-    } catch (err) {
-      return { ok: false, error: (err as Error).message }
+    } catch (error) {
+      return { ok: false, error: (error as Error).message }
     }
   },
 
@@ -107,13 +107,13 @@ export const github: Provider = {
         account,
         `/user/repos?per_page=100&page=${page}&sort=pushed&affiliation=owner,collaborator,organization_member`
       )
-      for (const r of batch) {
+      for (const ghRepo of batch) {
         repos.push({
-          id: r.full_name,
+          id: ghRepo.full_name,
           accountId: account.id,
-          name: r.full_name,
-          defaultBranch: r.default_branch,
-          webUrl: `${r.html_url}/actions`
+          name: ghRepo.full_name,
+          defaultBranch: ghRepo.default_branch,
+          webUrl: httpUrl(`${ghRepo.html_url}/actions`)
         })
       }
       if (batch.length < 100) {
@@ -160,7 +160,7 @@ export const github: Provider = {
           ref,
           isDefaultBranch: ref === repo.defaultBranch,
           status: mapGithubStatus(run.status, run.conclusion),
-          webUrl: run.html_url,
+          webUrl: httpUrl(run.html_url),
           sha: run.head_sha,
           title: run.display_title,
           updatedAt: run.updated_at
@@ -194,7 +194,7 @@ export const github: Provider = {
       title: pull.title,
       headRef: pull.head.ref,
       headSha: pull.head.sha,
-      webUrl: pull.html_url,
+      webUrl: httpUrl(pull.html_url),
       isDraft: pull.draft,
       isBot: pull.user?.type === 'Bot'
     }))
