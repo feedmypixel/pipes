@@ -83,6 +83,49 @@ product). Captured so nothing is lost.
 - **Notification icon** — use the greyscale logo on notifications (not the green tick).
 - **Prod `web_accessible_resources`** — verify crxjs output isn't over-broad (`<all_urls>`).
 
+## Data / freshness
+
+- **Stale (deleted-branch) refs linger** — GitHub Actions + GitLab keep workflow **runs**
+  after a branch is deleted; Pipes builds its list from runs grouped by ref, so deleted
+  branches with historical runs still show. Fix options: (1) **recency window** — only show
+  pipelines updated within N days (cheap, no extra calls; preferred default), or (2)
+  cross-check the live branches API and drop missing refs (accurate but costs rate-limit
+  budget). Default branch always kept regardless.
+
+## Loose ends captured from build sessions (verify when writing the PRD)
+
+- **Throttle the per-poll `validateToken`** — connection health currently validates every
+  account on every poll (1/min). Throttle (e.g. every N polls or on a longer interval / only
+  after an auth-looking failure) to spare rate-limit budget.
+- **Showcase parity** — add `RepoList`, `TopAlerts`, `UpdatedFooter` to `src/showcase/` and
+  refresh the `RepoCard` demo; keep the showcase current with the shared components.
+- **a11y sweep** — focus order, `aria-*`, keyboard reach + focus-visible across popup / side
+  panel / options; verify the new buttons (owner toggle, repo toggle, clears) announce well.
+- **FAQ / Help** — decide placement (Web Store "Support" tab + an in-extension Help link or a
+  docs page) and write it. (Release-adjacent.)
+- **`ROADMAP.md` refresh** — it's stale: mark phases 1–4 ✅, Phase 5 = hardening, Phase 6 =
+  release.
+- **Richer notifications (optional)** — `contextMessage` + action buttons + `list` grouping;
+  and custom sound via an offscreen doc. Deferred — click-to-job was deemed enough.
+
+## From the bath (2026-06-07)
+
+- **Showcase: TopAlerts variants** — render the side-panel top-message states in the showcase:
+  connection issue (amber), default branch failing (red alarm), all passing (green). Lets us
+  eyeball all three + both themes without forcing real failures.
+- **Popup quick "failures only" toggle** — popup is the glance; add a one-tap toggle to show
+  only failing repos so problems jump out instantly. Delve deeper → jump to side panel → dig
+  in → repo links. (NB: a Failures view was trialled in the *side panel* and removed; this is
+  the *popup*, as a lightweight glance toggle — confirm interaction before building.)
+
+## Components / UI
+
+- **Tooltip component** — replace native `title=` (ugly, slow ~1.5s delay, untyped) with a
+  small `Tooltip` showing the same values nicely. Used heavily on rows (pipeline title), icon
+  buttons, the star/branch marks. Needs hover/focus trigger, positioning that survives the
+  narrow popup (portal or anchored), keyboard + `prefers-reduced-motion` aware. Drives off a
+  `tooltip` prop/snippet so it's reusable.
+
 ## Features (post-build, nice-to-have)
 
 - **Token-expiry warning banner** — a third inline-banner variant (amber, neither error nor
