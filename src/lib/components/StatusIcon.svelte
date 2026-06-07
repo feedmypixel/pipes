@@ -31,8 +31,8 @@
     {:else if visual.symbol === 'arc'}
       <path d="M12 3a9 9 0 1 1-9 9" />
     {:else}
-      <path d="M9.1 9a3 3 0 0 1 5.8 1c0 2-3 3-3 3" />
-      <path d="M12 17h.01" />
+      <path d="M8.5 8.5a4 4 0 0 1 7.5 1.7c0 2.7-4 3.8-4 4.8" />
+      <path d="M12 18h.01" />
     {/if}
   </svg>
 </span>

@@ -30,7 +30,7 @@ test('canceled + skipped share the neutral colour with distinct symbols', () => 
   expect(statusVisual('skipped').symbol).toBe('chevrons')
 })
 
-test('unknown is its own violet, question-mark state (not a neutral dot)', () => {
-  expect(statusVisual('unknown').colour).toBe('var(--unknown)')
+test('unknown is a neutral question mark', () => {
+  expect(statusVisual('unknown').colour).toBe('var(--neutral)')
   expect(statusVisual('unknown').symbol).toBe('question')
 })

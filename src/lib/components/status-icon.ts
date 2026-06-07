@@ -17,7 +17,7 @@ const VISUALS: Record<PipelineStatus, StatusVisual> = {
   pending: { colour: 'var(--pending)', symbol: 'pause', label: 'pending' },
   canceled: { colour: 'var(--neutral)', symbol: 'slash', label: 'canceled' },
   skipped: { colour: 'var(--neutral)', symbol: 'chevrons', label: 'skipped' },
-  unknown: { colour: 'var(--unknown)', symbol: 'question', label: 'unknown' }
+  unknown: { colour: 'var(--neutral)', symbol: 'question', label: 'unknown' }
 }
 
 export function statusVisual(status: PipelineStatus): StatusVisual {
