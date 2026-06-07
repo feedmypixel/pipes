@@ -1,44 +1,63 @@
 # Tasks: Hardening
 
 From `tasks/prd-hardening.md` + `tasks/review-2026-06-07.md`. Phased; **P1 is the go-live gate.**
-Each parent task is intended to be its own small PR (hardening spans many PRs, not one branch).
+Each parent task is its own small PR. Check off sub-tasks as completed.
 
-> Parent tasks below. Sub-tasks generated on "Go". Start order: 1.0 first (the rate-limit /
-> resilience blocker Ben flagged).
+## Relevant files
+
+- `src/lib/async.ts` — bounded-concurrency `mapLimit` helper (new).
+- `src/providers/http.ts` — 429/rate-limit detection + typed error.
+- `src/background/poll.ts` — single-flight, bounded fan-out, rate-limit pause, auth short-circuit.
+- `src/lib/components/TopAlerts.svelte` — surface rate-limited connections.
+- `src/popup/App.svelte` / `src/sidepanel/App.svelte` — derive + pass rate-limit state.
+- `src/lib/config.ts` — central constants (new).
+- `*.test.ts` alongside each.
 
 ## Parent tasks
 
 ### P1 — release-critical
 
-- [ ] 1.0 **Poll resilience** — single-flight guard (no overlapping cycles racing on storage);
-      bounded fetch concurrency (pool, not unbounded `Promise.all`); detect 429/403-rate-limit +
-      parse `Retry-After`/reset → set `rateLimitPausedUntil`; **surface a distinct "Rate limited —
-      resumes in ~Nm" state** in the UI; make a dead-token (401) state explicit.
-- [ ] 2.0 **Branch-centric data model** — show live branches + latest run; drop merged/deleted
-      ghosts via the live-branches API intersection (ETag-conditional, cached per repo); fix the
-      GitHub "newest run per ref" ordering (dedupe by max `updated_at`, not list order).
-- [ ] 3.0 **Core test suite + CI signal** — tests for `poll()`, `notify`, provider mapping, and
-      the shared components; add a non-gating coverage report + a `pnpm build` job to CI; fix the
-      pre-push ↔ CI Playwright-install mismatch.
-- [ ] 4.0 **Central config** — `src/lib/config.ts` for SaaS hosts, the `0.5` alarm floor (worker
-      ↔ options), badge colour, notif id prefixes, page sizes.
+- [x] 1.0 **Poll resilience**
+  - [x] 1.1 `mapLimit(items, limit, fn)` helper + test (bounded concurrency).
+  - [x] 1.2 Single-flight `poll()` — module-scoped in-flight promise; concurrent calls coalesce.
+  - [x] 1.3 Replace the unbounded `Promise.all` fan-out with `mapLimit` (limit 6).
+  - [x] 1.4 `http.ts`: detect 429 (+403 secondary) → throw a typed `RateLimitError` carrying the
+        reset epoch (parse `Retry-After` / `x-ratelimit-reset`).
+  - [x] 1.5 `poll`/`pollRepo`: catch `RateLimitError` → set `rateLimitPausedUntil[account.id]`;
+        same for the `validateToken` health check.
+  - [x] 1.6 Skip polling repos whose account health is already known-bad this cycle (avoid N 401s).
+  - [x] 1.7 Surface rate-limit state — derive rate-limited accounts in the surfaces; `TopAlerts`
+        shows a distinct "‹label› rate limited — resumes in ~Nm" banner (+ showcase example).
+  - [x] 1.8 Tests: `mapLimit`, 429 → `RateLimitError`. (single-flight + full `poll()` coverage
+        lands with 3.0's `poll()` orchestration test.)
+
+- [ ] 2.0 **Branch-centric data model**
+  - [ ] 2.1 Provider `listBranches(account, repo, etag)` (GitHub `/branches`, GitLab
+        `/repository/branches`), ETag-conditional.
+  - [ ] 2.2 Cache branches + ETag per repo (new storage key).
+  - [ ] 2.3 Intersect latest-run-per-ref with live branches (default always kept); drop ghosts.
+  - [ ] 2.4 GitHub: dedupe newest run per ref by max `updated_at`, not list order.
+  - [ ] 2.5 Decide + handle MR-pipeline refs and no-run branches.
+  - [ ] 2.6 Tests for the intersection + ordering.
+
+- [ ] 3.0 **Core test suite + CI signal**
+  - [ ] 3.1 `poll()` orchestration test. 3.2 `notify` test. 3.3 provider mapping tests.
+  - [ ] 3.4 Component tests (RepoCard/RepoList/TopAlerts/UpdatedFooter/Row).
+  - [ ] 3.5 CI: coverage report (non-gating) + `pnpm build` job + Playwright-install parity.
+
+- [ ] 4.0 **Central config** (`src/lib/config.ts`)
+  - [ ] 4.1 SaaS hosts. 4.2 alarm floor (worker ↔ options). 4.3 badge colour, notif prefixes,
+        page sizes. 4.4 update consumers.
 
 ### P2 — quality + safety
 
-- [ ] 5.0 **Boundaries + logger + dedup** — deepen `matchesShape` guards (or zod — decide per
-      dep-minimalism); a level-gated logger that never logs tokens (pino vs wrapper — decide);
-      extract `createDashboardState()` to de-dupe popup/side-panel storage wiring.
-- [ ] 6.0 **a11y + tooling + dev boundary** — fix the disabled-button violations + focus/aria
-      sweep; Dependabot (weekly Wed, ignore held majors) + gitleaks + Semgrep + stylelint; routine
-      safe dep bump; move dev modules to `src/dev/` with a prod-guard + ESLint import rule.
+- [ ] 5.0 **Boundaries + logger + dedup** — deepen `matchesShape` (or zod); level-gated logger
+      (pino vs wrapper); `createDashboardState()` rune module.
+- [ ] 6.0 **a11y + tooling + dev boundary** — disabled-button fixes + focus/aria; Dependabot +
+      gitleaks + Semgrep + stylelint + dep bump; `src/dev/` boundary + prod guard + eslint rule.
 
-### P3 — nice-to-have (after the above)
+### P3 — nice-to-have
 
-- [ ] 7.0 **Notification enrichment** — drop title emoji (keep brand icon), add `contextMessage`,
-      an "Open run" button + handler, reliable recovery notifications; later the token-expiry banner.
-- [ ] 8.0 **Polish** — `Stack` + shared chrome primitives; Playwright visual-regression
-      baselines; ratchet coverage to a hard threshold.
-
----
-
-Respond **"Go"** to expand these into sub-tasks (starting with 1.0).
+- [ ] 7.0 **Notification enrichment** — emoji→brand icon, contextMessage, Open-run button,
+      reliable recovery; token-expiry banner.
+- [ ] 8.0 **Polish** — Stack + shared chrome; visual regression; coverage gate.

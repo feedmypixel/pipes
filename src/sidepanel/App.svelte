@@ -26,6 +26,7 @@
   let watchedRepos = $state<Repo[]>([])
   let snapshots = $state<Snapshots>({})
   let accountHealth = $state<Record<string, AccountHealth>>({})
+  let rateLimitPaused = $state<Record<string, number>>({})
   let search = $state('')
   let lastPolledAt = $state(0)
   let refreshing = $state(false)
@@ -74,12 +75,14 @@
     storage.get('watchedRepos').then((value) => (watchedRepos = value))
     storage.get('snapshots').then((value) => (snapshots = value))
     storage.get('accountHealth').then((value) => (accountHealth = value))
+    storage.get('rateLimitPausedUntil').then((value) => (rateLimitPaused = value))
     storage.get('lastPolledAt').then((value) => (lastPolledAt = value))
     const unsubscribers = [
       storage.subscribe('accounts', (value) => (accounts = value)),
       storage.subscribe('watchedRepos', (value) => (watchedRepos = value)),
       storage.subscribe('snapshots', (value) => (snapshots = value)),
       storage.subscribe('accountHealth', (value) => (accountHealth = value)),
+      storage.subscribe('rateLimitPausedUntil', (value) => (rateLimitPaused = value)),
       storage.subscribe('lastPolledAt', (value) => (lastPolledAt = value))
     ]
     return () => unsubscribers.forEach((off) => off())
@@ -107,6 +110,15 @@
         id: account.id,
         label: account.label,
         error: accountHealth[account.id].error
+      }))
+  )
+  const rateLimited = $derived(
+    accounts
+      .filter((account) => (rateLimitPaused[account.id] ?? 0) > Math.floor(Date.now() / 1000))
+      .map((account) => ({
+        id: account.id,
+        label: account.label,
+        resumesAt: rateLimitPaused[account.id]
       }))
   )
 
@@ -146,6 +158,7 @@
 
   <TopAlerts
     {connectionIssues}
+    {rateLimited}
     {mainFailing}
     ready={configured && watchedRepos.length > 0}
     onOpenSettings={openOptions}

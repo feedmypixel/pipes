@@ -1,4 +1,4 @@
-import { parseRateLimit, fetchJson } from './http'
+import { parseRateLimit, fetchJson, RateLimitError } from './http'
 
 const NAMES = { remaining: 'x-ratelimit-remaining', reset: 'x-ratelimit-reset' }
 
@@ -57,6 +57,40 @@ test('fetchJson: non-ok throws', async () => {
   globalThis.fetch = (async () => new Response('nope', { status: 500 })) as typeof fetch
   try {
     await expect(fetchJson('https://example.test', {})).rejects.toThrow()
+  } finally {
+    globalThis.fetch = original
+  }
+})
+
+test('fetchJson: 429 throws RateLimitError with reset from x-ratelimit-reset', async () => {
+  const original = globalThis.fetch
+  globalThis.fetch = (async () =>
+    new Response('limited', {
+      status: 429,
+      headers: { 'x-ratelimit-remaining': '0', 'x-ratelimit-reset': '1800000000' }
+    })) as typeof fetch
+  try {
+    const error = await fetchJson('https://example.test', {}, { rateLimitHeaders: NAMES }).catch(
+      (e) => e
+    )
+    expect(error).toBeInstanceOf(RateLimitError)
+    expect((error as RateLimitError).resetAt).toBe(1800000000)
+  } finally {
+    globalThis.fetch = original
+  }
+})
+
+test('fetchJson: 403 with exhausted budget is treated as a rate limit', async () => {
+  const original = globalThis.fetch
+  globalThis.fetch = (async () =>
+    new Response('forbidden', {
+      status: 403,
+      headers: { 'x-ratelimit-remaining': '0', 'x-ratelimit-reset': '1800000001' }
+    })) as typeof fetch
+  try {
+    await expect(
+      fetchJson('https://example.test', {}, { rateLimitHeaders: NAMES })
+    ).rejects.toBeInstanceOf(RateLimitError)
   } finally {
     globalThis.fetch = original
   }

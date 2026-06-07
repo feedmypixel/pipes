@@ -1,9 +1,14 @@
 import { providerFor } from '../providers'
 import { TERMINAL_STATUSES } from '../providers/types'
 import type { Account, Pipeline, Repo } from '../providers/types'
+import { RateLimitError } from '../providers/http'
 import * as storage from '../lib/storage'
 import type { Snapshots } from '../lib/storage'
+import { mapLimit } from '../lib/async'
 import * as notify from '../lib/notify'
+
+/** Max provider requests in flight at once, so many repos don't burst the API. */
+const POLL_CONCURRENCY = 6
 
 /** Build a fast lookup of a snapshot's pipelines by ref. */
 function byRef(pipelines: Pipeline[]): Map<string, Pipeline> {
@@ -62,6 +67,8 @@ interface RepoPollResult {
   pipelines: Pipeline[]
   etag: string | null
   rateLimit: { remaining: number; reset: number } | null
+  /** Epoch seconds to pause this account, when the provider rate-limited us. */
+  pausedUntil?: number
 }
 
 /**
@@ -87,6 +94,9 @@ async function pollRepo(
     }
     return { pipelines: result.pipelines, etag: result.etag, rateLimit: result.rateLimit }
   } catch (err) {
+    if (err instanceof RateLimitError) {
+      return { pipelines: prevList, etag: etag ?? null, rateLimit: null, pausedUntil: err.resetAt }
+    }
     console.warn(`Poll failed for ${repo.name}:`, (err as Error).message)
     return { pipelines: prevList, etag: etag ?? null, rateLimit: null }
   }
@@ -114,7 +124,21 @@ function countFailures(snapshots: Snapshots): number {
 /** Pause a connection's polling when its remaining rate-limit budget drops below this. */
 const RATE_LIMIT_FLOOR = 50
 
-export async function poll(): Promise<void> {
+// Single-flight: overlapping triggers (alarm + poll-now + startup) coalesce onto one cycle
+// so they can't race on chrome.storage.
+let inFlight: Promise<void> | null = null
+
+export function poll(): Promise<void> {
+  if (inFlight) {
+    return inFlight
+  }
+  inFlight = runPollCycle().finally(() => {
+    inFlight = null
+  })
+  return inFlight
+}
+
+async function runPollCycle(): Promise<void> {
   const [accounts, watchedRepos, settings, prevSnapshots, repoEtags, pausedUntil] =
     await Promise.all([
       storage.get('accounts'),
@@ -131,15 +155,22 @@ export async function poll(): Promise<void> {
     return
   }
 
-  // Connection health: surface invalid/expired tokens and unreachable hosts.
+  // Connection health: surface invalid/expired tokens and unreachable hosts. A rate-limit here
+  // is not a token problem — record the pause and leave the connection healthy.
   const health: Record<string, { ok: boolean; error?: string }> = {}
+  const healthPaused: Record<string, number> = {}
   await Promise.all(
     accounts.map(async (account) => {
       try {
         const result = await providerFor(account).validateToken(account)
         health[account.id] = result.ok ? { ok: true } : { ok: false, error: result.error }
       } catch (err) {
-        health[account.id] = { ok: false, error: (err as Error).message }
+        if (err instanceof RateLimitError) {
+          healthPaused[account.id] = err.resetAt
+          health[account.id] = { ok: true }
+        } else {
+          health[account.id] = { ok: false, error: (err as Error).message }
+        }
       }
     })
   )
@@ -154,40 +185,63 @@ export async function poll(): Promise<void> {
   const accountById = new Map(accounts.map((a) => [a.id, a]))
   const now = Math.floor(Date.now() / 1000)
 
-  const results = await Promise.all(
-    watchedRepos.map(async (repo) => {
-      const account = accountById.get(repo.accountId)
-      const keep = prevSnapshots[repo.id] ?? []
-      if (!account || (pausedUntil[account.id] ?? 0) > now) {
-        return { repo, account, pipelines: keep, etag: repoEtags[repo.id] ?? null, rateLimit: null }
-      }
-      const result = await pollRepo(
-        account,
+  const results = await mapLimit(watchedRepos, POLL_CONCURRENCY, async (repo) => {
+    const account = accountById.get(repo.accountId)
+    const keep = prevSnapshots[repo.id] ?? []
+    const accountPaused = account
+      ? Math.max(pausedUntil[account.id] ?? 0, healthPaused[account.id] ?? 0)
+      : 0
+    const accountUnhealthy = account ? health[account.id]?.ok === false : true
+    // Skip repos whose account is missing, known-bad, or paused — keep the last snapshot.
+    if (!account || accountUnhealthy || accountPaused > now) {
+      return {
         repo,
-        prevSnapshots,
-        settings.notifyOnSuccess,
-        repoEtags[repo.id]
-      )
-      return { repo, account, ...result }
-    })
-  )
+        account,
+        pipelines: keep,
+        etag: repoEtags[repo.id] ?? null,
+        rateLimit: null,
+        pausedUntil: undefined
+      }
+    }
+    const result = await pollRepo(
+      account,
+      repo,
+      prevSnapshots,
+      settings.notifyOnSuccess,
+      repoEtags[repo.id]
+    )
+    return { repo, account, ...result }
+  })
 
   const snapshots: Snapshots = {}
   const nextEtags: Record<string, string> = {}
   const nextPaused: Record<string, number> = { ...pausedUntil }
-  for (const { repo, account, pipelines, etag, rateLimit } of results) {
+  const pause = (accountId: string, until: number) => {
+    nextPaused[accountId] = Math.max(nextPaused[accountId] ?? 0, until)
+  }
+  for (const [accountId, until] of Object.entries(healthPaused)) {
+    pause(accountId, until)
+  }
+  for (const { repo, account, pipelines, etag, rateLimit, pausedUntil: repoPaused } of results) {
     snapshots[repo.id] = pipelines
     if (etag) {
       nextEtags[repo.id] = etag
     }
+    if (account && repoPaused) {
+      pause(account.id, repoPaused)
+    }
     if (account && rateLimit && rateLimit.remaining < RATE_LIMIT_FLOOR) {
-      nextPaused[account.id] = Math.max(nextPaused[account.id] ?? 0, rateLimit.reset)
+      pause(account.id, rateLimit.reset)
     }
   }
+  // Drop expired pauses so the store doesn't accrete stale entries.
+  const prunedPaused = Object.fromEntries(
+    Object.entries(nextPaused).filter(([, until]) => until > now)
+  )
 
   await storage.set('snapshots', snapshots)
   await storage.set('repoEtags', nextEtags)
-  await storage.set('rateLimitPausedUntil', nextPaused)
+  await storage.set('rateLimitPausedUntil', prunedPaused)
   await storage.set('lastPolledAt', Date.now())
   await notify.setBadge(countFailures(snapshots))
 }
