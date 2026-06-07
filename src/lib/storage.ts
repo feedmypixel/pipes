@@ -37,10 +37,17 @@ interface StorageShape {
   notifLinks: Record<string, string>
   /** Epoch ms of the last completed poll cycle, for the "updated … ago" footer. */
   lastPolledAt: number
-  /** Connection health per accountId, refreshed each poll. */
+  /** Connection health per accountId. */
   accountHealth: Record<string, AccountHealth>
-  /** Live branch names + ETag per repo id, to drop ghost (deleted-branch) refs. */
-  branchCache: Record<string, { names: string[]; etag: string }>
+  /** Epoch ms of the last connection-health check (throttled, not every poll). */
+  lastHealthAt: number
+  /** Live branch names + ETag + last-checked (ms) per repo, to drop ghost refs.
+   * `unavailable` marks repos where /branches can't be read (no Contents:read) so we don't
+   * mistake it for "zero branches" and don't retry every poll. */
+  branchCache: Record<
+    string,
+    { names: string[]; etag: string; checkedAt: number; unavailable?: boolean }
+  >
 }
 
 const DEFAULTS: StorageShape = {
@@ -54,6 +61,7 @@ const DEFAULTS: StorageShape = {
   notifLinks: {},
   lastPolledAt: 0,
   accountHealth: {},
+  lastHealthAt: 0,
   branchCache: {}
 }
 

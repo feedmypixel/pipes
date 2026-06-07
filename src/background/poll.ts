@@ -6,6 +6,7 @@ import * as storage from '../lib/storage'
 import type { Snapshots } from '../lib/storage'
 import { mapLimit } from '../lib/async'
 import { keepLiveBranches } from '../lib/group'
+import { HEALTH_REFRESH_MS, BRANCH_REFRESH_MS } from '../lib/config'
 import * as notify from '../lib/notify'
 
 /** Max provider requests in flight at once, so many repos don't burst the API. */
@@ -67,6 +68,9 @@ async function announceTransition(
 interface BranchCacheEntry {
   names: string[]
   etag: string
+  checkedAt: number
+  /** /branches couldn't be read (e.g. token lacks Contents:read) — don't filter, don't hammer. */
+  unavailable?: boolean
 }
 
 interface RepoPollResult {
@@ -96,24 +100,36 @@ async function pollRepo(
   try {
     const provider = providerFor(account)
 
-    // Live branches are an enhancement (drop ghost refs). Best-effort: if listing them fails
-    // — e.g. a GitHub Actions-only token lacks Contents:read for /branches — fall back to NOT
-    // filtering rather than losing the repo. A rate limit still propagates to pause the account.
-    let liveSet: Set<string> | null = null
-    let branches: BranchCacheEntry | undefined
-    try {
-      const branchResult = await provider.listBranches(account, repo, branchCache?.etag)
-      const liveNames = branchResult.notModified
-        ? (branchCache?.names ?? [])
-        : branchResult.branches
-      liveSet = new Set(liveNames)
-      const nextBranchEtag = branchResult.etag ?? branchCache?.etag ?? null
-      branches = nextBranchEtag ? { names: liveNames, etag: nextBranchEtag } : undefined
-    } catch (err) {
-      if (err instanceof RateLimitError) {
-        throw err
+    // Live branches drop ghost refs. Refreshed only every BRANCH_REFRESH_MS (branch lists
+    // change slowly) — between refreshes we reuse the cache. Best-effort: if /branches can't be
+    // read (e.g. a GitHub Actions-only token lacking Contents:read) we mark it unavailable, skip
+    // filtering rather than losing the repo, and don't retry every poll. Rate limits propagate.
+    const now = Date.now()
+    let branches: BranchCacheEntry | undefined = branchCache
+    let liveSet: Set<string> | null =
+      branchCache && !branchCache.unavailable ? new Set(branchCache.names) : null
+
+    const branchesStale = !branchCache || now - branchCache.checkedAt > BRANCH_REFRESH_MS
+    if (branchesStale) {
+      try {
+        const branchResult = await provider.listBranches(account, repo, branchCache?.etag)
+        const liveNames = branchResult.notModified
+          ? (branchCache?.names ?? [])
+          : branchResult.branches
+        liveSet = new Set(liveNames)
+        branches = {
+          names: liveNames,
+          etag: branchResult.etag ?? branchCache?.etag ?? '',
+          checkedAt: now
+        }
+      } catch (err) {
+        if (err instanceof RateLimitError) {
+          throw err
+        }
+        console.warn(`Branches unavailable for ${repo.name}:`, (err as Error).message)
+        liveSet = null // don't filter — show all rather than hide the repo
+        branches = { names: [], etag: '', checkedAt: now, unavailable: true }
       }
-      console.warn(`Branches unavailable for ${repo.name}:`, (err as Error).message)
     }
     const filterLive = (pipelines: Pipeline[]): Pipeline[] =>
       liveSet ? keepLiveBranches(pipelines, liveSet) : pipelines
@@ -180,16 +196,27 @@ export function poll(): Promise<void> {
 }
 
 async function runPollCycle(): Promise<void> {
-  const [accounts, watchedRepos, settings, prevSnapshots, repoEtags, pausedUntil, branchCache] =
-    await Promise.all([
-      storage.get('accounts'),
-      storage.get('watchedRepos'),
-      storage.get('settings'),
-      storage.get('snapshots'),
-      storage.get('repoEtags'),
-      storage.get('rateLimitPausedUntil'),
-      storage.get('branchCache')
-    ])
+  const [
+    accounts,
+    watchedRepos,
+    settings,
+    prevSnapshots,
+    repoEtags,
+    pausedUntil,
+    branchCache,
+    prevHealth,
+    lastHealthAt
+  ] = await Promise.all([
+    storage.get('accounts'),
+    storage.get('watchedRepos'),
+    storage.get('settings'),
+    storage.get('snapshots'),
+    storage.get('repoEtags'),
+    storage.get('rateLimitPausedUntil'),
+    storage.get('branchCache'),
+    storage.get('accountHealth'),
+    storage.get('lastHealthAt')
+  ])
   if (accounts.length === 0) {
     await storage.set('accountHealth', {})
     await notify.setBadge(0)
@@ -197,26 +224,31 @@ async function runPollCycle(): Promise<void> {
     return
   }
 
-  // Connection health: surface invalid/expired tokens and unreachable hosts. A rate-limit here
-  // is not a token problem — record the pause and leave the connection healthy.
-  const health: Record<string, { ok: boolean; error?: string }> = {}
+  // Connection health: surface invalid/expired tokens. Tokens change rarely, so re-validate at
+  // most every HEALTH_REFRESH_MS; otherwise reuse the last result. A rate-limit here is not a
+  // token problem — record the pause and leave the connection healthy.
   const healthPaused: Record<string, number> = {}
-  await Promise.all(
-    accounts.map(async (account) => {
-      try {
-        const result = await providerFor(account).validateToken(account)
-        health[account.id] = result.ok ? { ok: true } : { ok: false, error: result.error }
-      } catch (err) {
-        if (err instanceof RateLimitError) {
-          healthPaused[account.id] = err.resetAt
-          health[account.id] = { ok: true }
-        } else {
-          health[account.id] = { ok: false, error: (err as Error).message }
+  let health = prevHealth
+  if (Date.now() - lastHealthAt >= HEALTH_REFRESH_MS) {
+    health = {}
+    await Promise.all(
+      accounts.map(async (account) => {
+        try {
+          const result = await providerFor(account).validateToken(account)
+          health[account.id] = result.ok ? { ok: true } : { ok: false, error: result.error }
+        } catch (err) {
+          if (err instanceof RateLimitError) {
+            healthPaused[account.id] = err.resetAt
+            health[account.id] = { ok: true }
+          } else {
+            health[account.id] = { ok: false, error: (err as Error).message }
+          }
         }
-      }
-    })
-  )
-  await storage.set('accountHealth', health)
+      })
+    )
+    await storage.set('accountHealth', health)
+    await storage.set('lastHealthAt', Date.now())
+  }
 
   if (watchedRepos.length === 0) {
     await notify.setBadge(0)
