@@ -1,4 +1,4 @@
-// Temp notification test. Starts green; flips red to fire the failure notification. Do not merge.
-test('notif test: green now, flips red', () => {
-  expect(1).toBe(1)
+// Temp notification test. Flipped to RED to fire the failure notification. Do not merge.
+test('notif test: now red', () => {
+  expect(1).toBe(2)
 })
