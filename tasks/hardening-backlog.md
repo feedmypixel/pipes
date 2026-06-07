@@ -117,6 +117,8 @@ product). Captured so nothing is lost.
   only failing repos so problems jump out instantly. Delve deeper → jump to side panel → dig
   in → repo links. (NB: a Failures view was trialled in the _side panel_ and removed; this is
   the _popup_, as a lightweight glance toggle — confirm interaction before building.)
+- **Drop the Name/Status sort (side panel)** — the state pills + search make sort redundant;
+  remove the segmented sort control. (Revisit only if a clear need returns.)
 
 ## Components / UI
 
