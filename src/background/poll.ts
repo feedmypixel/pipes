@@ -95,23 +95,40 @@ async function pollRepo(
   const prevList = prevSnapshots[repo.id] ?? []
   try {
     const provider = providerFor(account)
-    const branchResult = await provider.listBranches(account, repo, branchCache?.etag)
-    const liveNames = branchResult.notModified ? (branchCache?.names ?? []) : branchResult.branches
-    const liveSet = new Set(liveNames)
-    const nextBranchEtag = branchResult.etag ?? branchCache?.etag ?? null
-    const branches = nextBranchEtag ? { names: liveNames, etag: nextBranchEtag } : undefined
+
+    // Live branches are an enhancement (drop ghost refs). Best-effort: if listing them fails
+    // — e.g. a GitHub Actions-only token lacks Contents:read for /branches — fall back to NOT
+    // filtering rather than losing the repo. A rate limit still propagates to pause the account.
+    let liveSet: Set<string> | null = null
+    let branches: BranchCacheEntry | undefined
+    try {
+      const branchResult = await provider.listBranches(account, repo, branchCache?.etag)
+      const liveNames = branchResult.notModified
+        ? (branchCache?.names ?? [])
+        : branchResult.branches
+      liveSet = new Set(liveNames)
+      const nextBranchEtag = branchResult.etag ?? branchCache?.etag ?? null
+      branches = nextBranchEtag ? { names: liveNames, etag: nextBranchEtag } : undefined
+    } catch (err) {
+      if (err instanceof RateLimitError) {
+        throw err
+      }
+      console.warn(`Branches unavailable for ${repo.name}:`, (err as Error).message)
+    }
+    const filterLive = (pipelines: Pipeline[]): Pipeline[] =>
+      liveSet ? keepLiveBranches(pipelines, liveSet) : pipelines
 
     const result = await provider.listPipelines(account, repo, etag)
     if (result.notModified) {
       // Pipelines unchanged; re-filter the cached snapshot in case branches changed.
       return {
-        pipelines: keepLiveBranches(prevList, liveSet),
+        pipelines: filterLive(prevList),
         etag: result.etag,
         rateLimit: result.rateLimit,
         branches
       }
     }
-    const live = keepLiveBranches(result.pipelines, liveSet)
+    const live = filterLive(result.pipelines)
     const prev = byRef(prevList)
     for (const pipeline of live) {
       await announceTransition(repo, prev.get(pipeline.ref), pipeline, notifyOnSuccess)

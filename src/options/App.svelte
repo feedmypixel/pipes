@@ -329,7 +329,7 @@
             <ul>
               <li>
                 <b>GitHub</b>: fine-grained token with <b>Actions: read-only</b>. Grant the repos or
-                orgs you want to watch.
+                orgs you want to watch. Add <b>Contents: read</b> to hide merged/deleted branches.
               </li>
               <li><b>GitLab</b>: personal access token with the <b>read_api</b> scope.</li>
             </ul>
@@ -668,7 +668,10 @@
     display: flex;
     align-items: center;
     gap: var(--space-md);
-    padding: var(--space-md) var(--space-xl);
+    /* Fixed height so the row never shifts when the clear button appears or while typing. */
+    height: 2.75rem;
+    box-sizing: border-box;
+    padding: 0 var(--space-xl);
     border: 1px solid var(--border-2);
     border-radius: var(--radius);
     background: var(--bg);
