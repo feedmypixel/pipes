@@ -4,6 +4,7 @@
   import RefChip from '../lib/components/RefChip.svelte'
   import RelativeTime from '../lib/components/RelativeTime.svelte'
   import RepoCard from '../lib/components/RepoCard.svelte'
+  import TopAlerts from '../lib/components/TopAlerts.svelte'
   import { ALL_BRANCH_STATES, type RepoView } from '../lib/group'
   import Field from '../lib/components/forms/Field.svelte'
   import Input from '../lib/components/forms/Input.svelte'
@@ -196,6 +197,37 @@
           onToggle={() => (repoCollapsed[repoView.repo.id] = !repoCollapsed[repoView.repo.id])}
         />
       {/each}
+    </div>
+  </section>
+
+  <section>
+    <p class="eyebrow">TopAlerts (side-panel / popup top messages)</p>
+    <div class="stack">
+      <div class="surface-frame">
+        <TopAlerts connectionIssues={[]} mainFailing={0} ready={true} onOpenSettings={() => {}} />
+      </div>
+      <div class="surface-frame">
+        <TopAlerts connectionIssues={[]} mainFailing={2} ready={true} onOpenSettings={() => {}} />
+      </div>
+      <div class="surface-frame">
+        <TopAlerts connectionIssues={[]} mainFailing={1} ready={true} onOpenSettings={() => {}} />
+      </div>
+      <div class="surface-frame">
+        <TopAlerts
+          connectionIssues={[{ id: 'a', label: 'work', error: 'token invalid or expired' }]}
+          mainFailing={0}
+          ready={false}
+          onOpenSettings={() => {}}
+        />
+      </div>
+      <div class="surface-frame">
+        <TopAlerts
+          connectionIssues={[{ id: 'a', label: 'work', error: 'token invalid or expired' }]}
+          mainFailing={2}
+          ready={true}
+          onOpenSettings={() => {}}
+        />
+      </div>
     </div>
   </section>
 
@@ -416,7 +448,8 @@
     font: var(--weight-medium) var(--font-size-2xs) / var(--leading-none) var(--font-mono);
     color: var(--text-3);
   }
-  .rows {
+  .rows,
+  .surface-frame {
     border: 1px solid var(--border);
     border-radius: var(--radius);
     overflow: hidden;

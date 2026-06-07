@@ -7,6 +7,7 @@
   import {
     groupByOwner,
     filterGroups,
+    failingCount,
     ALL_BRANCH_STATES,
     countDefaultBranchFailures
   } from '../lib/group'
@@ -21,6 +22,9 @@
   let accountHealth = $state<Record<string, AccountHealth>>({})
   let lastPolledAt = $state(0)
   let refreshing = $state(false)
+  let failuresOnly = $state(localStorage.getItem('pipes-popup-failures-only') === 'true')
+
+  $effect(() => localStorage.setItem('pipes-popup-failures-only', String(failuresOnly)))
 
   $effect(() => {
     storage.get('accounts').then((value) => (accounts = value))
@@ -38,7 +42,17 @@
     return () => unsubscribers.forEach((off) => off())
   })
 
-  const groups = $derived(filterGroups(groupByOwner(watchedRepos, snapshots), ALL_BRANCH_STATES))
+  const allGroups = $derived(filterGroups(groupByOwner(watchedRepos, snapshots), ALL_BRANCH_STATES))
+  const groups = $derived(
+    failuresOnly
+      ? allGroups
+          .map((group) => ({
+            owner: group.owner,
+            repos: group.repos.filter((view) => failingCount(view) > 0)
+          }))
+          .filter((group) => group.repos.length > 0)
+      : allGroups
+  )
   const mainFailing = $derived(countDefaultBranchFailures(watchedRepos, snapshots))
   const configured = $derived(accounts.length > 0)
   const connectionIssues = $derived(
@@ -123,8 +137,25 @@
       <button class="empty-action" onclick={openOptions}>Choose repos</button>
     </div>
   {:else}
+    <div class="filter-bar">
+      <button
+        class="failures"
+        class:on={failuresOnly}
+        aria-pressed={failuresOnly}
+        title="Show only repos with a failure"
+        onclick={() => (failuresOnly = !failuresOnly)}
+      >
+        <span class="dot"></span> Failures only
+      </button>
+    </div>
     <main class="body">
-      <RepoList {groups} allowed={ALL_BRANCH_STATES} storageKey="pipes-popup" defaultCollapsed />
+      {#if groups.length === 0}
+        <p class="body-empty">
+          {failuresOnly ? 'No failures' : 'Nothing to show'}
+        </p>
+      {:else}
+        <RepoList {groups} allowed={ALL_BRANCH_STATES} storageKey="pipes-popup" defaultCollapsed />
+      {/if}
     </main>
   {/if}
 
@@ -197,10 +228,49 @@
     }
   }
 
+  .filter-bar {
+    display: flex;
+    padding: var(--space-sm) var(--space-lg);
+    border-bottom: 1px solid var(--border);
+  }
+  .failures {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-xs);
+    padding: var(--space-3xs) var(--space-md);
+    border: 1px solid var(--border-2);
+    border-radius: var(--radius);
+    background: var(--surface);
+    color: var(--text-2);
+    font: var(--weight-medium) var(--font-size-sm) / var(--leading-none) var(--font-sans);
+    cursor: pointer;
+  }
+  .failures:hover {
+    background: var(--hover);
+  }
+  .failures .dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--failed);
+  }
+  .failures.on {
+    background: var(--failed-bg);
+    border-color: var(--failed-line);
+    color: var(--failed);
+  }
+
   .body {
     flex: 1;
     min-height: 0;
     overflow-y: auto;
+  }
+  .body-empty {
+    margin: 0;
+    padding: var(--space-4xl) var(--space-xl);
+    text-align: center;
+    color: var(--text-3);
+    font-size: var(--font-size-base);
   }
 
   .empty {
