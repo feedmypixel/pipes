@@ -83,6 +83,87 @@ product). Captured so nothing is lost.
 - **Notification icon** — use the greyscale logo on notifications (not the green tick).
 - **Prod `web_accessible_resources`** — verify crxjs output isn't over-broad (`<all_urls>`).
 
+## Dependencies & dev-only boundaries
+
+- **Dependency minimalism** — runtime deps are currently just `@lucide/svelte` (Svelte compiles
+  away; no date/util libs — `RelativeTime` is hand-rolled). Keep it that way: prefer platform
+  APIs / small hand-rolled code over deps (supply-chain + npm-security surface). Specifically,
+  **reconsider the planned hardening deps**: **pino** → a ~20-line level-gated `console` wrapper
+  is enough for a client-only extension; **zod** → extend the existing `matchesShape` hand
+  guards rather than add zod. Optional zero-dep stretch: inline the ~18 lucide SVGs to drop the
+  last runtime dep (low value vs maintenance — probably keep lucide).
+- **Dev-only module boundary** — make "dev only" enforced, not just named (`dev-chrome.ts`,
+  `dev-theme.ts`). (1) Co-locate in `src/dev/` (the directory is the signal, like `*.test.ts`).
+  (2) Fail loud: `if (import.meta.env.PROD) throw new Error('dev-only module loaded in production')`
+  at the top of each — turns a future un-guarded import from a silent prod leak into an obvious
+  error (Vite already strips them via the `import.meta.env.DEV` guard). (3) ESLint
+  `no-restricted-imports` so only the surface `main.ts` entries may import `src/dev/*`.
+- **Bundle-size review** — a `chevron-right-*.js` chunk shipped at ~55 kB (20 kB gzip); likely
+  the Svelte-runtime + lucide vendor chunk just named after a module in it, but confirm lucide
+  is per-icon tree-shaken and the chunk isn't pulling in more than expected.
+
+## Data / freshness
+
+- **Branch-centric model: show live branches, not raw runs** (headline — likely its own PRD).
+  Pipes currently lists pipeline **runs** grouped by `head_branch`. GitHub Actions + GitLab keep
+  runs after a branch is merged/deleted, so the UI fills with ghost rows for branches that no
+  longer exist — programmatically correct, mentally wrong. Confirmed on `feedmypixel/pipes`:
+  live branches = `main` + `feat/popup-failures-showcase-alerts` (2), but run `head_branch`es =
+  17 (all the merged/deleted ones).
+
+  **Target model:** show each **branch that still exists** + its **latest run** (pass/fail);
+  when a branch is merged + deleted it drops out of the view.
+
+  **Approach:** fetch the repo's live branches (GitHub `GET /repos/{o}/{r}/branches`, GitLab
+  `GET /projects/:id/repository/branches`), then intersect the existing latest-run-per-ref with
+  that set (default branch always kept). Deleted branches fall out automatically.
+
+  **Rate limit (be mindful):** ~1 extra request per repo per poll. Make it **ETag-conditional**
+  so a 304 costs no GitHub budget (GitLab list ETag support is uncertain — verify; lean on the
+  rate-limit floor back-off). Cache the branch list + its ETag per repo (new storage key, same
+  pattern as `repoEtags`). Page at 100; for huge repos cap + note.
+
+  **Sub-decisions:** (a) GitLab `refs/merge-requests/*/merge` pipelines aren't branches — drop
+  from the branch view (revisit MR pipelines as a separate concept later); (b) a branch with no
+  runs yet — omit (nothing to report) vs show as "no runs"; (c) keep a recency window as a cheap
+  secondary guard? Probably unnecessary once the intersection lands.
+
+## Loose ends captured from build sessions (verify when writing the PRD)
+
+- **Throttle the per-poll `validateToken`** — connection health currently validates every
+  account on every poll (1/min). Throttle (e.g. every N polls or on a longer interval / only
+  after an auth-looking failure) to spare rate-limit budget.
+- **Showcase parity** — add `RepoList`, `TopAlerts`, `UpdatedFooter` to `src/showcase/` and
+  refresh the `RepoCard` demo; keep the showcase current with the shared components.
+- **a11y sweep** — focus order, `aria-*`, keyboard reach + focus-visible across popup / side
+  panel / options; verify the new buttons (owner toggle, repo toggle, clears) announce well.
+- **FAQ / Help** — decide placement (Web Store "Support" tab + an in-extension Help link or a
+  docs page) and write it. (Release-adjacent.)
+- **`ROADMAP.md` refresh** — it's stale: mark phases 1–4 ✅, Phase 5 = hardening, Phase 6 =
+  release.
+- **Richer notifications (optional)** — `contextMessage` + action buttons + `list` grouping;
+  and custom sound via an offscreen doc. Deferred — click-to-job was deemed enough.
+
+## From the bath (2026-06-07)
+
+- **Showcase: TopAlerts variants** — render the side-panel top-message states in the showcase:
+  connection issue (amber), default branch failing (red alarm), all passing (green). Lets us
+  eyeball all three + both themes without forcing real failures.
+- **Popup quick "failures only" toggle** — popup is the glance; add a one-tap toggle to show
+  only failing repos so problems jump out instantly. Delve deeper → jump to side panel → dig
+  in → repo links. (NB: a Failures view was trialled in the _side panel_ and removed; this is
+  the _popup_, as a lightweight glance toggle — confirm interaction before building.)
+- **Drop the Name/Status sort (side panel)** — the state pills + search make sort redundant;
+  remove the segmented sort control. (Revisit only if a clear need returns.)
+
+## Components / UI
+
+- **Tooltip component** — replace native `title=` (ugly, slow ~1.5s delay, untyped) with a
+  small `Tooltip` showing the same values nicely. Used heavily on rows (pipeline title), icon
+  buttons, the star/branch marks. Needs hover/focus trigger, positioning that survives the
+  narrow popup (portal or anchored), keyboard + `prefers-reduced-motion` aware. Drives off a
+  `tooltip` prop/snippet so it's reusable.
+
 ## Features (post-build, nice-to-have)
 
 - **Token-expiry warning banner** — a third inline-banner variant (amber, neither error nor

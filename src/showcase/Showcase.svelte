@@ -4,6 +4,7 @@
   import RefChip from '../lib/components/RefChip.svelte'
   import RelativeTime from '../lib/components/RelativeTime.svelte'
   import RepoCard from '../lib/components/RepoCard.svelte'
+  import TopAlerts from '../lib/components/TopAlerts.svelte'
   import { ALL_BRANCH_STATES, type RepoView } from '../lib/group'
   import Field from '../lib/components/forms/Field.svelte'
   import Input from '../lib/components/forms/Input.svelte'
@@ -100,7 +101,7 @@
       pipeline('success', 'fix/timeout', false, 120)
     ]),
     view('marketing-site', pipeline('success', 'main', true, 90)),
-    view('pixel-cli', pipeline('running', 'main', true, 1))
+    view('cli', pipeline('running', 'main', true, 1))
   ]
   let repoCollapsed = $state<Record<string, boolean>>({})
 
@@ -146,7 +147,7 @@
 
   // Static toasts so every variant is visible at once (live ones auto-dismiss).
   const staticToasts: ToastItem[] = [
-    { id: -1, variant: 'success', title: 'Connection added', message: 'github.com · feedmypixel' },
+    { id: -1, variant: 'success', title: 'Connection added', message: 'github.com · octo-org' },
     { id: -2, variant: 'error', title: 'Validation failed', message: 'Host did not respond' },
     { id: -3, variant: 'info', title: 'Permission requested' },
     {
@@ -196,6 +197,37 @@
           onToggle={() => (repoCollapsed[repoView.repo.id] = !repoCollapsed[repoView.repo.id])}
         />
       {/each}
+    </div>
+  </section>
+
+  <section>
+    <p class="eyebrow">TopAlerts (side-panel / popup top messages)</p>
+    <div class="stack">
+      <div class="surface-frame">
+        <TopAlerts connectionIssues={[]} mainFailing={0} ready={true} onOpenSettings={() => {}} />
+      </div>
+      <div class="surface-frame">
+        <TopAlerts connectionIssues={[]} mainFailing={2} ready={true} onOpenSettings={() => {}} />
+      </div>
+      <div class="surface-frame">
+        <TopAlerts connectionIssues={[]} mainFailing={1} ready={true} onOpenSettings={() => {}} />
+      </div>
+      <div class="surface-frame">
+        <TopAlerts
+          connectionIssues={[{ id: 'a', label: 'work', error: 'token invalid or expired' }]}
+          mainFailing={0}
+          ready={false}
+          onOpenSettings={() => {}}
+        />
+      </div>
+      <div class="surface-frame">
+        <TopAlerts
+          connectionIssues={[{ id: 'a', label: 'work', error: 'token invalid or expired' }]}
+          mainFailing={2}
+          ready={true}
+          onOpenSettings={() => {}}
+        />
+      </div>
     </div>
   </section>
 
@@ -416,7 +448,8 @@
     font: var(--weight-medium) var(--font-size-2xs) / var(--leading-none) var(--font-mono);
     color: var(--text-3);
   }
-  .rows {
+  .rows,
+  .surface-frame {
     border: 1px solid var(--border);
     border-radius: var(--radius);
     overflow: hidden;

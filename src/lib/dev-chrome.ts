@@ -46,22 +46,22 @@ function seedData() {
     }
   ]
   const watchedRepos = [
-    repo('feedmypixel/marketing-site'),
-    repo('feedmypixel/pixel-cli'),
-    repo('feedmypixel/status-api'),
-    repo('whiskyinvestdirect/api'),
-    repo('whiskyinvestdirect/database')
+    repo('octo-org/marketing-site'),
+    repo('octo-org/cli'),
+    repo('octo-org/status-api'),
+    repo('globex/api'),
+    repo('globex/database')
   ]
   const snapshots: Record<string, Pipeline[]> = {
-    'feedmypixel/marketing-site': [pipe('1', 'main', 'success', true, 90)],
-    'feedmypixel/pixel-cli': [pipe('2', 'main', 'running', true, 1)],
-    'feedmypixel/status-api': [
+    'octo-org/marketing-site': [pipe('1', 'main', 'success', true, 90)],
+    'octo-org/cli': [pipe('2', 'main', 'running', true, 1)],
+    'octo-org/status-api': [
       pipe('3', 'main', 'failed', true, 4),
       pipe('4', 'pr/210-retry', 'failed', false, 9),
       pipe('5', 'fix/timeout', 'success', false, 120)
     ],
-    'whiskyinvestdirect/api': [pipe('6', 'main', 'success', true, 40)],
-    'whiskyinvestdirect/database': [pipe('7', 'main', 'failed', true, 30)]
+    'globex/api': [pipe('6', 'main', 'success', true, 40)],
+    'globex/database': [pipe('7', 'main', 'failed', true, 30)]
   }
   return { accounts, watchedRepos, snapshots, settings: { pollMinutes: 1, notifyOnSuccess: true } }
 }
@@ -136,24 +136,21 @@ function mockFetch() {
     const hasToken = Boolean(headers.get('authorization') || headers.get('private-token'))
     if (hasToken && /^https:\/\/api\.github\.com\/user\/repos/.test(url)) {
       return json([
-        repos('feedmypixel/marketing-site'),
-        repos('feedmypixel/pixel-cli'),
-        repos('feedmypixel/status-api'),
+        repos('octo-org/marketing-site'),
+        repos('octo-org/cli'),
+        repos('octo-org/status-api'),
         repos('acme-corp/billing'),
         repos('acme-corp/dashboard')
       ])
     }
     if (hasToken && /^https:\/\/api\.github\.com\/user(\?|$)/.test(url)) {
-      return json({ login: 'feedmypixel' })
+      return json({ login: 'octo-org' })
     }
     if (hasToken && /^https:\/\/gitlab\.com\/api\/v4\/projects/.test(url)) {
-      return json([
-        projects(1, 'whiskyinvestdirect/api'),
-        projects(2, 'whiskyinvestdirect/database')
-      ])
+      return json([projects(1, 'globex/api'), projects(2, 'globex/database')])
     }
     if (hasToken && /^https:\/\/gitlab\.com\/api\/v4\/user(\?|$)/.test(url)) {
-      return json({ username: 'feedmypixel' })
+      return json({ username: 'octo-org' })
     }
     return new Response('{"message":"Unauthorized"}', { status: 401 })
   }) as typeof fetch
