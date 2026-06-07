@@ -144,6 +144,11 @@
     return false
   }
 
+  function handleSubmit(event: SubmitEvent) {
+    event.preventDefault() // it's an extension page — no navigation, just add the connection
+    addConnection()
+  }
+
   async function addConnection() {
     checkHost()
     checkToken()
@@ -313,72 +318,75 @@
         {#if addResult}
           <Banner variant={addResult.variant}>{addResult.text}</Banner>
         {/if}
-        <FormSummary errors={summaryErrors} />
-        <Field name="label" label="Label" optional>
-          <Input placeholder="work" autocomplete="off" bind:value={label} />
-        </Field>
-        <Field name="provider" label="Provider">
-          <Select bind:value={hostChoice} onchange={syncHost}>
-            <option value="github">GitHub (github.com)</option>
-            <option value="gitlab">GitLab (gitlab.com)</option>
-            <option value="self">Self-hosted…</option>
-          </Select>
-        </Field>
-        {#if hostChoice === 'self'}
+        <form onsubmit={handleSubmit}>
+          <FormSummary errors={summaryErrors} />
+          <Field name="label" label="Label" optional>
+            <Input placeholder="work" autocomplete="off" bind:value={label} />
+          </Field>
+          <Field name="provider" label="Provider">
+            <Select bind:value={hostChoice} onchange={syncHost}>
+              <option value="github">GitHub (github.com)</option>
+              <option value="gitlab">GitLab (gitlab.com)</option>
+              <option value="self">Self-hosted…</option>
+            </Select>
+          </Field>
+          {#if hostChoice === 'self'}
+            <Field
+              name="host"
+              label="Host URL"
+              hint="your GitHub Enterprise or GitLab origin, e.g. gitlab.example.com"
+              error={errors.host}
+            >
+              <Input
+                placeholder="gitlab.example.com"
+                autocomplete="off"
+                bind:value={host}
+                onblur={checkHost}
+                oninput={clearHostIfValid}
+              />
+            </Field>
+          {/if}
+          {#snippet tokenHint()}
+            <details class="token-help">
+              <summary>
+                <ChevronRight class="chevron" size={14} />
+                <span>What permissions does my token need?</span>
+              </summary>
+              <ul>
+                <li>
+                  <b>GitHub</b>: fine-grained with <b>Actions: read</b> +
+                  <b>Pull requests: read</b>.
+                </li>
+                <li><b>GitLab</b>: PAT with <b>read_api</b>.</li>
+              </ul>
+            </details>
+          {/snippet}
           <Field
-            name="host"
-            label="Host URL"
-            hint="your GitHub Enterprise or GitLab origin, e.g. gitlab.example.com"
-            error={errors.host}
+            name="token"
+            label="Personal access token"
+            hint={tokenHint}
+            error={errors.token}
+            mono
+            below={availability ?? undefined}
           >
-            <Input
-              placeholder="gitlab.example.com"
+            <PasswordInput
               autocomplete="off"
-              bind:value={host}
-              onblur={checkHost}
-              oninput={clearHostIfValid}
+              bind:value={token}
+              onblur={checkToken}
+              oninput={clearTokenIfValid}
             />
           </Field>
-        {/if}
-        {#snippet tokenHint()}
-          <details class="token-help">
-            <summary>
-              <ChevronRight class="chevron" size={14} />
-              <span>What permissions does my token need?</span>
-            </summary>
-            <ul>
-              <li>
-                <b>GitHub</b>: fine-grained with <b>Actions: read</b> + <b>Pull requests: read</b>.
-              </li>
-              <li><b>GitLab</b>: PAT with <b>read_api</b>.</li>
-            </ul>
-          </details>
-        {/snippet}
-        <Field
-          name="token"
-          label="Personal access token"
-          hint={tokenHint}
-          error={errors.token}
-          mono
-          below={availability ?? undefined}
-        >
-          <PasswordInput
-            autocomplete="off"
-            bind:value={token}
-            onblur={checkToken}
-            oninput={clearTokenIfValid}
-          />
-        </Field>
-        <div class="note-row"><PermissionNote /></div>
-        <div class="button-group">
-          <Button variant="primary" {submitting} onclick={addConnection}>
-            <Plug size={14} />
-            {submitting ? 'Adding connection…' : 'Add connection'}
-          </Button>
-          <Button variant="secondary" disabled={submitting} onclick={validate}>
-            <BadgeCheck size={14} /> Validate
-          </Button>
-        </div>
+          <div class="note-row"><PermissionNote /></div>
+          <div class="button-group">
+            <Button variant="primary" type="submit" {submitting}>
+              <Plug size={14} />
+              {submitting ? 'Adding connection…' : 'Add connection'}
+            </Button>
+            <Button variant="secondary" disabled={submitting} onclick={validate}>
+              <BadgeCheck size={14} /> Validate
+            </Button>
+          </div>
+        </form>
       </div>
     </section>
 
