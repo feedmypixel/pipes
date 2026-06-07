@@ -184,16 +184,20 @@ test('a paused account is skipped and keeps its snapshot', async () => {
   expect((snap().default as { status: string }).status).toBe('success')
 })
 
-test('a background poll sends the stored ETags', async () => {
+test('a poll sends the stored ETags for both calls', async () => {
   seed({ repoEtags: { 'o/r': 'pipe-etag' }, changeEtags: { 'o/r': 'change-etag' } })
   await poll()
   expect(h.provider.listPipelines).toHaveBeenCalledWith(account, repo, 'pipe-etag')
   expect(h.provider.listOpenChanges).toHaveBeenCalledWith(account, repo, 'change-etag')
 })
 
-test('a fresh poll skips the runs ETag but keeps the PR-list ETag', async () => {
-  seed({ repoEtags: { 'o/r': 'pipe-etag' }, changeEtags: { 'o/r': 'change-etag' } })
-  await poll(false, true)
-  expect(h.provider.listPipelines).toHaveBeenCalledWith(account, repo, undefined)
-  expect(h.provider.listOpenChanges).toHaveBeenCalledWith(account, repo, 'change-etag')
+test('a PR row carries the joined pipeline updatedAt', async () => {
+  seed()
+  h.provider.listPipelines.mockResolvedValue(runs(undefined, [prPipe('f5', 'success')]))
+  h.provider.listOpenChanges.mockResolvedValue(openChanges([change(5, 'success')]))
+  await poll()
+  const pr = (snap().changes as { number: number; updatedAt?: string }[]).find(
+    (c) => c.number === 5
+  )
+  expect(pr?.updatedAt).toBe('2026-06-07T00:00:00Z')
 })

@@ -90,6 +90,8 @@ export interface Change {
   /** Head commit SHA the status reflects. */
   headSha: string
   status: PipelineStatus
+  /** ISO time of the head pipeline run, joined from the runs list. Undefined when none matched. */
+  updatedAt?: string
   /** Deep link to the PR/MR (its checks). */
   webUrl: string
   /** Draft / work-in-progress — shown dimmed. */
@@ -99,10 +101,10 @@ export interface Change {
 }
 
 /**
- * Open-PR/MR metadata without status. Providers return just the list; poll joins each one's
- * status from the repo's pipelines (by head ref) — one shared runs fetch, no per-PR fan-out.
+ * Open-PR/MR metadata. Providers return just the list; poll joins each one's status + time from
+ * the repo's pipelines (by head ref) — one shared runs fetch, no per-PR fan-out.
  */
-export type ChangeMeta = Omit<Change, 'status'>
+export type ChangeMeta = Omit<Change, 'status' | 'updatedAt'>
 
 /** Result of a conditional open-PR/MR fetch (metadata only — status is joined in poll). */
 export interface OpenChangesResult {

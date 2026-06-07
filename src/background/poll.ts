@@ -106,9 +106,9 @@ const EMPTY_SNAPSHOT: RepoSnapshot = { default: null, changes: [] }
 
 /**
  * Fetch + diff one repo with two parallel calls and no per-PR fan-out: the runs list gives every
- * ref's status (default branch + PR head branches); the open-PR list is joined to those statuses
- * by head ref. `fresh` skips only the runs ETag (the status source) so the PR-list call stays
- * 304-cheap. A 304 keeps the cached side; any error keeps the old snapshot.
+ * ref's status + time (default branch + PR head branches); the open-PR list is joined to those by
+ * head ref. Both calls are ETag-conditional (GitHub caches /actions/runs ~60s, so an open panel is
+ * already as fresh as the API allows). A 304 keeps the cached side; any error keeps the old snapshot.
  */
 async function pollRepo(
   account: Account,
@@ -116,15 +116,14 @@ async function pollRepo(
   prevSnapshots: Snapshots,
   notifyOnSuccess: boolean,
   etag: string | undefined,
-  changeEtag: string | undefined,
-  fresh: boolean
+  changeEtag: string | undefined
 ): Promise<RepoPollResult> {
   const prev = prevSnapshots[repo.id] ?? EMPTY_SNAPSHOT
   try {
     const provider = providerFor(account)
 
     const [runs, open] = await Promise.all([
-      provider.listPipelines(account, repo, fresh ? undefined : etag),
+      provider.listPipelines(account, repo, etag),
       provider.listOpenChanges(account, repo, changeEtag)
     ])
     // Pause off whichever call is closer to the budget floor, so neither fetch is invisible.
@@ -134,28 +133,32 @@ async function pollRepo(
       ? prev.default
       : (runs.pipelines.find((pipeline) => pipeline.isDefaultBranch) ?? null)
 
-    // Join each open PR/MR to its pipeline status by head ref. When runs is a 304 (no new run, so
-    // no status change) we fall back to the previously-known status per PR number.
-    const statusByRef = new Map(
-      runs.notModified ? [] : runs.pipelines.map((pipeline) => [pipeline.ref, pipeline.status])
+    // Join each open PR/MR to its pipeline (status + time) by head ref. On a runs 304 (no new run,
+    // so no change) fall back to the previously-known status/time per PR number.
+    const pipelineByRef = new Map(
+      runs.notModified ? [] : runs.pipelines.map((pipeline) => [pipeline.ref, pipeline])
     )
-    const prevStatus = new Map(prev.changes.map((change) => [change.number, change.status]))
+    const prevByNumber = new Map(prev.changes.map((change) => [change.number, change]))
     const metas = open.notModified ? prev.changes : open.changes
-    const nextChanges: Change[] = metas.map((meta) => ({
-      number: meta.number,
-      title: meta.title,
-      headRef: meta.headRef,
-      headSha: meta.headSha,
-      webUrl: meta.webUrl,
-      isDraft: meta.isDraft,
-      isBot: meta.isBot,
-      status: statusByRef.get(meta.headRef) ?? prevStatus.get(meta.number) ?? 'unknown'
-    }))
+    const nextChanges: Change[] = metas.map((meta) => {
+      const pipeline = pipelineByRef.get(meta.headRef)
+      const previous = prevByNumber.get(meta.number)
+      return {
+        number: meta.number,
+        title: meta.title,
+        headRef: meta.headRef,
+        headSha: meta.headSha,
+        webUrl: meta.webUrl,
+        isDraft: meta.isDraft,
+        isBot: meta.isBot,
+        status: pipeline?.status ?? previous?.status ?? 'unknown',
+        updatedAt: pipeline?.updatedAt ?? previous?.updatedAt
+      }
+    })
 
     if (nextDefault) {
       await diffDefault(repo, prev.default, nextDefault, notifyOnSuccess)
     }
-    const prevByNumber = new Map(prev.changes.map((change) => [change.number, change]))
     for (const change of nextChanges) {
       await diffChange(repo, prevByNumber.get(change.number), change, notifyOnSuccess)
     }
@@ -202,21 +205,21 @@ const RATE_LIMIT_FLOOR = 50
 let inFlight: Promise<void> | null = null
 
 /**
- * `force` (manual Refresh) bypasses the health throttle for an immediate re-check.
- * `fresh` skips the ETags so GitHub can't answer a stale 304 — an open panel polls fresh
- * for real-time status; the background alarm keeps the ETags (rate-safe).
+ * `force` (manual Refresh) bypasses the health throttle for an immediate re-check. ETags are
+ * always sent: a 304 is cheap and GitHub caches /actions/runs ~60s, so skipping the ETag would
+ * cost a full payload for no fresher data.
  */
-export function poll(force = false, fresh = false): Promise<void> {
+export function poll(force = false): Promise<void> {
   if (inFlight) {
     return inFlight
   }
-  inFlight = runPollCycle(force, fresh).finally(() => {
+  inFlight = runPollCycle(force).finally(() => {
     inFlight = null
   })
   return inFlight
 }
 
-async function runPollCycle(force: boolean, fresh: boolean): Promise<void> {
+async function runPollCycle(force: boolean): Promise<void> {
   const [
     accounts,
     watchedRepos,
@@ -305,8 +308,7 @@ async function runPollCycle(force: boolean, fresh: boolean): Promise<void> {
       prevSnapshots,
       settings.notifyOnSuccess,
       repoEtags[repo.id],
-      changeEtags[repo.id],
-      fresh
+      changeEtags[repo.id]
     )
     return { repo, account, ...result }
   })

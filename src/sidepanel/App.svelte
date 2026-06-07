@@ -114,7 +114,7 @@
   async function refresh() {
     refreshing = true
     try {
-      await chrome.runtime.sendMessage({ type: 'poll-now', force: true, fresh: true })
+      await chrome.runtime.sendMessage({ type: 'poll-now', force: true })
     } finally {
       refreshing = false
     }
