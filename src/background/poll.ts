@@ -65,7 +65,12 @@ async function diffDefault(
     case 'fail':
       return notify.notifyMainFailed({ repo, pipeline: next })
     case 'recover':
-      return notify.notifyRecovered({ repo, label: repo.defaultBranch, url: next.webUrl })
+      return notify.notifyRecovered({
+        repo,
+        key: 'default',
+        label: repo.defaultBranch,
+        url: next.webUrl
+      })
   }
 }
 
@@ -79,7 +84,12 @@ async function diffChange(
     case 'fail':
       return notify.notifyChangeFailed({ repo, change: next })
     case 'recover':
-      return notify.notifyRecovered({ repo, label: `#${next.number}`, url: next.webUrl })
+      return notify.notifyRecovered({
+        repo,
+        key: `pr-${next.number}`,
+        label: `#${next.number}`,
+        url: next.webUrl
+      })
   }
 }
 

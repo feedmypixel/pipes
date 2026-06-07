@@ -10,7 +10,7 @@ import type {
   Repo,
   ValidationResult
 } from './types'
-import { fetchJson, type RateLimitHeaders } from './http'
+import { fetchJson, RateLimitError, type RateLimitHeaders } from './http'
 import { mapLimit } from '../lib/async'
 import { SAAS_HOST } from '../lib/config'
 
@@ -223,18 +223,26 @@ export const github: Provider = {
     if (status === 304 || data === null) {
       return { changes: [], etag: etag ?? null, notModified: true, rateLimit }
     }
-    // The PR list has no check status, so fan out to each head SHA's check-runs (bounded).
+    // The PR list has no check status, so fan out to each head SHA's check-runs (bounded). These
+    // go through fetchJson with the rate-limit headers so an exhausted budget throws a
+    // RateLimitError that propagates to pollRepo's pause — not a swallowed generic error.
     const changes = await mapLimit<GhPull, Change>(data, 4, async (pull) => {
       let pullStatus: PipelineStatus = 'unknown'
       try {
-        const checks = await request<GhCheckRuns>(
-          account,
-          `/repos/${repo.id}/commits/${pull.head.sha}/check-runs`
+        const { data: checks } = await fetchJson<GhCheckRuns>(
+          `${apiBase(account)}/repos/${repo.id}/commits/${pull.head.sha}/check-runs`,
+          headers(account),
+          { rateLimitHeaders: RATE_LIMIT_HEADERS }
         )
-        pullStatus = worstStatus(
-          checks.check_runs.map((c) => mapGithubStatus(c.status, c.conclusion))
-        )
+        if (checks) {
+          pullStatus = worstStatus(
+            checks.check_runs.map((c) => mapGithubStatus(c.status, c.conclusion))
+          )
+        }
       } catch (err) {
+        if (err instanceof RateLimitError) {
+          throw err
+        }
         console.warn(`Checks unreadable for ${repo.name}#${pull.number}:`, (err as Error).message)
       }
       return {
