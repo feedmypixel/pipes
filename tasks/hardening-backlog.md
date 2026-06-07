@@ -158,6 +158,9 @@ product). Captured so nothing is lost.
 
 ## Components / UI
 
+- **Host as a select (options)** — replace the free-text Host input with a select: GitHub /
+  GitLab / "Self-hosted (enter URL)". Saves typos for the SaaS case while keeping the text
+  input for self-hosted GHES / GitLab origins. (Ben's idea.)
 - **Tooltip component** — replace native `title=` (ugly, slow ~1.5s delay, untyped) with a
   small `Tooltip` showing the same values nicely. Used heavily on rows (pipeline title), icon
   buttons, the star/branch marks. Needs hover/focus trigger, positioning that survives the
