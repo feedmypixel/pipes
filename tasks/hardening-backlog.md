@@ -115,8 +115,8 @@ product). Captured so nothing is lost.
   eyeball all three + both themes without forcing real failures.
 - **Popup quick "failures only" toggle** — popup is the glance; add a one-tap toggle to show
   only failing repos so problems jump out instantly. Delve deeper → jump to side panel → dig
-  in → repo links. (NB: a Failures view was trialled in the *side panel* and removed; this is
-  the *popup*, as a lightweight glance toggle — confirm interaction before building.)
+  in → repo links. (NB: a Failures view was trialled in the _side panel_ and removed; this is
+  the _popup_, as a lightweight glance toggle — confirm interaction before building.)
 
 ## Components / UI
 
