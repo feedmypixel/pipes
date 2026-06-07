@@ -6,7 +6,7 @@ import * as storage from '../lib/storage'
 import type { Snapshots } from '../lib/storage'
 import { mapLimit } from '../lib/async'
 import { keepLiveBranches } from '../lib/group'
-import { HEALTH_REFRESH_MS, BRANCH_REFRESH_MS } from '../lib/config'
+import { HEALTH_REFRESH_MS } from '../lib/config'
 import * as notify from '../lib/notify'
 
 /** Max provider requests in flight at once, so many repos don't burst the API. */
@@ -68,9 +68,6 @@ async function announceTransition(
 interface BranchCacheEntry {
   names: string[]
   etag: string
-  checkedAt: number
-  /** /branches couldn't be read (e.g. token lacks Contents:read) — don't filter, don't hammer. */
-  unavailable?: boolean
 }
 
 interface RepoPollResult {
@@ -79,7 +76,7 @@ interface RepoPollResult {
   rateLimit: { remaining: number; reset: number } | null
   /** Epoch seconds to pause this account, when the provider rate-limited us. */
   pausedUntil?: number
-  /** Live-branch cache to persist for this repo (omitted when unchanged/unavailable). */
+  /** Last-known-good live-branch cache to persist for this repo. */
   branches?: BranchCacheEntry
 }
 
@@ -94,46 +91,33 @@ async function pollRepo(
   prevSnapshots: Snapshots,
   notifyOnSuccess: boolean,
   etag: string | undefined,
-  branchCache: BranchCacheEntry | undefined,
-  force: boolean
+  branchCache: BranchCacheEntry | undefined
 ): Promise<RepoPollResult> {
   const prevList = prevSnapshots[repo.id] ?? []
   try {
     const provider = providerFor(account)
 
-    // Live branches drop ghost refs. Refreshed only every BRANCH_REFRESH_MS (branch lists
-    // change slowly) — between refreshes we reuse the cache. Best-effort: if /branches can't be
-    // read (e.g. a GitHub Actions-only token lacking Contents:read) we mark it unavailable, skip
-    // filtering rather than losing the repo, and don't retry every poll. Rate limits propagate.
-    const now = Date.now()
-    let branches: BranchCacheEntry | undefined = branchCache
-    let liveSet: Set<string> | null =
-      branchCache && !branchCache.unavailable ? new Set(branchCache.names) : null
-
-    const branchesStale = force || !branchCache || now - branchCache.checkedAt > BRANCH_REFRESH_MS
-    if (branchesStale) {
-      try {
-        const branchResult = await provider.listBranches(account, repo, branchCache?.etag)
-        const liveNames = branchResult.notModified
-          ? (branchCache?.names ?? [])
-          : branchResult.branches
-        liveSet = new Set(liveNames)
-        branches = {
-          names: liveNames,
-          etag: branchResult.etag ?? branchCache?.etag ?? '',
-          checkedAt: now
-        }
-      } catch (err) {
-        if (err instanceof RateLimitError) {
-          throw err
-        }
-        console.warn(`Branches unavailable for ${repo.name}:`, (err as Error).message)
-        liveSet = null // don't filter — show all rather than hide the repo
-        branches = { names: [], etag: '', checkedAt: now, unavailable: true }
+    // Live branches drop ghost refs (merged/deleted branches whose runs linger). Fetched every
+    // poll, ETag-conditional so a 304 costs no rate budget — a new branch shows within one cycle.
+    // On failure we fall back to the last-known-good list so ghosts never reappear; with no prior
+    // list we show only the default branch. Rate limits propagate to pause the account.
+    let branches = branchCache
+    let liveSet: Set<string>
+    try {
+      const branchResult = await provider.listBranches(account, repo, branchCache?.etag)
+      const liveNames = branchResult.notModified
+        ? (branchCache?.names ?? [])
+        : branchResult.branches
+      liveSet = new Set(liveNames)
+      branches = { names: liveNames, etag: branchResult.etag ?? branchCache?.etag ?? '' }
+    } catch (err) {
+      if (err instanceof RateLimitError) {
+        throw err
       }
+      console.warn(`Branches unreadable for ${repo.name}:`, (err as Error).message)
+      liveSet = new Set(branchCache?.names ?? []) // last-known-good, else default-only
     }
-    const filterLive = (pipelines: Pipeline[]): Pipeline[] =>
-      liveSet ? keepLiveBranches(pipelines, liveSet) : pipelines
+    const filterLive = (pipelines: Pipeline[]): Pipeline[] => keepLiveBranches(pipelines, liveSet)
 
     const result = await provider.listPipelines(account, repo, etag)
     if (result.notModified) {
@@ -286,8 +270,7 @@ async function runPollCycle(force: boolean): Promise<void> {
       prevSnapshots,
       settings.notifyOnSuccess,
       repoEtags[repo.id],
-      branchCache[repo.id],
-      force
+      branchCache[repo.id]
     )
     return { repo, account, ...result }
   })

@@ -130,6 +130,33 @@ test('ghost refs not in the live branch list are dropped', async () => {
   expect(snapshot().map((p) => p.ref)).toEqual(['main'])
 })
 
+test('branch-read failure still drops ghosts (no passthrough), keeping the default branch', async () => {
+  seed({ snapshots: { 'o/r': [pipe('main', 'success', true)] } })
+  h.provider.listBranches.mockRejectedValue(new Error('HTTP 403'))
+  h.provider.listPipelines.mockResolvedValue(
+    pipelines([pipe('main', 'success', true), pipe('ghost', 'failed', false)])
+  )
+  await poll()
+  expect(snapshot().map((p) => p.ref)).toEqual(['main'])
+})
+
+test('branch-read failure falls back to the last-known-good branch list', async () => {
+  seed({
+    branchCache: { 'o/r': { names: ['main', 'dev'], etag: 'b' } },
+    snapshots: { 'o/r': [pipe('main', 'success', true)] }
+  })
+  h.provider.listBranches.mockRejectedValue(new Error('HTTP 500'))
+  h.provider.listPipelines.mockResolvedValue(
+    pipelines([
+      pipe('main', 'success', true),
+      pipe('dev', 'success', false),
+      pipe('ghost', 'failed', false)
+    ])
+  )
+  await poll()
+  expect(snapshot().map((p) => p.ref)).toEqual(['main', 'dev'])
+})
+
 test('a rate limit pauses the account', async () => {
   seed()
   h.provider.listPipelines.mockRejectedValue(new RateLimitError(1_800_000_000))

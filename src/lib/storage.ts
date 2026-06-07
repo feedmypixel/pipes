@@ -41,13 +41,9 @@ interface StorageShape {
   accountHealth: Record<string, AccountHealth>
   /** Epoch ms of the last connection-health check (throttled, not every poll). */
   lastHealthAt: number
-  /** Live branch names + ETag + last-checked (ms) per repo, to drop ghost refs.
-   * `unavailable` marks repos where /branches can't be read (no Contents:read) so we don't
-   * mistake it for "zero branches" and don't retry every poll. */
-  branchCache: Record<
-    string,
-    { names: string[]; etag: string; checkedAt: number; unavailable?: boolean }
-  >
+  /** Last-known-good live branch names + ETag per repo, to drop ghost refs (merged/deleted
+   * branches whose runs linger). Re-fetched every poll, ETag-conditional. */
+  branchCache: Record<string, { names: string[]; etag: string }>
 }
 
 const DEFAULTS: StorageShape = {
