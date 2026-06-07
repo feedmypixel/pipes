@@ -94,7 +94,8 @@ async function pollRepo(
   prevSnapshots: Snapshots,
   notifyOnSuccess: boolean,
   etag: string | undefined,
-  branchCache: BranchCacheEntry | undefined
+  branchCache: BranchCacheEntry | undefined,
+  force: boolean
 ): Promise<RepoPollResult> {
   const prevList = prevSnapshots[repo.id] ?? []
   try {
@@ -109,7 +110,7 @@ async function pollRepo(
     let liveSet: Set<string> | null =
       branchCache && !branchCache.unavailable ? new Set(branchCache.names) : null
 
-    const branchesStale = !branchCache || now - branchCache.checkedAt > BRANCH_REFRESH_MS
+    const branchesStale = force || !branchCache || now - branchCache.checkedAt > BRANCH_REFRESH_MS
     if (branchesStale) {
       try {
         const branchResult = await provider.listBranches(account, repo, branchCache?.etag)
@@ -185,17 +186,18 @@ const RATE_LIMIT_FLOOR = 50
 // so they can't race on chrome.storage.
 let inFlight: Promise<void> | null = null
 
-export function poll(): Promise<void> {
+/** `force` (manual Refresh) bypasses the health + branch throttles for an immediate full check. */
+export function poll(force = false): Promise<void> {
   if (inFlight) {
     return inFlight
   }
-  inFlight = runPollCycle().finally(() => {
+  inFlight = runPollCycle(force).finally(() => {
     inFlight = null
   })
   return inFlight
 }
 
-async function runPollCycle(): Promise<void> {
+async function runPollCycle(force: boolean): Promise<void> {
   const [
     accounts,
     watchedRepos,
@@ -229,7 +231,7 @@ async function runPollCycle(): Promise<void> {
   // token problem — record the pause and leave the connection healthy.
   const healthPaused: Record<string, number> = {}
   let health = prevHealth
-  if (Date.now() - lastHealthAt >= HEALTH_REFRESH_MS) {
+  if (force || Date.now() - lastHealthAt >= HEALTH_REFRESH_MS) {
     health = {}
     await Promise.all(
       accounts.map(async (account) => {
@@ -284,7 +286,8 @@ async function runPollCycle(): Promise<void> {
       prevSnapshots,
       settings.notifyOnSuccess,
       repoEtags[repo.id],
-      branchCache[repo.id]
+      branchCache[repo.id],
+      force
     )
     return { repo, account, ...result }
   })
