@@ -1,6 +1,7 @@
 <script lang="ts">
   import type { HTMLSelectAttributes } from 'svelte/elements'
   import type { Snippet } from 'svelte'
+  import ChevronDown from '@lucide/svelte/icons/chevron-down'
   import { getFieldContext } from './field-context'
 
   let {
@@ -13,20 +14,31 @@
   const ctx = $derived(field())
 </script>
 
-<select
-  {...rest}
-  id={ctx.id}
-  aria-describedby={ctx.describedBy}
-  aria-invalid={ctx.invalid ? 'true' : undefined}
-  bind:value
->
-  {@render children()}
-</select>
+<span class="select">
+  <select
+    {...rest}
+    id={ctx.id}
+    aria-describedby={ctx.describedBy}
+    aria-invalid={ctx.invalid ? 'true' : undefined}
+    bind:value
+  >
+    {@render children()}
+  </select>
+  <ChevronDown class="chevron" size={16} aria-hidden="true" />
+</span>
 
 <style>
+  .select {
+    position: relative;
+    display: block;
+  }
   select {
     width: 100%;
+    /* Right padding clears the custom chevron; appearance:none drops the native arrow,
+       which the browser pins to the edge and ignores padding on. */
     padding: var(--space-md) var(--space-lg);
+    padding-right: var(--space-3xl);
+    appearance: none;
     border: 1px solid var(--border-2);
     border-radius: var(--radius);
     background: var(--bg);
@@ -44,5 +56,13 @@
   }
   select[aria-invalid='true'] {
     border-color: var(--failed);
+  }
+  .select :global(.chevron) {
+    position: absolute;
+    top: 50%;
+    right: var(--space-lg);
+    transform: translateY(-50%);
+    color: var(--text-2);
+    pointer-events: none;
   }
 </style>
