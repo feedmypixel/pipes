@@ -18,7 +18,7 @@ let liveConnections = 0
 let liveTimer: ReturnType<typeof setTimeout> | undefined
 
 function liveLoop(): void {
-  poll(false, true).catch((err) => console.warn('Live poll failed:', err))
+  poll().catch((err) => console.warn('Live poll failed:', err))
   liveTimer = setTimeout(liveLoop, LIVE_POLL_MS)
 }
 
@@ -92,9 +92,9 @@ chrome.notifications.onClosed.addListener((notifId) => {
 // Manual "refresh now" from popup / side panel.
 chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
   if (message?.type === 'poll-now') {
-    // Manual Refresh: force a full re-check and skip the ETag (fresh) for live status. The recurring
-    // live poll is driven by the LIVE_PORT loop above, not this message.
-    poll(message.force === true, message.fresh === true)
+    // Manual Refresh forces a full re-check (bypasses the health throttle). The recurring live
+    // poll is driven by the LIVE_PORT loop above, not this message.
+    poll(message.force === true)
       .then(() => sendResponse({ ok: true }))
       .catch((err) => sendResponse({ ok: false, error: (err as Error).message }))
     return true // keep the channel open for the async response

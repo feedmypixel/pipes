@@ -3,6 +3,7 @@
   import GitPullRequest from '@lucide/svelte/icons/git-pull-request'
   import GitBranch from '@lucide/svelte/icons/git-branch'
   import StatusIcon from './StatusIcon.svelte'
+  import RelativeTime from './RelativeTime.svelte'
 
   let { change }: { change: Change } = $props()
 </script>
@@ -26,12 +27,15 @@
     <GitBranch size={11} aria-hidden="true" />
     <span class="branch-name">{change.headRef}</span>
   </span>
+  {#if change.updatedAt}
+    <RelativeTime iso={change.updatedAt} />
+  {/if}
 </a>
 
 <style>
   .row {
     display: grid;
-    grid-template-columns: auto 1fr auto;
+    grid-template-columns: auto 1fr auto auto;
     align-items: center;
     gap: var(--space-md);
     /* indented: these rows always sit under a repo-name header */
@@ -87,7 +91,7 @@
     align-items: center;
     gap: var(--space-2xs);
     min-width: 0;
-    max-width: 11rem;
+    max-width: 9rem;
     color: var(--text-3);
   }
   .branch :global(svg) {
