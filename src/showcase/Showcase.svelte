@@ -145,7 +145,8 @@
       demoError = undefined
     }
   }
-  async function demoSubmit() {
+  async function demoSubmit(event: SubmitEvent) {
+    event.preventDefault()
     demoDone = false
     demoError = demoToken.trim() ? undefined : 'Enter a token'
     demoSummary = demoError ? [{ name: 'demo-token', message: demoError }] : []
@@ -291,28 +292,30 @@
   </section>
 
   <section>
-    <p class="eyebrow">Forms · live (press submit)</p>
-    {#if demoDone}<Banner variant="ok">Saved.</Banner>{/if}
-    <FormSummary errors={demoSummary} />
-    <Field
-      name="demo-token"
-      label="Token"
-      hint="submit empty to invoke errors; type to clear"
-      error={demoError}
-    >
-      <Input
-        bind:value={demoToken}
-        type="text"
-        placeholder="paste a token"
-        onblur={demoBlur}
-        oninput={demoInput}
-      />
-    </Field>
-    <div class="button-group">
-      <Button variant="primary" submitting={demoSubmitting} onclick={demoSubmit}>
-        {demoSubmitting ? 'Saving…' : 'Submit'}
-      </Button>
-    </div>
+    <p class="eyebrow">Forms · live (press Enter or submit)</p>
+    <form onsubmit={demoSubmit}>
+      {#if demoDone}<Banner variant="ok">Saved.</Banner>{/if}
+      <FormSummary errors={demoSummary} />
+      <Field
+        name="demo-token"
+        label="Token"
+        hint="submit empty to invoke errors; type to clear"
+        error={demoError}
+      >
+        <Input
+          bind:value={demoToken}
+          type="text"
+          placeholder="paste a token"
+          onblur={demoBlur}
+          oninput={demoInput}
+        />
+      </Field>
+      <div class="button-group">
+        <Button variant="primary" type="submit" submitting={demoSubmitting}>
+          {demoSubmitting ? 'Saving…' : 'Submit'}
+        </Button>
+      </div>
+    </form>
   </section>
 
   <section>
