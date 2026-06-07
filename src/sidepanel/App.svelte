@@ -314,7 +314,10 @@
     align-items: center;
     gap: var(--space-sm);
     flex: 1;
-    padding: var(--space-xs) var(--space-md);
+    /* Fixed height so the row never shifts when the clear button appears or while typing. */
+    height: 2rem;
+    box-sizing: border-box;
+    padding: 0 var(--space-md);
     border: 1px solid var(--border-2);
     border-radius: var(--radius);
     background: var(--bg);
