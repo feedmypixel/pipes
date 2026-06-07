@@ -9,11 +9,11 @@ const h = vi.hoisted(() => ({
     validateToken: vi.fn(),
     listRepos: vi.fn(),
     listPipelines: vi.fn(),
-    listBranches: vi.fn()
+    listOpenChanges: vi.fn()
   },
   notify: {
     notifyMainFailed: vi.fn(),
-    notifyBranchFailed: vi.fn(),
+    notifyChangeFailed: vi.fn(),
     notifyRecovered: vi.fn(),
     setBadge: vi.fn()
   }
@@ -51,28 +51,50 @@ const account = {
 }
 const repo = { id: 'o/r', accountId: 'a1', name: 'o/r', defaultBranch: 'main', webUrl: 'https://x' }
 
-function pipe(ref: string, status: PipelineStatus, isDefaultBranch: boolean) {
+function defaultPipe(status: PipelineStatus) {
   return {
-    id: `${ref}-${status}`,
-    ref,
-    isDefaultBranch,
+    id: `d-${status}`,
+    ref: 'main',
+    isDefaultBranch: true,
     status,
-    webUrl: `https://x/${ref}`,
+    webUrl: 'https://x/main',
     sha: 's',
-    title: ref,
+    title: 'main',
     updatedAt: '2026-06-07T00:00:00Z'
   }
 }
-function pipelines(list: ReturnType<typeof pipe>[]) {
-  return { pipelines: list, etag: 'e', notModified: false, rateLimit: null }
+function runs(status?: PipelineStatus) {
+  return {
+    pipelines: status ? [defaultPipe(status)] : [],
+    etag: 'e',
+    notModified: false,
+    rateLimit: null
+  }
+}
+function change(number: number, status: PipelineStatus, isDraft = false) {
+  return {
+    number,
+    title: `PR ${number}`,
+    headRef: `f${number}`,
+    headSha: `s${number}`,
+    status,
+    webUrl: `https://x/pull/${number}`,
+    isDraft,
+    isBot: false
+  }
+}
+function openChanges(list: ReturnType<typeof change>[]) {
+  return { changes: list, etag: 'c', notModified: false, rateLimit: null }
 }
 function seed(overrides: Record<string, unknown> = {}) {
   h.store.accounts = [account]
   h.store.watchedRepos = [repo]
   Object.assign(h.store, overrides)
 }
-function snapshot() {
-  return (h.store.snapshots as Record<string, ReturnType<typeof pipe>[]>)['o/r'] ?? []
+function snap() {
+  return (h.store.snapshots as Record<string, { default: unknown; changes: { number: number }[] }>)[
+    'o/r'
+  ]
 }
 
 beforeEach(() => {
@@ -81,80 +103,46 @@ beforeEach(() => {
   }
   vi.clearAllMocks()
   h.provider.validateToken.mockResolvedValue({ ok: true, user: 'u' })
-  h.provider.listBranches.mockResolvedValue({
-    branches: ['main'],
-    etag: 'b',
-    notModified: false,
-    rateLimit: null
-  })
-  h.provider.listPipelines.mockResolvedValue(pipelines([]))
+  h.provider.listPipelines.mockResolvedValue(runs())
+  h.provider.listOpenChanges.mockResolvedValue(openChanges([]))
 })
 
-test('first sight seeds the snapshot silently (no notifications)', async () => {
+test('first sight seeds the default branch silently', async () => {
   seed()
-  h.provider.listPipelines.mockResolvedValue(pipelines([pipe('main', 'success', true)]))
+  h.provider.listPipelines.mockResolvedValue(runs('success'))
   await poll()
-  expect(snapshot().map((p) => p.ref)).toEqual(['main'])
+  expect((snap().default as { status: string }).status).toBe('success')
   expect(h.notify.notifyMainFailed).not.toHaveBeenCalled()
-  expect(h.notify.notifyRecovered).not.toHaveBeenCalled()
   expect(h.notify.setBadge).toHaveBeenCalledWith(0)
 })
 
 test('default-branch failure notifies loudly and sets the badge', async () => {
-  seed({ snapshots: { 'o/r': [pipe('main', 'success', true)] } })
-  h.provider.listPipelines.mockResolvedValue(pipelines([pipe('main', 'failed', true)]))
+  seed({ snapshots: { 'o/r': { default: defaultPipe('success'), changes: [] } } })
+  h.provider.listPipelines.mockResolvedValue(runs('failed'))
   await poll()
   expect(h.notify.notifyMainFailed).toHaveBeenCalledTimes(1)
   expect(h.notify.setBadge).toHaveBeenCalledWith(1)
 })
 
-test('recovery (failed → success) notifies', async () => {
-  seed({ snapshots: { 'o/r': [pipe('main', 'failed', true)] } })
-  h.provider.listPipelines.mockResolvedValue(pipelines([pipe('main', 'success', true)]))
+test('default-branch recovery notifies', async () => {
+  seed({ snapshots: { 'o/r': { default: defaultPipe('failed'), changes: [] } } })
+  h.provider.listPipelines.mockResolvedValue(runs('success'))
   await poll()
   expect(h.notify.notifyRecovered).toHaveBeenCalledTimes(1)
 })
 
-test('ghost refs not in the live branch list are dropped', async () => {
+test('a PR check going failed notifies', async () => {
+  seed({ snapshots: { 'o/r': { default: null, changes: [change(7, 'success')] } } })
+  h.provider.listOpenChanges.mockResolvedValue(openChanges([change(7, 'failed')]))
+  await poll()
+  expect(h.notify.notifyChangeFailed).toHaveBeenCalledTimes(1)
+})
+
+test('open PRs are stored in the snapshot', async () => {
   seed()
-  h.provider.listBranches.mockResolvedValue({
-    branches: ['main'],
-    etag: 'b',
-    notModified: false,
-    rateLimit: null
-  })
-  h.provider.listPipelines.mockResolvedValue(
-    pipelines([pipe('main', 'success', true), pipe('deleted-branch', 'success', false)])
-  )
+  h.provider.listOpenChanges.mockResolvedValue(openChanges([change(3, 'running')]))
   await poll()
-  expect(snapshot().map((p) => p.ref)).toEqual(['main'])
-})
-
-test('branch-read failure still drops ghosts (no passthrough), keeping the default branch', async () => {
-  seed({ snapshots: { 'o/r': [pipe('main', 'success', true)] } })
-  h.provider.listBranches.mockRejectedValue(new Error('HTTP 403'))
-  h.provider.listPipelines.mockResolvedValue(
-    pipelines([pipe('main', 'success', true), pipe('ghost', 'failed', false)])
-  )
-  await poll()
-  expect(snapshot().map((p) => p.ref)).toEqual(['main'])
-})
-
-test('branch-read failure falls back to the last-known-good branch list', async () => {
-  seed({
-    branchCache: { 'o/r': { names: ['main', 'dev'], etag: 'b' } },
-    snapshots: { 'o/r': [pipe('main', 'success', true)] }
-  })
-  h.provider.listBranches.mockRejectedValue(new Error('HTTP 500'))
-  h.provider.listPipelines.mockResolvedValue(
-    pipelines([
-      pipe('main', 'success', true),
-      pipe('dev', 'success', false),
-      pipe('ghost', 'failed', false)
-    ])
-  )
-  await poll()
-  expect(snapshot().map((p) => p.ref)).toEqual(['main', 'dev'])
+  expect(snap().changes.map((c) => c.number)).toEqual([3])
 })
 
 test('a rate limit pauses the account', async () => {
@@ -174,21 +162,23 @@ test('a paused account is skipped and keeps its snapshot', async () => {
   const future = Math.floor(Date.now() / 1000) + 600
   seed({
     rateLimitPausedUntil: { a1: future },
-    snapshots: { 'o/r': [pipe('main', 'success', true)] }
+    snapshots: { 'o/r': { default: defaultPipe('success'), changes: [] } }
   })
   await poll()
   expect(h.provider.listPipelines).not.toHaveBeenCalled()
-  expect(snapshot().map((p) => p.ref)).toEqual(['main'])
+  expect((snap().default as { status: string }).status).toBe('success')
 })
 
-test('a background poll sends the stored pipeline ETag', async () => {
-  seed({ repoEtags: { 'o/r': 'pipe-etag' } })
+test('a background poll sends the stored ETags', async () => {
+  seed({ repoEtags: { 'o/r': 'pipe-etag' }, changeEtags: { 'o/r': 'change-etag' } })
   await poll()
   expect(h.provider.listPipelines).toHaveBeenCalledWith(account, repo, 'pipe-etag')
+  expect(h.provider.listOpenChanges).toHaveBeenCalledWith(account, repo, 'change-etag')
 })
 
-test('a fresh poll skips the pipeline ETag for live status', async () => {
-  seed({ repoEtags: { 'o/r': 'pipe-etag' } })
+test('a fresh poll skips the ETags for live status', async () => {
+  seed({ repoEtags: { 'o/r': 'pipe-etag' }, changeEtags: { 'o/r': 'change-etag' } })
   await poll(false, true)
   expect(h.provider.listPipelines).toHaveBeenCalledWith(account, repo, undefined)
+  expect(h.provider.listOpenChanges).toHaveBeenCalledWith(account, repo, undefined)
 })

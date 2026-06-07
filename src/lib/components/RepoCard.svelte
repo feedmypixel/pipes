@@ -2,9 +2,10 @@
   import ChevronRight from '@lucide/svelte/icons/chevron-right'
   import ExternalLink from '@lucide/svelte/icons/external-link'
   import type { RepoView } from '../group'
-  import { visibleBranches, primaryVisible, failingCount } from '../group'
+  import { visibleChanges, defaultVisible, failingCount } from '../group'
   import type { PipelineStatus } from '../../providers/types'
   import Row from './Row.svelte'
+  import ChangeRow from './ChangeRow.svelte'
 
   let {
     view,
@@ -18,10 +19,10 @@
     onToggle?: () => void
   } = $props()
 
-  // Non-default branches collapse into the drawer; the default branch is always shown.
-  const branches = $derived(visibleBranches(view, allowed))
-  const showPrimary = $derived(primaryVisible(view, allowed))
-  const hasBranches = $derived(branches.length > 0)
+  // Open PRs/MRs collapse into the drawer; the default branch is always shown.
+  const changes = $derived(visibleChanges(view, allowed))
+  const showDefault = $derived(defaultVisible(view, allowed))
+  const hasChanges = $derived(changes.length > 0)
   const failing = $derived(failingCount(view))
 </script>
 
@@ -30,12 +31,12 @@
     <button
       class="repo-toggle"
       class:open={!collapsed}
-      aria-expanded={hasBranches ? !collapsed : undefined}
-      disabled={!hasBranches || !onToggle}
+      aria-expanded={hasChanges ? !collapsed : undefined}
+      disabled={!hasChanges || !onToggle}
       onclick={onToggle}
     >
       <span class="caret">
-        {#if hasBranches}<ChevronRight size={16} />{/if}
+        {#if hasChanges}<ChevronRight size={16} />{/if}
       </span>
       <span class="repo-name">{view.displayName}</span>
       {#if failing > 0}
@@ -53,12 +54,12 @@
     </a>
   </div>
 
-  {#if view.primary && showPrimary}
-    <Row pipeline={view.primary} />
+  {#if view.default && showDefault}
+    <Row pipeline={view.default} />
   {/if}
   {#if !collapsed}
-    {#each branches as branch (branch.id)}
-      <Row pipeline={branch} />
+    {#each changes as change (change.number)}
+      <ChangeRow {change} />
     {/each}
   {/if}
 </div>

@@ -1,5 +1,5 @@
 <script lang="ts">
-  import type { Pipeline, PipelineStatus } from '../providers/types'
+  import type { Change, Pipeline, PipelineStatus } from '../providers/types'
   import StatusIcon from '../lib/components/StatusIcon.svelte'
   import RefChip from '../lib/components/RefChip.svelte'
   import RelativeTime from '../lib/components/RelativeTime.svelte'
@@ -80,7 +80,23 @@
     }
   }
 
-  function view(displayName: string, primary: Pipeline, branches: Pipeline[] = []): RepoView {
+  function change(number: number, status: PipelineStatus, isDraft = false): Change {
+    return {
+      number,
+      title: `Change ${number}`,
+      headRef: `pr/${number}`,
+      headSha: 'abc1234',
+      status,
+      webUrl: 'https://example.test/pull',
+      isDraft,
+      isBot: false
+    }
+  }
+  function view(
+    displayName: string,
+    defaultPipe: Pipeline | null,
+    changes: Change[] = []
+  ): RepoView {
     return {
       repo: {
         id: `o/${displayName}`,
@@ -90,15 +106,14 @@
         webUrl: 'https://example.test'
       },
       displayName,
-      primary,
-      active: branches.filter((p) => p.status === 'failed' || p.status === 'running'),
-      collapsed: branches.filter((p) => p.status !== 'failed' && p.status !== 'running')
+      default: defaultPipe,
+      changes
     }
   }
   const repoViews: RepoView[] = [
     view('status-api', pipeline('failed', 'main', true, 4), [
-      pipeline('failed', 'pr/210-retry', false, 9),
-      pipeline('success', 'fix/timeout', false, 120)
+      change(210, 'failed'),
+      change(208, 'success', true)
     ]),
     view('marketing-site', pipeline('success', 'main', true, 90)),
     view('cli', pipeline('running', 'main', true, 1))

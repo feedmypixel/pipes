@@ -26,7 +26,7 @@ tab open on the pipelines page. **Loud when the default branch breaks.**
 - **Pick repos from the API**: no hand-entered IDs; check the ones to watch.
 - **Notifies on transitions only**: re-polling the same failure stays quiet.
   - **Default-branch failure → loud** (sticky, high-priority notification).
-  - Other branches → normal toast. Recovery (red → green) → optional toast.
+  - An open PR/MR's checks failing → normal toast. Recovery (red → green) → optional toast.
 - **Badge**: toolbar count of currently-failing pipelines.
 - **Two surfaces**: a popup for a quick glance, a side panel to keep open while
   you work. Both share one live-updating status list.
@@ -129,14 +129,15 @@ full surface. (Loaded, the same pages live at `chrome-extension://<id>/src/...`.
 
 ## Tokens
 
-| Provider | Scope                                                                   | Header                  |
-| -------- | ----------------------------------------------------------------------- | ----------------------- |
-| GitLab   | `read_api` (covers pipelines + branches)                                | `PRIVATE-TOKEN`         |
-| GitHub   | fine-grained: **Actions: Read** + **Contents: Read**, or classic `repo` | `Authorization: Bearer` |
+| Provider | Scope                                                                        | Header                  |
+| -------- | ---------------------------------------------------------------------------- | ----------------------- |
+| GitLab   | `read_api` (covers pipelines + merge requests)                               | `PRIVATE-TOKEN`         |
+| GitHub   | fine-grained: **Actions: Read** + **Pull requests: Read** + **Checks: Read** | `Authorization: Bearer` |
 
-GitHub needs **Contents: Read** for the branch list — that's how Pipes drops merged/deleted
-branches (workflow runs persist after a branch is gone; the branch list is the only signal it
-still exists). Without it, runs for deleted branches linger.
+Pipes shows each repo's default branch (Actions runs) plus its open PRs/MRs with their check
+status. GitHub reads `/pulls` (**Pull requests**) and each head commit's check runs (**Checks**);
+the default-branch run needs **Actions**. No **Contents** scope is required — closed PRs drop off
+on their own, so there are no merged/deleted-branch ghosts to filter.
 
 Add accounts in the options page; each token is validated against the host before
 it's saved. For a client/employer instance, confirm storing an instance token in a
