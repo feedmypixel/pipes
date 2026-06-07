@@ -40,9 +40,6 @@
   --neutral-bg: oklch(95% 0.008 256deg);
   --neutral-line: oklch(88% 0.012 256deg);
 
-  /* unknown: violet, kept off the blue of running/brand so it reads as its own state */
-  --unknown: oklch(56% 0.18 300deg);
-
   /* default-branch star marker (decorative, not a status) */
   --star: oklch(78% 0.15 85deg);
 
@@ -170,7 +167,6 @@
     --neutral: oklch(72% 0.025 256deg);
     --neutral-bg: oklch(28% 0.012 256deg);
     --neutral-line: oklch(40% 0.02 256deg);
-    --unknown: oklch(72% 0.16 300deg);
     --star: oklch(85% 0.14 85deg);
     --alarm-strip: oklch(30% 0.1 27deg);
     --alarm-ink: oklch(82% 0.13 27deg);
@@ -217,7 +213,6 @@
   --neutral: oklch(72% 0.025 256deg);
   --neutral-bg: oklch(28% 0.012 256deg);
   --neutral-line: oklch(40% 0.02 256deg);
-  --unknown: oklch(72% 0.16 300deg);
   --star: oklch(85% 0.14 85deg);
   --alarm-strip: oklch(30% 0.1 27deg);
   --alarm-ink: oklch(82% 0.13 27deg);
