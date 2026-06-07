@@ -87,6 +87,24 @@ Configuration. Forms follow the design's forms spec.
 - Performance, rate-limit friendliness, error/empty-state polish
 - End-to-end dogfood on real repos
 
+### Automated end-to-end tests ⏳ (big gap)
+
+Today's tests stop at the unit + component boundary; nothing boots the assembled MV3
+extension. Add Playwright e2e that loads `dist/` as an unpacked extension (persistent
+context, `--load-extension`) and drives the real surfaces with live `chrome.*` + the
+service worker. Provider APIs stubbed at the network layer (Playwright routes), tokens
+fake. Journeys to cover:
+
+- **Add a connection** — pick provider, enter token, validate (authed handle shown), add;
+  it appears in the list. Invalid token surfaces the error.
+- **Self-hosted** — enter a custom origin, host-permission prompt, validate.
+- **Pick repos** — search, check repos; they show in the popup + side panel.
+- **Default branch breaks** — red badge count + notification fires; click opens the run.
+- **Recovery** — red → green clears the badge; recovery toast when enabled.
+- **PR/MR rows** — open PRs/MRs appear with status; draft dimmed; drawer expand/collapse.
+- **Rate limit** — banner shows, polling pauses, resumes on reset.
+- **Manual refresh**, **remove connection + undo**, **settings persist** (interval, notify).
+
 ## Phase 6: Web Store release ⏳
 
 - `CHROMEWEBSTORE.md`: listing copy, permission justifications, privacy disclosure
