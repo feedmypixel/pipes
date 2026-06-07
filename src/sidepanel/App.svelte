@@ -10,6 +10,7 @@
     sortGroups,
     filterGroups,
     ALL_BRANCH_STATES,
+    BRANCH_STATE_ORDER,
     countDefaultBranchFailures,
     type SortMode
   } from '../lib/group'
@@ -18,15 +19,6 @@
   import RepoList from '../lib/components/RepoList.svelte'
   import TopAlerts from '../lib/components/TopAlerts.svelte'
   import UpdatedFooter from '../lib/components/UpdatedFooter.svelte'
-
-  const BRANCH_STATES: PipelineStatus[] = [
-    'failed',
-    'running',
-    'pending',
-    'success',
-    'canceled',
-    'skipped'
-  ]
 
   const POLL_INTERVAL_MS = 10_000
 
@@ -67,8 +59,8 @@
   }
 
   function toggleAll() {
-    const turnOn = !BRANCH_STATES.every((state) => allowed.has(state))
-    for (const state of BRANCH_STATES) {
+    const turnOn = !BRANCH_STATE_ORDER.every((state) => allowed.has(state))
+    for (const state of BRANCH_STATE_ORDER) {
       if (turnOn) {
         allowed.add(state)
       } else {
@@ -105,7 +97,7 @@
     watchedRepos.filter((repo) => repo.name.toLowerCase().includes(search.trim().toLowerCase()))
   )
   const groups = $derived(filterGroups(sortGroups(groupByOwner(matched, snapshots), sort), allowed))
-  const allStatesOn = $derived(BRANCH_STATES.every((state) => allowed.has(state)))
+  const allStatesOn = $derived(BRANCH_STATE_ORDER.every((state) => allowed.has(state)))
   const mainFailing = $derived(countDefaultBranchFailures(watchedRepos, snapshots))
   const configured = $derived(accounts.length > 0)
   const connectionIssues = $derived(
@@ -184,7 +176,7 @@
     </div>
     <div class="filters">
       <div class="pills" role="group" aria-label="Show branch states">
-        {#each BRANCH_STATES as state (state)}
+        {#each BRANCH_STATE_ORDER as state (state)}
           <button
             class="chip"
             class:on={allowed.has(state)}

@@ -5,17 +5,11 @@
   import StatusIcon from './StatusIcon.svelte'
   import RelativeTime from './RelativeTime.svelte'
 
-  let {
-    pipeline,
-    primary = false,
-    dim = false
-  }: { pipeline: Pipeline; primary?: boolean; dim?: boolean } = $props()
+  let { pipeline }: { pipeline: Pipeline } = $props()
 </script>
 
 <a
   class="row"
-  class:primary
-  class:dim
   data-status={pipeline.status}
   href={pipeline.webUrl}
   target="_blank"
@@ -50,18 +44,12 @@
   .row:hover {
     background: var(--hover);
   }
-  .row.primary {
-    border-top: 1px solid var(--border);
-  }
   .row[data-status='failed'] {
     box-shadow: inset 2px 0 0 var(--failed);
     background: var(--failed-bg);
   }
   .row[data-status='running'] {
     box-shadow: inset 2px 0 0 var(--running);
-  }
-  .row.dim {
-    opacity: 0.5;
   }
   .ref {
     display: inline-flex;
