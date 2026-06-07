@@ -42,9 +42,11 @@ Each parent task is its own small PR. Check off sub-tasks as completed.
   - [x] 2.6 `keepLiveBranches` test. (Provider `listBranches` mapping covered with 3.0.)
 
 - [ ] 3.0 **Core test suite + CI signal**
-  - [ ] 3.1 `poll()` orchestration test. 3.2 `notify` test. 3.3 provider mapping tests.
-  - [ ] 3.4 Component tests (RepoCard/RepoList/TopAlerts/UpdatedFooter/Row).
-  - [ ] 3.5 CI: coverage report (non-gating) + `pnpm build` job + Playwright-install parity.
+  - [x] 3.1 `poll()` orchestration test. 3.2 `notify` test. 3.3 provider mapping tests
+        (`listBranches` name/etag mapping).
+  - [ ] 3.4 Component tests (RepoCard/RepoList/TopAlerts/UpdatedFooter/Row). _Deferred — UI, low risk._
+  - [~] 3.5 CI: `pnpm build` job added; Playwright install already in CI. Coverage report
+    deferred (needs `@vitest/coverage-*` dep; non-gating, post-launch).
 
 - [x] 4.0 **Central config** (`src/lib/config.ts`)
   - [x] 4.1 SaaS hosts (`SAAS_HOST`). 4.2 alarm floor `MIN_POLL_MINUTES` (worker ↔ options) +
