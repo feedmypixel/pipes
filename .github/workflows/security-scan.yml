@@ -1,8 +1,8 @@
 name: Security scan
 
 on:
+  # Every PR, whatever its base (stacked PRs included); push checks stay on main.
   pull_request:
-    branches: [main]
   push:
     branches: [main]
 
