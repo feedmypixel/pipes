@@ -30,25 +30,36 @@
   const count = $derived(view.changes.length)
   const changeNoun = $derived(view.providerId === 'gitlab' ? 'merge request' : 'pull request')
   const changeTooltip = $derived(`${count} open ${changeNoun}${count === 1 ? '' : 's'}`)
+
+  // A repo with no open PRs/MRs has nothing to expand, so it's a plain header, not a
+  // disabled button (no-disabled-buttons: never-applicable shouldn't render the affordance).
+  const canToggle = $derived(hasChanges && Boolean(onToggle))
 </script>
+
+{#snippet head()}
+  <span class="caret">
+    {#if canToggle}<ChevronRight size={16} />{/if}
+  </span>
+  <span class="repo-name">{view.displayName}</span>
+  {#if failing > 0}
+    <span class="fail-badge" use:tooltip={`${failing} failing`}>{failing}</span>
+  {/if}
+{/snippet}
 
 <div class="repo">
   <div class="repo-head">
-    <button
-      class="repo-toggle"
-      class:open={!collapsed}
-      aria-expanded={hasChanges ? !collapsed : undefined}
-      disabled={!hasChanges || !onToggle}
-      onclick={onToggle}
-    >
-      <span class="caret">
-        {#if hasChanges}<ChevronRight size={16} />{/if}
-      </span>
-      <span class="repo-name">{view.displayName}</span>
-      {#if failing > 0}
-        <span class="fail-badge" use:tooltip={`${failing} failing`}>{failing}</span>
-      {/if}
-    </button>
+    {#if canToggle}
+      <button
+        class="repo-toggle"
+        class:open={!collapsed}
+        aria-expanded={!collapsed}
+        onclick={onToggle}
+      >
+        {@render head()}
+      </button>
+    {:else}
+      <div class="repo-toggle">{@render head()}</div>
+    {/if}
     {#if view.changes.length > 0}
       <span class="pr-count" use:tooltip={changeTooltip}>
         <GitPullRequest size={12} />
@@ -95,7 +106,7 @@
     cursor: pointer;
     text-align: left;
   }
-  .repo-toggle:disabled {
+  div.repo-toggle {
     cursor: default;
   }
   .caret {
