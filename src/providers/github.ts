@@ -9,8 +9,8 @@ import type {
   ValidationResult
 } from './types'
 import { fetchJson, type RateLimitHeaders } from './http'
+import { SAAS_HOST } from '../lib/config'
 
-const SAAS_HOST = 'https://github.com'
 const SAAS_API = 'https://api.github.com'
 const REPO_PAGES = 3 // up to 300 repos
 const RUNS_PER_REPO = 30
@@ -21,7 +21,7 @@ const RATE_LIMIT_HEADERS: RateLimitHeaders = {
 
 /** api.github.com for SaaS; {host}/api/v3 for GitHub Enterprise Server. */
 function apiBase(account: Account): string {
-  return account.host.replace(/\/$/, '') === SAAS_HOST
+  return account.host.replace(/\/$/, '') === SAAS_HOST.github
     ? SAAS_API
     : `${account.host.replace(/\/$/, '')}/api/v3`
 }

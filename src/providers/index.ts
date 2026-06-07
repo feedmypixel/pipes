@@ -1,4 +1,5 @@
 import type { Account, Provider, ProviderId } from './types'
+import { SAAS_HOST } from '../lib/config'
 import { github } from './github'
 import { gitlab } from './gitlab'
 
@@ -14,7 +15,7 @@ export function getProvider(id: ProviderId): Provider {
 
 /** Default sign-in origin for a provider's SaaS offering. */
 export function defaultHost(provider: ProviderId): string {
-  return provider === 'github' ? 'https://github.com' : 'https://gitlab.com'
+  return SAAS_HOST[provider]
 }
 
 /** Turn user input ("github.com", "https://x/", a path) into a bare origin, or '' if invalid. */
@@ -34,10 +35,10 @@ export function normaliseHost(input: string): string {
 /** The provider for a known SaaS host, or null for a self-hosted origin (detect by probing). */
 export function saasProvider(host: string): ProviderId | null {
   const origin = normaliseHost(host)
-  if (origin === 'https://github.com') {
+  if (origin === SAAS_HOST.github) {
     return 'github'
   }
-  if (origin === 'https://gitlab.com') {
+  if (origin === SAAS_HOST.gitlab) {
     return 'gitlab'
   }
   return null
