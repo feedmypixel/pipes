@@ -46,5 +46,14 @@ export default defineManifest({
     32: 'icons/icon-32.png',
     48: 'icons/icon-48.png',
     128: 'icons/icon-128.png'
-  }
+  },
+
+  // Status glyphs used as notification icons (not part of the manifest icon set). Declared so
+  // crxjs packages them and the service worker can reference them by path.
+  web_accessible_resources: [
+    {
+      resources: ['icons/status-success.png', 'icons/status-failed.png'],
+      matches: ['<all_urls>']
+    }
+  ]
 })
