@@ -20,7 +20,7 @@ The poll loop diffs each fresh pipeline against the last snapshot and only notif
 | Transition                  | Function             | Priority | Sticky                     |
 | --------------------------- | -------------------- | -------- | -------------------------- |
 | Default branch → failed     | `notifyMainFailed`   | 2        | yes (`requireInteraction`) |
-| Non-default branch → failed | `notifyBranchFailed` | 1        | no                         |
+| Open PR/MR → failed         | `notifyChangeFailed` | 1        | no                         |
 | Previously-failed → success | `notifyRecovered`    | 0        | no                         |
 
 - **First sight is silent.** A repo whose pipelines are already red when you add it seeds the
@@ -30,27 +30,28 @@ The poll loop diffs each fresh pipeline against the last snapshot and only notif
 
 ## Click → the job
 
-Each notification stores its pipeline URL (`notifLinks` in `chrome.storage`) keyed by the
-notification id. `chrome.notifications.onClicked` opens that URL in a new tab and clears the
-link. So a click always lands on the exact run/job, even much later.
+Each notification stores its target URL (`notifLinks` in `chrome.storage`) keyed by the
+notification id. Clicking the body or the `Open` button (`onClicked` / `onButtonClicked`) opens
+that URL in a new tab and clears the link; a dismissal (`onClosed`) just clears it. So a click
+always lands on the exact run / PR / MR, even much later.
 
 ## What we control
 
 `chrome.notifications` gives us full control over **text**, partial over **icon**, and almost
 none over **sound** or **visual style** — the rest is the OS.
 
-| Aspect               | Control | Notes                                                                                                                                                                   |
-| -------------------- | ------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `title`              | full    | We send `<emoji> <repo> · <ref>` (repo without owner). The 🔴/❌/✅ emoji carry the state.                                                                              |
-| `message`            | full    | One short status line: `Default branch failed` / `Failed` / `Passed`.                                                                                                   |
-| `contextMessage`     | full    | A third greyed line. Unused today (could be `GitHub Actions · 2m ago`).                                                                                                 |
-| `buttons`            | full    | Up to 2 action buttons. Unused today (e.g. Open run / Mute repo).                                                                                                       |
-| `type`               | full    | `basic` today; `list` could group several failures, `image`/`progress` also exist.                                                                                      |
-| `priority`           | full    | -2…2. Higher = more prominent / persistent.                                                                                                                             |
-| `requireInteraction` | full    | Sticky until dismissed. Used for default-branch failures.                                                                                                               |
-| `iconUrl`            | partial | We set `/icons/icon-128.png`. **macOS shows the Chrome app icon regardless** (OS rule); our icon shows on Windows/Linux.                                                |
-| **Sound**            | none    | `chrome.notifications` has no sound option and no reliable per-notification mute. Plays the macOS default for Chrome (System Settings › Notifications › Google Chrome). |
-| Visual style         | none    | Native OS notification — no theming of fonts/colours/layout.                                                                                                            |
+| Aspect               | Control | Notes                                                                                                                                                                                                              |
+| -------------------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `title`              | full    | `<repo> · <ref> failed` / `<repo> · #<n> failed` / `<repo> · <ref> recovered` (repo without owner). State lives in the word + the icon, no emoji.                                                                  |
+| `message`            | full    | The run / PR / MR title; `Back to green` on recovery.                                                                                                                                                              |
+| `contextMessage`     | full    | The greyed third line: full `owner/repo`, or the head branch for a PR/MR failure.                                                                                                                                  |
+| `buttons`            | full    | One `Open` button; clicking it (or the body) opens the run / PR / MR.                                                                                                                                              |
+| `type`               | full    | `basic` today; `list` could group several failures, `image`/`progress` also exist.                                                                                                                                 |
+| `priority`           | full    | -2…2. Higher = more prominent / persistent.                                                                                                                                                                        |
+| `requireInteraction` | full    | Sticky until dismissed. Used for default-branch failures.                                                                                                                                                          |
+| `iconUrl`            | partial | A packaged status glyph (`/icons/status-{failed,success}.png`) so the toast leads with a red cross / green tick. **macOS still shows the Chrome icon on the left** (OS rule); our glyph is the image on the right. |
+| **Sound**            | none    | `chrome.notifications` has no sound option and no reliable per-notification mute. Plays the macOS default for Chrome (System Settings › Notifications › Google Chrome).                                            |
+| Visual style         | none    | Native OS notification — no theming of fonts/colours/layout.                                                                                                                                                       |
 
 ### Custom sound (if ever needed)
 
