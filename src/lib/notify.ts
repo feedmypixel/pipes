@@ -32,8 +32,10 @@ export async function notifyMainFailed({
   await chrome.notifications.create(id, {
     type: 'basic',
     iconUrl: '/icons/icon-128.png',
-    title: `🔴 ${shortName(repo)} · ${repo.defaultBranch}`,
-    message: 'Default branch failed',
+    title: `${shortName(repo)} · ${repo.defaultBranch} failed`,
+    message: pipeline.title,
+    contextMessage: repo.name,
+    buttons: [{ title: 'Open run' }],
     priority: 2,
     requireInteraction: true
   })
@@ -52,8 +54,10 @@ export async function notifyChangeFailed({
   await chrome.notifications.create(id, {
     type: 'basic',
     iconUrl: '/icons/icon-128.png',
-    title: `❌ ${shortName(repo)} · #${change.number}`,
-    message: `Checks failed: ${change.title}`,
+    title: `${shortName(repo)} · #${change.number} failed`,
+    message: change.title,
+    contextMessage: change.headRef,
+    buttons: [{ title: 'Open PR' }],
     priority: 1
   })
 }
@@ -79,8 +83,10 @@ export async function notifyRecovered({
   await chrome.notifications.create(id, {
     type: 'basic',
     iconUrl: '/icons/icon-128.png',
-    title: `✅ ${shortName(repo)} · ${label}`,
-    message: 'Passed',
+    title: `${shortName(repo)} · ${label} recovered`,
+    message: 'Back to green',
+    contextMessage: repo.name,
+    buttons: [{ title: 'Open' }],
     priority: 0
   })
 }

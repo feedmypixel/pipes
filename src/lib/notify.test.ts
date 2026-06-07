@@ -80,11 +80,14 @@ test('setBadge shows the count, then clears at 0', async () => {
   expect(badge.text).toBe('')
 })
 
-test('default-branch failure is sticky + high priority and stores its link', async () => {
+test('default-branch failure is sticky + high priority, with context + an open button', async () => {
   await notify.notifyMainFailed({ repo, pipeline })
   expect(created).toHaveLength(1)
   expect(created[0].opts.requireInteraction).toBe(true)
   expect(created[0].opts.priority).toBe(2)
+  expect(created[0].opts.contextMessage).toBe('o/r')
+  expect(created[0].opts.buttons).toEqual([{ title: 'Open run' }])
+  expect(created[0].opts.title).toBe('r · main failed') // plain text, no emoji glyph
   expect(store.notifLinks[created[0].id]).toBe('https://x/run/1')
 })
 
