@@ -327,12 +327,8 @@
               <span>What permissions does my token need?</span>
             </summary>
             <ul>
-              <li>
-                <b>GitHub</b>: fine-grained token with <b>Actions: read</b> and
-                <b>Contents: read</b> (Contents lets Pipes drop merged/deleted branches). Grant the repos
-                or orgs you want to watch.
-              </li>
-              <li><b>GitLab</b>: personal access token with the <b>read_api</b> scope.</li>
+              <li><b>GitHub</b>: fine-grained — <b>Actions: read</b> + <b>Contents: read</b>.</li>
+              <li><b>GitLab</b>: PAT with <b>read_api</b>.</li>
             </ul>
           </details>
         {/snippet}
