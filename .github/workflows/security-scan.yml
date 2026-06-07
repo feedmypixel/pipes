@@ -1,0 +1,40 @@
+name: Security scan
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  gitleaks:
+    name: gitleaks
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # full history, so a secret in any past commit is caught
+
+      # The CLI binary directly: gitleaks-action needs a paid licence for org accounts,
+      # the MIT CLI does not.
+      - name: Install gitleaks
+        run: |
+          version=8.21.2
+          curl -sSfL "https://github.com/gitleaks/gitleaks/releases/download/v${version}/gitleaks_${version}_linux_x64.tar.gz" \
+            | tar -xz -C /usr/local/bin gitleaks
+
+      - run: gitleaks git . --redact --no-banner
+
+  semgrep:
+    name: semgrep
+    runs-on: ubuntu-latest
+    container:
+      image: semgrep/semgrep
+    steps:
+      - uses: actions/checkout@v4
+
+      # Local scan only: no SEMGREP_APP_TOKEN, so nothing is uploaded; public rule packs.
+      - run: semgrep scan --config p/typescript --config p/security-audit --error --skip-unknown-extensions --metrics off
