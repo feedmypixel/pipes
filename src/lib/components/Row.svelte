@@ -4,6 +4,7 @@
   import Star from '@lucide/svelte/icons/star'
   import StatusIcon from './StatusIcon.svelte'
   import RelativeTime from './RelativeTime.svelte'
+  import { tooltip } from '../tooltip'
 
   let { pipeline }: { pipeline: Pipeline } = $props()
 </script>
@@ -14,7 +15,6 @@
   href={pipeline.webUrl}
   target="_blank"
   rel="noopener noreferrer"
-  title={pipeline.title}
 >
   <StatusIcon status={pipeline.status} size={16} />
   <span class="ref">
@@ -23,7 +23,7 @@
     {:else}
       <GitBranch class="branch-mark" size={12} aria-hidden="true" />
     {/if}
-    <span class="name">{pipeline.ref}</span>
+    <span class="name" use:tooltip={pipeline.title}>{pipeline.ref}</span>
   </span>
   <RelativeTime iso={pipeline.updatedAt} />
 </a>

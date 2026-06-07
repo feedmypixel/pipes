@@ -5,6 +5,7 @@
   import type { RepoView } from '../group'
   import { visibleChanges, defaultVisible, failingCount } from '../group'
   import type { PipelineStatus } from '../../providers/types'
+  import { tooltip } from '../tooltip'
   import Row from './Row.svelte'
   import ChangeRow from './ChangeRow.svelte'
 
@@ -41,11 +42,11 @@
       </span>
       <span class="repo-name">{view.displayName}</span>
       {#if failing > 0}
-        <span class="fail-badge" title="{failing} failing">{failing}</span>
+        <span class="fail-badge" use:tooltip={`${failing} failing`}>{failing}</span>
       {/if}
     </button>
     {#if view.changes.length > 0}
-      <span class="pr-count" title="{view.changes.length} open pull/merge requests">
+      <span class="pr-count" use:tooltip={`${view.changes.length} open pull/merge requests`}>
         <GitPullRequest size={12} />
         {view.changes.length}
       </span>

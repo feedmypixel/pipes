@@ -4,6 +4,7 @@
   import GitBranch from '@lucide/svelte/icons/git-branch'
   import StatusIcon from './StatusIcon.svelte'
   import RelativeTime from './RelativeTime.svelte'
+  import { tooltip } from '../tooltip'
 
   let { change }: { change: Change } = $props()
 </script>
@@ -15,15 +16,14 @@
   href={change.webUrl}
   target="_blank"
   rel="noopener noreferrer"
-  title={change.title}
 >
   <StatusIcon status={change.status} size={16} />
   <span class="ref">
     <GitPullRequest class="pr-mark" size={12} aria-hidden="true" />
     <span class="number">#{change.number}</span>
-    <span class="name">{change.title}</span>
+    <span class="name" use:tooltip={change.title}>{change.title}</span>
   </span>
-  <span class="branch" title={change.headRef}>
+  <span class="branch" use:tooltip={change.headRef}>
     <GitBranch size={11} aria-hidden="true" />
     <span class="branch-name">{change.headRef}</span>
   </span>

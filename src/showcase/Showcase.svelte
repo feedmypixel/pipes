@@ -17,7 +17,7 @@
   import type { ToastItem } from '../lib/toasts.svelte'
   import Button from '../lib/components/Button.svelte'
   import PermissionNote from '../lib/components/PermissionNote.svelte'
-  import Tooltip from '../lib/components/Tooltip.svelte'
+  import { tooltip } from '../lib/tooltip'
   import Plus from '@lucide/svelte/icons/plus'
 
   type ThemeChoice = 'auto' | 'light' | 'dark'
@@ -272,9 +272,7 @@
   <section>
     <p class="eyebrow">Tooltip (hover / focus)</p>
     <div class="inline">
-      <Tooltip text="7 Jun 2026, 17:34">
-        <span class="tooltip-demo">hover me</span>
-      </Tooltip>
+      <span class="tooltip-demo" use:tooltip={'7 Jun 2026, 17:34'}>hover me</span>
     </div>
   </section>
 
