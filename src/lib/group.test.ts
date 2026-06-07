@@ -6,6 +6,7 @@ import {
   primaryVisible,
   hasVisibleRows,
   failingCount,
+  keepLiveBranches,
   filterGroups,
   PROBLEM_STATES,
   ALL_BRANCH_STATES,
@@ -120,6 +121,16 @@ test('hasVisibleRows: true when a non-default branch passes even if the default 
   }
   const view = groupByOwner([repo('o/r', 'o/r')], snapshots)[0].repos[0]
   expect(hasVisibleRows(view, PROBLEM_STATES)).toBe(true)
+})
+
+test('keepLiveBranches: drops ghost refs, always keeps the default branch', () => {
+  const pipelines = [
+    pipe('main', 'success', true, 't'),
+    pipe('feat-live', 'failed', false, 't'),
+    pipe('feat-deleted', 'failed', false, 't')
+  ]
+  const live = new Set(['feat-live']) // main not listed, but kept as default
+  expect(keepLiveBranches(pipelines, live).map((p) => p.ref)).toEqual(['main', 'feat-live'])
 })
 
 test('failingCount: counts failed pipelines across default + other branches', () => {

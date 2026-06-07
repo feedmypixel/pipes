@@ -5,6 +5,7 @@ import { RateLimitError } from '../providers/http'
 import * as storage from '../lib/storage'
 import type { Snapshots } from '../lib/storage'
 import { mapLimit } from '../lib/async'
+import { keepLiveBranches } from '../lib/group'
 import * as notify from '../lib/notify'
 
 /** Max provider requests in flight at once, so many repos don't burst the API. */
@@ -63,36 +64,59 @@ async function announceTransition(
   }
 }
 
+interface BranchCacheEntry {
+  names: string[]
+  etag: string
+}
+
 interface RepoPollResult {
   pipelines: Pipeline[]
   etag: string | null
   rateLimit: { remaining: number; reset: number } | null
   /** Epoch seconds to pause this account, when the provider rate-limited us. */
   pausedUntil?: number
+  /** Live-branch cache to persist for this repo (omitted when unchanged/unavailable). */
+  branches?: BranchCacheEntry
 }
 
 /**
- * Fetch + diff one repo. Sends the prior ETag for a conditional request; a 304
- * keeps the cached snapshot silently. Any error keeps the old snapshot.
+ * Fetch + diff one repo: latest run per ref, intersected with the repo's live branches so
+ * merged/deleted-branch ghosts drop out. Sends prior ETags for conditional requests; a 304
+ * keeps the cached data. Any error keeps the old snapshot.
  */
 async function pollRepo(
   account: Account,
   repo: Repo,
   prevSnapshots: Snapshots,
   notifyOnSuccess: boolean,
-  etag: string | undefined
+  etag: string | undefined,
+  branchCache: BranchCacheEntry | undefined
 ): Promise<RepoPollResult> {
   const prevList = prevSnapshots[repo.id] ?? []
   try {
-    const result = await providerFor(account).listPipelines(account, repo, etag)
+    const provider = providerFor(account)
+    const branchResult = await provider.listBranches(account, repo, branchCache?.etag)
+    const liveNames = branchResult.notModified ? (branchCache?.names ?? []) : branchResult.branches
+    const liveSet = new Set(liveNames)
+    const nextBranchEtag = branchResult.etag ?? branchCache?.etag ?? null
+    const branches = nextBranchEtag ? { names: liveNames, etag: nextBranchEtag } : undefined
+
+    const result = await provider.listPipelines(account, repo, etag)
     if (result.notModified) {
-      return { pipelines: prevList, etag: result.etag, rateLimit: result.rateLimit }
+      // Pipelines unchanged; re-filter the cached snapshot in case branches changed.
+      return {
+        pipelines: keepLiveBranches(prevList, liveSet),
+        etag: result.etag,
+        rateLimit: result.rateLimit,
+        branches
+      }
     }
+    const live = keepLiveBranches(result.pipelines, liveSet)
     const prev = byRef(prevList)
-    for (const pipeline of result.pipelines) {
+    for (const pipeline of live) {
       await announceTransition(repo, prev.get(pipeline.ref), pipeline, notifyOnSuccess)
     }
-    return { pipelines: result.pipelines, etag: result.etag, rateLimit: result.rateLimit }
+    return { pipelines: live, etag: result.etag, rateLimit: result.rateLimit, branches }
   } catch (err) {
     if (err instanceof RateLimitError) {
       return { pipelines: prevList, etag: etag ?? null, rateLimit: null, pausedUntil: err.resetAt }
@@ -139,14 +163,15 @@ export function poll(): Promise<void> {
 }
 
 async function runPollCycle(): Promise<void> {
-  const [accounts, watchedRepos, settings, prevSnapshots, repoEtags, pausedUntil] =
+  const [accounts, watchedRepos, settings, prevSnapshots, repoEtags, pausedUntil, branchCache] =
     await Promise.all([
       storage.get('accounts'),
       storage.get('watchedRepos'),
       storage.get('settings'),
       storage.get('snapshots'),
       storage.get('repoEtags'),
-      storage.get('rateLimitPausedUntil')
+      storage.get('rateLimitPausedUntil'),
+      storage.get('branchCache')
     ])
   if (accounts.length === 0) {
     await storage.set('accountHealth', {})
@@ -200,7 +225,8 @@ async function runPollCycle(): Promise<void> {
         pipelines: keep,
         etag: repoEtags[repo.id] ?? null,
         rateLimit: null,
-        pausedUntil: undefined
+        pausedUntil: undefined,
+        branches: branchCache[repo.id]
       }
     }
     const result = await pollRepo(
@@ -208,13 +234,15 @@ async function runPollCycle(): Promise<void> {
       repo,
       prevSnapshots,
       settings.notifyOnSuccess,
-      repoEtags[repo.id]
+      repoEtags[repo.id],
+      branchCache[repo.id]
     )
     return { repo, account, ...result }
   })
 
   const snapshots: Snapshots = {}
   const nextEtags: Record<string, string> = {}
+  const nextBranchCache: Record<string, BranchCacheEntry> = {}
   const nextPaused: Record<string, number> = { ...pausedUntil }
   const pause = (accountId: string, until: number) => {
     nextPaused[accountId] = Math.max(nextPaused[accountId] ?? 0, until)
@@ -222,10 +250,21 @@ async function runPollCycle(): Promise<void> {
   for (const [accountId, until] of Object.entries(healthPaused)) {
     pause(accountId, until)
   }
-  for (const { repo, account, pipelines, etag, rateLimit, pausedUntil: repoPaused } of results) {
+  for (const {
+    repo,
+    account,
+    pipelines,
+    etag,
+    rateLimit,
+    pausedUntil: repoPaused,
+    branches
+  } of results) {
     snapshots[repo.id] = pipelines
     if (etag) {
       nextEtags[repo.id] = etag
+    }
+    if (branches) {
+      nextBranchCache[repo.id] = branches
     }
     if (account && repoPaused) {
       pause(account.id, repoPaused)
@@ -241,6 +280,7 @@ async function runPollCycle(): Promise<void> {
 
   await storage.set('snapshots', snapshots)
   await storage.set('repoEtags', nextEtags)
+  await storage.set('branchCache', nextBranchCache)
   await storage.set('rateLimitPausedUntil', prunedPaused)
   await storage.set('lastPolledAt', Date.now())
   await notify.setBadge(countFailures(snapshots))

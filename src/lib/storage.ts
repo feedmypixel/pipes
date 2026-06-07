@@ -39,6 +39,8 @@ interface StorageShape {
   lastPolledAt: number
   /** Connection health per accountId, refreshed each poll. */
   accountHealth: Record<string, AccountHealth>
+  /** Live branch names + ETag per repo id, to drop ghost (deleted-branch) refs. */
+  branchCache: Record<string, { names: string[]; etag: string }>
 }
 
 const DEFAULTS: StorageShape = {
@@ -51,7 +53,8 @@ const DEFAULTS: StorageShape = {
   rateLimitPausedUntil: {},
   notifLinks: {},
   lastPolledAt: 0,
-  accountHealth: {}
+  accountHealth: {},
+  branchCache: {}
 }
 
 /**

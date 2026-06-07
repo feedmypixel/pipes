@@ -31,14 +31,15 @@ Each parent task is its own small PR. Check off sub-tasks as completed.
   - [x] 1.8 Tests: `mapLimit`, 429 → `RateLimitError`. (single-flight + full `poll()` coverage
         lands with 3.0's `poll()` orchestration test.)
 
-- [ ] 2.0 **Branch-centric data model**
-  - [ ] 2.1 Provider `listBranches(account, repo, etag)` (GitHub `/branches`, GitLab
+- [x] 2.0 **Branch-centric data model**
+  - [x] 2.1 Provider `listBranches(account, repo, etag)` (GitHub `/branches`, GitLab
         `/repository/branches`), ETag-conditional.
-  - [ ] 2.2 Cache branches + ETag per repo (new storage key).
-  - [ ] 2.3 Intersect latest-run-per-ref with live branches (default always kept); drop ghosts.
-  - [ ] 2.4 GitHub: dedupe newest run per ref by max `updated_at`, not list order.
-  - [ ] 2.5 Decide + handle MR-pipeline refs and no-run branches.
-  - [ ] 2.6 Tests for the intersection + ordering.
+  - [x] 2.2 Cache branches + ETag per repo (`branchCache` storage key).
+  - [x] 2.3 Intersect latest-run-per-ref with live branches (default always kept); drop ghosts.
+  - [x] 2.4 GitHub: dedupe newest run per ref by max `updated_at`, not list order.
+  - [x] 2.5 MR-pipeline refs + tag refs drop out naturally (not in `/branches`); no-run branches
+        are simply not shown (we filter runs, not list branches). Default always kept.
+  - [x] 2.6 `keepLiveBranches` test. (Provider `listBranches` mapping covered with 3.0.)
 
 - [ ] 3.0 **Core test suite + CI signal**
   - [ ] 3.1 `poll()` orchestration test. 3.2 `notify` test. 3.3 provider mapping tests.

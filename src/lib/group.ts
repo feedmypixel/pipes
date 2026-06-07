@@ -171,6 +171,17 @@ export function filterGroups(
     .filter((group) => group.repos.length > 0)
 }
 
+/**
+ * Drop ghost refs: keep only pipelines whose branch still exists (plus the default branch,
+ * always). Removes runs left behind by merged/deleted branches.
+ */
+export function keepLiveBranches(
+  pipelines: Pipeline[],
+  liveBranches: ReadonlySet<string>
+): Pipeline[] {
+  return pipelines.filter((pipeline) => pipeline.isDefaultBranch || liveBranches.has(pipeline.ref))
+}
+
 /** Count default-branch pipelines currently failing (drives the alarm strip). */
 export function countDefaultBranchFailures(repos: Repo[], snapshots: Snapshots): number {
   let count = 0

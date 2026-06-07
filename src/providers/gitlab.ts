@@ -1,5 +1,6 @@
 import type {
   Account,
+  BranchesResult,
   Pipeline,
   PipelineStatus,
   PipelinesResult,
@@ -139,5 +140,22 @@ export const gitlab: Provider = {
       })
     }
     return { pipelines, etag: newEtag, notModified: false, rateLimit }
+  },
+
+  async listBranches(account: Account, repo: Repo, etag?: string | null): Promise<BranchesResult> {
+    const {
+      status,
+      data,
+      etag: newEtag,
+      rateLimit
+    } = await fetchJson<{ name: string }[]>(
+      `${apiBase(account)}/projects/${repo.id}/repository/branches?per_page=100`,
+      { 'PRIVATE-TOKEN': account.token },
+      { etag, rateLimitHeaders: RATE_LIMIT_HEADERS }
+    )
+    if (status === 304 || data === null) {
+      return { branches: [], etag: etag ?? null, notModified: true, rateLimit }
+    }
+    return { branches: data.map((b) => b.name), etag: newEtag, notModified: false, rateLimit }
   }
 }
