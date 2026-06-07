@@ -57,6 +57,7 @@ interface GhRun {
   updated_at: string
   display_title: string
   id: number
+  workflow_id: number
 }
 
 interface GhPull {
@@ -66,10 +67,6 @@ interface GhPull {
   html_url: string
   user: { type: string } | null
   head: { ref: string; sha: string }
-}
-
-interface GhCheckRuns {
-  check_runs: { status: string | null; conclusion: string | null }[]
 }
 
 /** Worst-first, so a PR's many check runs collapse to one status (any failure dominates). */
@@ -84,6 +81,18 @@ const STATUS_PRIORITY: PipelineStatus[] = [
 ]
 function worstStatus(statuses: PipelineStatus[]): PipelineStatus {
   return STATUS_PRIORITY.find((status) => statuses.includes(status)) ?? 'unknown'
+}
+
+/** Statuses of the newest run per workflow, so a re-run supersedes its earlier attempt. */
+function newestPerWorkflow(runs: GhRun[]): PipelineStatus[] {
+  const newest = new Map<number, GhRun>()
+  for (const run of runs) {
+    const existing = newest.get(run.workflow_id)
+    if (!existing || run.updated_at > existing.updated_at) {
+      newest.set(run.workflow_id, run)
+    }
+  }
+  return [...newest.values()].map((run) => mapGithubStatus(run.status, run.conclusion))
 }
 
 export function mapGithubStatus(status: string | null, conclusion: string | null): PipelineStatus {
@@ -223,27 +232,26 @@ export const github: Provider = {
     if (status === 304 || data === null) {
       return { changes: [], etag: etag ?? null, notModified: true, rateLimit }
     }
-    // The PR list has no check status, so fan out to each head SHA's check-runs (bounded). These
-    // go through fetchJson with the rate-limit headers so an exhausted budget throws a
-    // RateLimitError that propagates to pollRepo's pause — not a swallowed generic error.
+    // The PR list has no check status, so fan out to each head SHA's workflow runs (bounded).
+    // Using the Actions runs API (not check-runs) means we only need Actions:read, the same scope
+    // as the default branch. fetchJson carries the rate-limit headers so an exhausted budget throws
+    // a RateLimitError that propagates to pollRepo's pause, rather than a swallowed generic error.
     const changes = await mapLimit<GhPull, Change>(data, 4, async (pull) => {
       let pullStatus: PipelineStatus = 'unknown'
       try {
-        const { data: checks } = await fetchJson<GhCheckRuns>(
-          `${apiBase(account)}/repos/${repo.id}/commits/${pull.head.sha}/check-runs`,
+        const { data: shaRuns } = await fetchJson<{ workflow_runs: GhRun[] }>(
+          `${apiBase(account)}/repos/${repo.id}/actions/runs?head_sha=${pull.head.sha}&per_page=${RUNS_PER_REPO}`,
           headers(account),
           { rateLimitHeaders: RATE_LIMIT_HEADERS }
         )
-        if (checks) {
-          pullStatus = worstStatus(
-            checks.check_runs.map((c) => mapGithubStatus(c.status, c.conclusion))
-          )
+        if (shaRuns) {
+          pullStatus = worstStatus(newestPerWorkflow(shaRuns.workflow_runs))
         }
       } catch (err) {
         if (err instanceof RateLimitError) {
           throw err
         }
-        console.warn(`Checks unreadable for ${repo.name}#${pull.number}:`, (err as Error).message)
+        console.warn(`Runs unreadable for ${repo.name}#${pull.number}:`, (err as Error).message)
       }
       return {
         number: pull.number,

@@ -348,8 +348,7 @@
             </summary>
             <ul>
               <li>
-                <b>GitHub</b>: fine-grained with <b>Actions: read</b>, <b>Pull requests: read</b>,
-                <b>Checks: read</b>.
+                <b>GitHub</b>: fine-grained with <b>Actions: read</b> + <b>Pull requests: read</b>.
               </li>
               <li><b>GitLab</b>: PAT with <b>read_api</b>.</li>
             </ul>

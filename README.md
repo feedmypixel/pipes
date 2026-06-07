@@ -129,15 +129,15 @@ full surface. (Loaded, the same pages live at `chrome-extension://<id>/src/...`.
 
 ## Tokens
 
-| Provider | Scope                                                                        | Header                  |
-| -------- | ---------------------------------------------------------------------------- | ----------------------- |
-| GitLab   | `read_api` (covers pipelines + merge requests)                               | `PRIVATE-TOKEN`         |
-| GitHub   | fine-grained: **Actions: Read** + **Pull requests: Read** + **Checks: Read** | `Authorization: Bearer` |
+| Provider | Scope                                                     | Header                  |
+| -------- | --------------------------------------------------------- | ----------------------- |
+| GitLab   | `read_api` (covers pipelines + merge requests)            | `PRIVATE-TOKEN`         |
+| GitHub   | fine-grained: **Actions: Read** + **Pull requests: Read** | `Authorization: Bearer` |
 
-Pipes shows each repo's default branch (Actions runs) plus its open PRs/MRs with their check
-status. GitHub reads `/pulls` (**Pull requests**) and each head commit's check runs (**Checks**);
-the default-branch run needs **Actions**. No **Contents** scope is required — closed PRs drop off
-on their own, so there are no merged/deleted-branch ghosts to filter.
+Pipes shows each repo's default branch plus its open PRs/MRs with their pipeline status, all from
+the **Actions runs** API (**Actions: Read**) keyed by the PR head SHA, plus the PR list
+(**Pull requests: Read**). No **Contents** or **Checks** scope is needed — closed PRs drop off on
+their own, so there are no merged/deleted-branch ghosts to filter.
 
 Add accounts in the options page; each token is validated against the host before
 it's saved. For a client/employer instance, confirm storing an instance token in a

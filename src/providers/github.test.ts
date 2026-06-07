@@ -85,7 +85,7 @@ test('listBranches 304 keeps the sent etag and flags notModified', async () => {
   }
 })
 
-test('listOpenChanges maps PRs and collapses check-runs to the worst status', async () => {
+test('listOpenChanges maps PRs and collapses head-SHA runs to the worst status', async () => {
   const restore = stubFetchByUrl((url) =>
     url.includes('/pulls')
       ? new Response(
@@ -103,9 +103,9 @@ test('listOpenChanges maps PRs and collapses check-runs to the worst status', as
         )
       : new Response(
           JSON.stringify({
-            check_runs: [
-              { status: 'completed', conclusion: 'success' },
-              { status: 'completed', conclusion: 'failure' }
+            workflow_runs: [
+              { status: 'completed', conclusion: 'success', workflow_id: 1, updated_at: 't1' },
+              { status: 'completed', conclusion: 'failure', workflow_id: 2, updated_at: 't1' }
             ]
           }),
           { status: 200 }
@@ -131,7 +131,7 @@ test('listOpenChanges maps PRs and collapses check-runs to the worst status', as
   }
 })
 
-test('listOpenChanges flags bots and drafts; no checks → unknown', async () => {
+test('listOpenChanges flags bots and drafts; no runs → unknown', async () => {
   const restore = stubFetchByUrl((url) =>
     url.includes('/pulls')
       ? new Response(
@@ -147,7 +147,7 @@ test('listOpenChanges flags bots and drafts; no checks → unknown', async () =>
           ]),
           { status: 200 }
         )
-      : new Response(JSON.stringify({ check_runs: [] }), { status: 200 })
+      : new Response(JSON.stringify({ workflow_runs: [] }), { status: 200 })
   )
   try {
     const [change] = await github.listOpenChanges(account, repo).then((r) => r.changes)
