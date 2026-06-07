@@ -4,6 +4,7 @@ Reference docs for Pipes. Implementation details live next to the code; these co
 cross-cutting behaviour.
 
 - [`notifications.md`](notifications.md) — when notifications fire, what we control, platform limits.
+- [`releasing-to-chrome-web-store.md`](releasing-to-chrome-web-store.md) — package + publish to the CWS.
 
 ## Principles (WIP)
 
