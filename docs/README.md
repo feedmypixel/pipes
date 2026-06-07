@@ -3,6 +3,7 @@
 Reference docs for Pipes. Implementation details live next to the code; these cover the
 cross-cutting behaviour.
 
+- [`faq.md`](faq.md) — why status isn't instant (60s cache), rate limits, token scopes, notifications.
 - [`notifications.md`](notifications.md) — when notifications fire, what we control, platform limits.
 - [`releasing-to-chrome-web-store.md`](releasing-to-chrome-web-store.md) — package + publish to the CWS.
 
