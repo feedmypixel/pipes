@@ -1,47 +1,22 @@
 # CLAUDE.md
 
-Guidance for Claude Code in the **Pipes** repo. The global `~/.claude/CLAUDE.md` holds
-the universal principles (simplicity, go-slow, YAGNI, surgical changes, consistency,
-comments, brevity, testing prefs, no-disabled-buttons UX, pre-commit gates, git hygiene).
-This file is only what is specific to Pipes. Do not duplicate the global.
-
-## Contents
-
-- [What Pipes is](#what-pipes-is)
-- [Stack](#stack)
-- [pnpm only](#pnpm-only)
-- [Commands](#commands)
-- [Layout](#layout)
-- [Extension specifics (MV3)](#extension-specifics-mv3)
-- [Config & environment](#config--environment)
-- [TypeScript](#typescript)
-- [JavaScript / Svelte](#javascript--svelte)
-- [Testing](#testing)
-- [Styling](#styling)
-- [Design workflow](#design-workflow)
-- [PRDs and tasks](#prds-and-tasks)
-- [PR review gate](#pr-review-gate)
-- [Allowed tools](#allowed-tools)
+Pipes-specific notes only. The global `~/.claude/CLAUDE.md` holds the universal rules
+(simplicity, go-slow, YAGNI, surgical changes, consistency, comments, brevity, naming,
+implicit TypeScript, code style, testing prefs, no-disabled-buttons UX, pre-commit gates,
+git hygiene). Don't duplicate it here.
 
 ## What Pipes is
 
-Chrome (Manifest V3) extension. Watches GitHub Actions + GitLab CI/CD pipeline status
-across chosen repos; loud the moment the default branch breaks. **Fully client-side, no
-backend or server**: it calls provider APIs directly from the extension using the user's
-read-only token, and keeps all state in `chrome.storage`.
+Chrome (Manifest V3) extension. Watches GitHub Actions + GitLab CI/CD status across chosen
+repos; loud the moment the default branch breaks. **Fully client-side, no backend**: it calls
+provider APIs directly using the user's read-only token and keeps all state in `chrome.storage`.
 
 ## Stack
 
 - Svelte 5 (runes) + Vite 6 + `@crxjs/vite-plugin` (typed MV3 manifest + HMR) + TypeScript
-- `@lucide/svelte` for icons
-- Vitest 4 (unit), ESLint flat config + Prettier + eslint-plugin-svelte + eslint-plugin-security
-- `sharp` rasterizes the logo into icon PNGs
-- **Not SvelteKit.** No server, SSR, routes, adapter, `$env`, `$app`, zod, Playwright, husky.
-
-## pnpm only
-
-`pnpm` (pinned in `.npmrc`, Node in `.nvmrc`; `nvm use` first). After installs run
-`pnpm security-audit`.
+- `@lucide/svelte` icons · `sharp` rasterizes SVGs → icon PNGs
+- Vitest 4 · ESLint flat config + Prettier + eslint-plugin-svelte/-security
+- `pnpm` only (pinned in `.npmrc`, Node in `.nvmrc` — `nvm use` first)
 
 ## Commands
 
@@ -51,10 +26,9 @@ pnpm build           # production build → dist/
 pnpm check           # svelte-check / type-check
 pnpm lint            # prettier --check . && eslint .
 pnpm format          # prettier --write .
-pnpm test            # vitest run
-pnpm test:watch      # vitest
+pnpm test            # vitest run (unit + browser projects)
 pnpm security-audit  # pnpm audit --audit-level=moderate
-pnpm icons           # rasterize design logo → icons/*.png
+pnpm icons           # rasterize assets/*.svg → icons/*.png
 ```
 
 ## Layout
@@ -63,112 +37,84 @@ pnpm icons           # rasterize design logo → icons/*.png
 src/
 ├── manifest.config.ts     # typed MV3 manifest (crxjs)
 ├── providers/             # normalize GitHub + GitLab into one model
-│   ├── types.ts           #   Account, Repo, Pipeline, Provider interface
-│   ├── github.ts          #   GitHub Actions runs API
-│   ├── gitlab.ts          #   GitLab pipelines API
+│   ├── types.ts           #   Account, Repo, Pipeline, Change, Provider interface
+│   ├── github.ts          #   GitHub Actions runs + open pulls
+│   ├── gitlab.ts          #   GitLab pipelines + open merge requests
 │   └── index.ts           #   provider registry + host helpers
 ├── lib/
 │   ├── storage.ts         # typed chrome.storage wrappers + change subscribe
+│   ├── group.ts           # owner/repo grouping + status view model
 │   ├── notify.ts          # notifications + toolbar badge
-│   ├── components/         # shared Svelte primitives (StatusIcon, Row, RefChip, …)
+│   ├── live-port.ts       # keep-alive port that drives the live poll loop
+│   ├── components/        # shared Svelte UI (StatusIcon, Row, ChangeRow, RepoCard, …)
 │   └── styles/            # tokens.css (+ base) lifted from the design bundle
-├── background/            # service-worker.ts (lifecycle) + poll.ts (fetch→diff→notify)
-├── popup/ · sidepanel/ · options/   # the three HTML surface entries
-design/                    # versioned design bundles (design/vN), not built/shipped
-tasks/                     # PRDs + task lists (ai-dev-tasks workflow)
-scripts/ · icons/
+├── background/            # service-worker.ts (lifecycle) + poll.ts (fetch→join→diff→notify)
+└── popup/ · sidepanel/ · options/   # the three HTML surface entries
+design/ · tasks/ · scripts/ · icons/
 ```
 
 ## Extension specifics (MV3)
 
 - The service worker is **ephemeral** (killed after ~30s idle). Keep **no state in module
-  globals**: persist via `chrome.storage`, schedule via `chrome.alarms`, and register all
-  listeners synchronously at the top level so a restarted worker still receives events.
-- Tokens (PATs) are **read-only**, stored in `chrome.storage.local`, never synced, never
-  logged. GitLab `read_api`; GitHub a read-only fine-grained token.
+  globals** that must survive a restart: persist via `chrome.storage`, schedule via
+  `chrome.alarms`, register all listeners synchronously at the top level.
+- Tokens (PATs) are **read-only**, in `chrome.storage.local`, never synced, never logged.
+  GitHub fine-grained (Actions + Pull requests: read); GitLab `read_api`.
 - `host_permissions` covers SaaS hosts; self-hosted / Enterprise origins are requested at
   runtime via `optional_host_permissions` + `chrome.permissions.request()` on a user gesture.
-- Providers normalize GitHub + GitLab into one model. Adding a provider = a new adapter
-  implementing the `Provider` interface, registered in `providers/index.ts`.
-- UIs subscribe to the `snapshots` key in `chrome.storage`; the service worker polls, diffs
-  against the last snapshot, notifies on transitions, and sets the badge.
-- **The toolbar icon is the static green tick and never changes.** The failure signal is the
-  red badge count, not the icon.
+- Adding a provider = a new adapter implementing `Provider`, registered in `providers/index.ts`.
+- Per repo Pipes shows the **default-branch run + open PRs/MRs** (PR status joined from the runs
+  list by head ref). UIs subscribe to the `snapshots` key; the worker polls, diffs, notifies on
+  transitions, sets the badge.
+- **The toolbar icon is the static green tick and never changes** — the failure signal is the red
+  badge count.
 
 ## Config & environment
 
-There are **no runtime environment variables and no `.env` files**, there is no server,
-and nothing is injected at build time.
+No runtime env vars, no `.env`, nothing injected at build time.
 
-- **User config is runtime data**, not env: accounts, tokens, watched repos, and settings
-  live in `chrome.storage.local` and are read/written through the single module
-  `src/lib/storage.ts`. That module is the one place config is accessed; the rest of the
-  app imports its typed helpers. Do not read `chrome.storage` directly elsewhere.
-- **Tokens are user-provided**, never build-time secrets. Nothing to gitignore, nothing to
-  inject. They are read-only, never synced, never logged.
-- **Build-time only:** `import.meta.env.DEV` / `.PROD` (Vite) gate dev-only code (the theme
-  switcher, the component showcase) out of production. No `process.env` in extension code,
-  no `NODE_ENV` runtime branches in shipped paths.
+- User config is **runtime data**, not env: accounts, tokens, watched repos, settings live in
+  `chrome.storage.local`, read/written only through `src/lib/storage.ts`. Don't touch
+  `chrome.storage` directly elsewhere.
+- Build-time only: `import.meta.env.DEV` / `.PROD` gate dev-only code (theme switcher, showcase)
+  out of production. No `process.env` / `NODE_ENV` branches in shipped paths.
 
-## TypeScript
+## Svelte
 
-- Implicit types; annotate only when inference fails. No `@ts-expect-error`.
-- Prefer named files over barrels. A small registry module (`providers/index.ts`) is fine;
-  don't add pure re-export barrels.
-
-## JavaScript / Svelte
-
-- `const` by default; `let` only when reassignment is unavoidable. ES modules, destructured
-  imports, functional over OOP.
-- Svelte 5 **runes only**: `$props`/`$state`/`$derived`/`$effect`. No `export let`, no
-  `let`+`$:`, no `<slot/>` (use `{#snippet}`/`{@render}`), no `$app/stores`.
-- Mark `$state` only on what drives reactivity. Prefer `$derived` over `$effect`; `$effect`
-  is rare. Tear down `addEventListener`/timeouts/storage subscriptions in `$effect` cleanup.
+- Runes only: `$props`/`$state`/`$derived`/`$effect`. No `export let`, no `let`+`$:`, no
+  `<slot/>` (use `{#snippet}`/`{@render}`), no `$app/stores`.
+- Mark `$state` only on what drives reactivity. Prefer `$derived` over `$effect`. Tear down
+  `addEventListener`/timeouts/storage subscriptions in `$effect` cleanup.
 
 ## Testing
 
-- Vitest globals enabled: do not import `describe`/`test`/`expect`. Use `test`, not `it`.
-- Tests sit beside source (`foo.ts` ↔ `foo.test.ts`). Light types in tests.
-- Two vitest projects: **`unit`** (node) for pure logic (provider status maps, poll decisions),
-  **`browser`** (`@vitest/browser` + Playwright chromium via `vitest-browser-svelte`) for
-  component + rune-store tests, named `*.svelte.test.ts`. `pnpm test` runs both.
+Two vitest projects: **`unit`** (node) for pure logic, **`browser`**
+(`@vitest/browser` + Playwright chromium via `vitest-browser-svelte`) for components +
+rune-store tests, named `*.svelte.test.ts`. `pnpm test` runs both.
 
 ## Styling
 
 - Modern CSS. Tokens as CSS custom properties; scoped `<style>` per component. No SCSS, no BEM.
-- **Component / utility boundary:** components in `src/lib/components` are self-contained
-  (scoped styles only) and depend on **tokens** alone. Never apply a global utility class
-  inside a component; it must render correctly with zero global classes. Share values across
-  components via tokens, not shared classes.
-- Tokens live in `src/lib/styles/tokens.css`, lifted verbatim from the current design bundle
-  (`design/v1/assets/pipes.css`). No hex literals in component scoped styles.
+- Components in `src/lib/components` are self-contained: scoped styles depending on **tokens**
+  alone — never a global utility class, no hex literals. Share values via tokens, not classes.
+- Tokens in `src/lib/styles/tokens.css`, lifted from the design bundle.
 - Brand: **Pixel Blue `#3194FC`** for identity/links/focus only, never a status colour. Status
-  palette is OKLCH; cool-slate neutrals; system font stack; no all-caps (sentence case).
-- Respect `prefers-color-scheme` (ship both themes, no user-facing toggle; a dev-only switcher
-  previews them) and `prefers-reduced-motion`. WCAG 2.1 AA: semantic HTML, focus-visible,
-  keyboard reachability, 4.5:1 contrast.
+  palette is OKLCH; system font stack; sentence case (no all-caps).
+- Respect `prefers-color-scheme` (ship both themes, no user toggle) + `prefers-reduced-motion`.
+  WCAG 2.1 AA: semantic HTML, focus-visible, keyboard reachability, 4.5:1 contrast.
 
 ## Design workflow
 
-- Design bundles (claude.ai/design) land in `design/vN/`. Read that bundle's `README.md`
-  first, it is the authoritative spec. `design/README.md` is the version index/changelog.
-- Recreate surfaces as Svelte 5 components using the global tokens. Lift the visual treatment,
-  not the markup or class names. Don't import `pipes.css` wholesale; don't ship the bundle HTML.
+- Design bundles land in `design/vN/`; read that bundle's `README.md` first (authoritative spec).
+- Recreate surfaces as Svelte 5 components using the tokens — lift the visual treatment, not the
+  markup/class names. Don't import `pipes.css` wholesale or ship the bundle HTML.
 - No GitHub/GitLab brand marks in the UI (group by owner; one universal status-icon set).
 
 ## PRDs and tasks
 
-- Use the symlinked `ai-dev-tasks/create-prd.md` + `ai-dev-tasks/generate-tasks.md`. PRDs and
-  task lists live in `tasks/` as `prd-<feature>.md` / `tasks-<feature>.md`, referencing
-  `design/vN/` paths. Task lists start with `0.0 Create feature branch`. Generate parent tasks
-  first, wait for the user's "Go", then sub-tasks. Check sub-tasks off as completed.
-
-## PR review gate
-
-Before opening a PR with code changes, pass three layers: **mechanical** (check, lint, test,
-security-audit), **functional** (load unpacked, exercise the surface), and an **independent
-reviewer agent** (`pr-review-toolkit:code-reviewer`) on the diff. Apply HIGH and MEDIUM
-findings; defer LOW with a reason in the PR description.
+Use the symlinked `ai-dev-tasks/create-prd.md` + `generate-tasks.md`. PRDs/task lists live in
+`tasks/` as `prd-<feature>.md` / `tasks-<feature>.md`. Task lists start with
+`0.0 Create feature branch`. Generate parent tasks first, wait for "Go", then sub-tasks.
 
 ## Allowed tools
 
