@@ -83,7 +83,8 @@ chrome.notifications.onClosed.addListener((notifId) => {
 // Manual "refresh now" from popup / side panel.
 chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
   if (message?.type === 'poll-now') {
-    // Refresh forces a full re-check; the panel's interval polls fresh (no ETag) for live status.
+    // Manual Refresh: force a full re-check and skip the ETag (fresh) for live status. The recurring
+    // live poll is driven by the LIVE_PORT loop above, not this message.
     poll(message.force === true, message.fresh === true)
       .then(() => sendResponse({ ok: true }))
       .catch((err) => sendResponse({ ok: false, error: (err as Error).message }))

@@ -14,7 +14,7 @@
   import RepoList from '../lib/components/RepoList.svelte'
   import TopAlerts from '../lib/components/TopAlerts.svelte'
   import UpdatedFooter from '../lib/components/UpdatedFooter.svelte'
-  import { LIVE_PORT } from '../lib/config'
+  import { holdLivePort } from '../lib/live-port'
 
   let accounts = $state<Account[]>([])
   let watchedRepos = $state<Repo[]>([])
@@ -43,10 +43,7 @@
   })
 
   // Hold a live port while open so the worker drives a fast fresh poll loop.
-  $effect(() => {
-    const port = chrome.runtime.connect({ name: LIVE_PORT })
-    return () => port.disconnect()
-  })
+  $effect(holdLivePort)
 
   const groups = $derived(filterGroups(groupByOwner(watchedRepos, snapshots), ALL_BRANCH_STATES))
   const mainFailing = $derived(countDefaultBranchFailures(watchedRepos, snapshots))
