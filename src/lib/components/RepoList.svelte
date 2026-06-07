@@ -76,7 +76,7 @@
       >
         <ChevronRight class="owner-caret" size={13} />
         <span class="owner-name">{group.owner}</span>
-        <span class="count">{group.repos.length}</span>
+        <span class="count" title="{group.repos.length} repositories">{group.repos.length}</span>
       </button>
       {#if url}
         <a
