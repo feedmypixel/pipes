@@ -37,7 +37,8 @@ vi.mock('../lib/storage', () => ({
   },
   set: async (key: string, value: unknown) => {
     h.store[key] = value
-  }
+  },
+  setMany: async (values: Record<string, unknown>) => Object.assign(h.store, values)
 }))
 vi.mock('../lib/notify', () => h.notify)
 vi.mock('../providers', () => ({ providerFor: () => h.provider }))

@@ -28,7 +28,7 @@ export interface AccountHealth {
   error?: string
 }
 
-interface StorageShape {
+export interface StorageShape {
   accounts: Account[]
   watchedRepos: Repo[]
   /** Repos a connection can see, cached per accountId so the picker renders without refetching. */
@@ -95,6 +95,15 @@ export async function set<K extends keyof StorageShape>(
   // structured clone, which throws on a Proxy — strip to a plain value first.
   // Our stored shapes are all JSON-safe, so a JSON round-trip does it.
   await chrome.storage.local.set({ [key]: JSON.parse(JSON.stringify(value)) })
+}
+
+/**
+ * Batched write of already-plain values (the poll loop's computed objects, never $state Proxies).
+ * One `chrome.storage` round-trip and a single `onChanged`, so panels react once per cycle — and
+ * no per-value Proxy-stripping clone, unlike `set`.
+ */
+export async function setMany(values: Partial<StorageShape>): Promise<void> {
+  await chrome.storage.local.set(values)
 }
 
 const SCHEMA_VERSION = 2

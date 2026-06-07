@@ -65,6 +65,7 @@
 </script>
 
 {#each groups as group (group.owner)}
+  {@const url = ownerUrl(group)}
   <section>
     <div class="owner-row">
       <button
@@ -77,10 +78,10 @@
         <span class="owner-name">{group.owner}</span>
         <span class="count">{group.repos.length}</span>
       </button>
-      {#if ownerUrl(group)}
+      {#if url}
         <a
           class="owner-link"
-          href={ownerUrl(group)}
+          href={url}
           target="_blank"
           rel="noopener noreferrer"
           aria-label="Open {group.owner} on the provider"
