@@ -1,6 +1,7 @@
 <script lang="ts">
   import ChevronRight from '@lucide/svelte/icons/chevron-right'
   import ExternalLink from '@lucide/svelte/icons/external-link'
+  import GitPullRequest from '@lucide/svelte/icons/git-pull-request'
   import type { RepoView } from '../group'
   import { visibleChanges, defaultVisible, failingCount } from '../group'
   import type { PipelineStatus } from '../../providers/types'
@@ -43,6 +44,12 @@
         <span class="fail-badge" title="{failing} failing">{failing}</span>
       {/if}
     </button>
+    {#if view.changes.length > 0}
+      <span class="pr-count" title="{view.changes.length} open pull/merge requests">
+        <GitPullRequest size={12} />
+        {view.changes.length}
+      </span>
+    {/if}
     <a
       class="repo-link"
       href={view.repo.webUrl}
@@ -118,6 +125,17 @@
     background: var(--failed);
     color: var(--status-ink);
     font: var(--weight-bold) var(--font-size-2xs) / 1 var(--font-mono);
+  }
+  .pr-count {
+    flex: none;
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-3xs);
+    color: var(--text-3);
+    font: var(--weight-medium) var(--font-size-xs) / 1 var(--font-mono);
+  }
+  .pr-count :global(svg) {
+    flex: none;
   }
   .repo-link {
     flex: none;

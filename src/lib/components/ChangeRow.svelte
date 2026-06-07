@@ -23,7 +23,7 @@
     <span class="number">#{change.number}</span>
     <span class="name">{change.title}</span>
   </span>
-  <span class="branch">
+  <span class="branch" title={change.headRef}>
     <GitBranch size={11} aria-hidden="true" />
     <span class="branch-name">{change.headRef}</span>
   </span>
