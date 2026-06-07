@@ -13,7 +13,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        task: [lint, check, test, build, security-audit]
+        task: [lint, check, test:coverage, build, security-audit]
     steps:
       - uses: actions/checkout@v6
 
@@ -27,7 +27,7 @@ jobs:
       - run: pnpm install --frozen-lockfile
 
       # The browser vitest project renders components in Chromium.
-      - if: matrix.task == 'test'
+      - if: matrix.task == 'test:coverage'
         run: pnpm exec playwright install --with-deps chromium
 
       - run: pnpm ${{ matrix.task }}

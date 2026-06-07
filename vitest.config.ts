@@ -4,6 +4,18 @@ import { playwright } from '@vitest/browser-playwright'
 
 export default defineConfig({
   test: {
+    coverage: {
+      provider: 'v8',
+      reporter: ['text-summary', 'html'],
+      // Floor sits just below current so a dep bump won't break the build, but dropping a
+      // test or regressing covered code does. Ratchet up as coverage grows.
+      thresholds: {
+        statements: 79,
+        branches: 68,
+        functions: 83,
+        lines: 77
+      }
+    },
     projects: [
       {
         test: {
