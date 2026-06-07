@@ -1,6 +1,23 @@
-import { parseRateLimit, fetchJson, RateLimitError } from './http'
+import { parseRateLimit, fetchJson, RateLimitError, httpUrl } from './http'
 
 const NAMES = { remaining: 'x-ratelimit-remaining', reset: 'x-ratelimit-reset' }
+
+test('httpUrl passes http(s) URLs through', () => {
+  expect(httpUrl('https://github.com/o/r/actions')).toBe('https://github.com/o/r/actions')
+  expect(httpUrl('http://gitlab.local/g/p/-/pipelines')).toBe('http://gitlab.local/g/p/-/pipelines')
+})
+
+test('httpUrl rejects javascript: and other non-http schemes', () => {
+  expect(httpUrl('javascript:alert(1)')).toBe('')
+  expect(httpUrl('javascript:fetch("https://evil")/actions')).toBe('')
+  expect(httpUrl('data:text/html,<script>1</script>')).toBe('')
+  expect(httpUrl('file:///etc/passwd')).toBe('')
+})
+
+test('httpUrl returns empty on unparseable input', () => {
+  expect(httpUrl('not a url')).toBe('')
+  expect(httpUrl('')).toBe('')
+})
 
 test('parseRateLimit reads remaining + reset', () => {
   const headers = new Headers({ 'x-ratelimit-remaining': '42', 'x-ratelimit-reset': '1700000000' })

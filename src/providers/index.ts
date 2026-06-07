@@ -1,21 +1,12 @@
-import type { Account, Provider, ProviderId } from './types'
+import type { Provider, ProviderId } from './types'
 import { SAAS_HOST } from '../lib/config'
 import { github } from './github'
 import { gitlab } from './gitlab'
 
 const PROVIDERS: Record<ProviderId, Provider> = { github, gitlab }
 
-export function providerFor(account: Account): Provider {
-  return PROVIDERS[account.provider]
-}
-
 export function getProvider(id: ProviderId): Provider {
   return PROVIDERS[id]
-}
-
-/** Default sign-in origin for a provider's SaaS offering. */
-export function defaultHost(provider: ProviderId): string {
-  return SAAS_HOST[provider]
 }
 
 /** Turn user input ("github.com", "https://x/", a path) into a bare origin, or '' if invalid. */

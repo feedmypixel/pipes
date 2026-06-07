@@ -3,6 +3,8 @@
  * dialects; everything above this layer only ever sees these shapes.
  */
 
+import type { RateLimit } from './http'
+
 export type ProviderId = 'github' | 'gitlab'
 
 /** The state we collapse every provider's many statuses into. */
@@ -77,7 +79,7 @@ export interface PipelinesResult {
   /** True on a 304 — caller should keep its cached snapshot. */
   notModified: boolean
   /** Rate-limit budget from the response, if the provider exposes it. */
-  rateLimit: { remaining: number; reset: number } | null
+  rateLimit: RateLimit | null
 }
 
 /** An open pull request / merge request with its head pipeline status. */
@@ -112,7 +114,7 @@ export interface OpenChangesResult {
   changes: ChangeMeta[]
   etag: string | null
   notModified: boolean
-  rateLimit: { remaining: number; reset: number } | null
+  rateLimit: RateLimit | null
 }
 
 /**

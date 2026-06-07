@@ -6,12 +6,13 @@ import {
   hasVisibleRows,
   failingCount,
   filterGroups,
-  PROBLEM_STATES,
   ALL_BRANCH_STATES,
   countDefaultBranchFailures
 } from './group'
 import type { Change, Pipeline, PipelineStatus, Repo } from '../providers/types'
 import type { RepoSnapshot, Snapshots } from './storage'
+
+const PROBLEM_STATES: ReadonlySet<PipelineStatus> = new Set(['failed', 'running', 'pending'])
 
 function repo(name: string, id = name): Repo {
   return { id, accountId: 'a', name, defaultBranch: 'main', webUrl: 'https://x' }

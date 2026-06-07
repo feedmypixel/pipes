@@ -1,7 +1,7 @@
-import { providerFor } from '../providers'
+import { getProvider } from '../providers'
 import { TERMINAL_STATUSES } from '../providers/types'
 import type { Account, Change, Pipeline, PipelineStatus, Repo } from '../providers/types'
-import { RateLimitError } from '../providers/http'
+import { RateLimitError, type RateLimit } from '../providers/http'
 import * as storage from '../lib/storage'
 import type { RepoSnapshot, Snapshots, StorageShape } from '../lib/storage'
 import { mapLimit } from '../lib/async'
@@ -11,8 +11,6 @@ import * as notify from '../lib/notify'
 
 /** Max provider requests in flight at once, so many repos don't burst the API. */
 const POLL_CONCURRENCY = 6
-
-type RateLimit = { remaining: number; reset: number }
 
 /** The reading closer to exhaustion, so the budget floor sees the worst of a repo's calls. */
 function worstRateLimit(a: RateLimit | null, b: RateLimit | null): RateLimit | null {
@@ -121,7 +119,7 @@ async function pollRepo(
 ): Promise<RepoPollResult> {
   const prev = prevSnapshots[repo.id] ?? EMPTY_SNAPSHOT
   try {
-    const provider = providerFor(account)
+    const provider = getProvider(account.provider)
 
     const [runs, open] = await Promise.all([
       provider.listPipelines(account, repo, etag),
@@ -259,7 +257,7 @@ async function runPollCycle(force: boolean): Promise<void> {
     await Promise.all(
       accounts.map(async (account) => {
         try {
-          const result = await providerFor(account).validateToken(account)
+          const result = await getProvider(account.provider).validateToken(account)
           health[account.id] = result.ok ? { ok: true } : { ok: false, error: result.error }
         } catch (err) {
           if (err instanceof RateLimitError) {
