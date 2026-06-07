@@ -1,21 +1,15 @@
 import { providerFor } from '../providers'
 import { TERMINAL_STATUSES } from '../providers/types'
-import type { Account, Pipeline, Repo } from '../providers/types'
+import type { Account, Change, Pipeline, PipelineStatus, Repo } from '../providers/types'
 import { RateLimitError } from '../providers/http'
 import * as storage from '../lib/storage'
-import type { Snapshots } from '../lib/storage'
+import type { RepoSnapshot, Snapshots } from '../lib/storage'
 import { mapLimit } from '../lib/async'
-import { keepLiveBranches } from '../lib/group'
 import { HEALTH_REFRESH_MS } from '../lib/config'
 import * as notify from '../lib/notify'
 
 /** Max provider requests in flight at once, so many repos don't burst the API. */
 const POLL_CONCURRENCY = 6
-
-/** Build a fast lookup of a snapshot's pipelines by ref. */
-function byRef(pipelines: Pipeline[]): Map<string, Pipeline> {
-  return new Map(pipelines.map((p) => [p.ref, p]))
-}
 
 type RateLimit = { remaining: number; reset: number }
 
@@ -30,73 +24,80 @@ function worstRateLimit(a: RateLimit | null, b: RateLimit | null): RateLimit | n
   return a.remaining <= b.remaining ? a : b
 }
 
-export type TransitionAction = 'main-fail' | 'branch-fail' | 'recover' | null
+export type TransitionAction = 'fail' | 'recover' | null
 
 /**
- * Pure decision: what (if anything) to announce for one ref, comparing the
- * freshly fetched pipeline against what we last saw.
+ * Pure decision: what (if anything) to announce, comparing a freshly fetched status against
+ * what we last saw for the same thing (default branch, or a PR keyed by number).
  *
- * - First sight (no prev) seeds the baseline silently, so adding a repo whose
- *   pipelines are already red doesn't fire a notification storm.
- * - Only a *change* into a terminal state fires; re-polling the same failure
- *   stays quiet.
+ * - First sight (prev undefined) seeds the baseline silently, so adding an already-red repo
+ *   doesn't fire a notification storm.
+ * - Only a *change* into a terminal state fires; re-polling the same failure stays quiet.
  * - Success only announces as a recovery from a previous failure.
  */
 export function decideAction(
-  prev: Pipeline | undefined,
-  next: Pipeline,
+  prev: PipelineStatus | undefined,
+  next: PipelineStatus,
   notifyOnSuccess: boolean
 ): TransitionAction {
-  if (!prev || prev.status === next.status) {
+  if (prev === undefined || prev === next) {
     return null
   }
-  if (!TERMINAL_STATUSES.has(next.status)) {
+  if (!TERMINAL_STATUSES.has(next)) {
     return null
   }
-  if (next.status === 'failed') {
-    return next.isDefaultBranch ? 'main-fail' : 'branch-fail'
+  if (next === 'failed') {
+    return 'fail'
   }
-  if (next.status === 'success' && notifyOnSuccess && prev.status === 'failed') {
+  if (next === 'success' && notifyOnSuccess && prev === 'failed') {
     return 'recover'
   }
   return null
 }
 
-async function announceTransition(
+async function diffDefault(
   repo: Repo,
-  prev: Pipeline | undefined,
+  prev: Pipeline | null,
   next: Pipeline,
   notifyOnSuccess: boolean
 ): Promise<void> {
-  switch (decideAction(prev, next, notifyOnSuccess)) {
-    case 'main-fail':
+  switch (decideAction(prev?.status, next.status, notifyOnSuccess)) {
+    case 'fail':
       return notify.notifyMainFailed({ repo, pipeline: next })
-    case 'branch-fail':
-      return notify.notifyBranchFailed({ repo, pipeline: next })
     case 'recover':
-      return notify.notifyRecovered({ repo, pipeline: next })
+      return notify.notifyRecovered({ repo, label: repo.defaultBranch, url: next.webUrl })
   }
 }
 
-interface BranchCacheEntry {
-  names: string[]
-  etag: string
+async function diffChange(
+  repo: Repo,
+  prev: Change | undefined,
+  next: Change,
+  notifyOnSuccess: boolean
+): Promise<void> {
+  switch (decideAction(prev?.status, next.status, notifyOnSuccess)) {
+    case 'fail':
+      return notify.notifyChangeFailed({ repo, change: next })
+    case 'recover':
+      return notify.notifyRecovered({ repo, label: `#${next.number}`, url: next.webUrl })
+  }
 }
 
 interface RepoPollResult {
-  pipelines: Pipeline[]
+  snapshot: RepoSnapshot
   etag: string | null
-  rateLimit: { remaining: number; reset: number } | null
+  changeEtag: string | null
+  rateLimit: RateLimit | null
   /** Epoch seconds to pause this account, when the provider rate-limited us. */
   pausedUntil?: number
-  /** Last-known-good live-branch cache to persist for this repo. */
-  branches?: BranchCacheEntry
 }
 
+const EMPTY_SNAPSHOT: RepoSnapshot = { default: null, changes: [] }
+
 /**
- * Fetch + diff one repo: latest run per ref, intersected with the repo's live branches so
- * merged/deleted-branch ghosts drop out. Sends prior ETags for conditional requests; a 304
- * keeps the cached data. Any error keeps the old snapshot.
+ * Fetch + diff one repo: the default-branch run (the headline) plus its open PRs/MRs with head
+ * status. Sends prior ETags for conditional requests; a 304 keeps the cached side. Any error
+ * keeps the old snapshot. `fresh` skips the ETags so an open panel gets live status.
  */
 async function pollRepo(
   account: Account,
@@ -104,79 +105,68 @@ async function pollRepo(
   prevSnapshots: Snapshots,
   notifyOnSuccess: boolean,
   etag: string | undefined,
-  branchCache: BranchCacheEntry | undefined,
+  changeEtag: string | undefined,
   fresh: boolean
 ): Promise<RepoPollResult> {
-  const prevList = prevSnapshots[repo.id] ?? []
+  const prev = prevSnapshots[repo.id] ?? EMPTY_SNAPSHOT
   try {
     const provider = providerFor(account)
 
-    // Live branches drop ghost refs (merged/deleted branches whose runs linger). Fetched every
-    // poll, ETag-conditional (GitHub doesn't count a 304 against the rate limit). When /branches
-    // is readable a new branch appears within one cycle; on failure we fall back to the
-    // last-known-good list (else default-only) so ghosts never reappear. Rate limits propagate.
-    let branches = branchCache
-    let liveSet: Set<string>
-    let branchRate: RateLimit | null = null
-    try {
-      const branchResult = await provider.listBranches(account, repo, branchCache?.etag)
-      branchRate = branchResult.rateLimit
-      const liveNames = branchResult.notModified
-        ? (branchCache?.names ?? [])
-        : branchResult.branches
-      liveSet = new Set(liveNames)
-      branches = { names: liveNames, etag: branchResult.etag ?? branchCache?.etag ?? '' }
-    } catch (err) {
-      if (err instanceof RateLimitError) {
-        throw err
-      }
-      console.warn(`Branch fetch failed for ${repo.name}:`, (err as Error).message)
-      liveSet = new Set(branchCache?.names ?? []) // last-known-good, else default-only
-    }
-    const filterLive = (pipelines: Pipeline[]): Pipeline[] => keepLiveBranches(pipelines, liveSet)
+    const runs = await provider.listPipelines(account, repo, fresh ? undefined : etag)
+    const nextDefault = runs.notModified
+      ? prev.default
+      : (runs.pipelines.find((pipeline) => pipeline.isDefaultBranch) ?? null)
 
-    // Skip the ETag on a fresh (foreground) poll so GitHub returns live status, not a cached 304.
-    const result = await provider.listPipelines(account, repo, fresh ? undefined : etag)
-    // Pause off whichever call is closer to the budget floor, so the branch fetch isn't invisible.
-    const rateLimit = worstRateLimit(branchRate, result.rateLimit)
-    if (result.notModified) {
-      // Pipelines unchanged; re-filter the cached snapshot in case branches changed.
-      return { pipelines: filterLive(prevList), etag: result.etag, rateLimit, branches }
+    const open = await provider.listOpenChanges(account, repo, fresh ? undefined : changeEtag)
+    const nextChanges = open.notModified ? prev.changes : open.changes
+
+    // Pause off whichever call is closer to the budget floor, so neither fetch is invisible.
+    const rateLimit = worstRateLimit(runs.rateLimit, open.rateLimit)
+
+    if (!runs.notModified && nextDefault) {
+      await diffDefault(repo, prev.default, nextDefault, notifyOnSuccess)
     }
-    const live = filterLive(result.pipelines)
-    const prev = byRef(prevList)
-    for (const pipeline of live) {
-      await announceTransition(repo, prev.get(pipeline.ref), pipeline, notifyOnSuccess)
+    if (!open.notModified) {
+      const prevByNumber = new Map(prev.changes.map((change) => [change.number, change]))
+      for (const change of nextChanges) {
+        await diffChange(repo, prevByNumber.get(change.number), change, notifyOnSuccess)
+      }
     }
-    return { pipelines: live, etag: result.etag, rateLimit, branches }
+    return {
+      snapshot: { default: nextDefault, changes: nextChanges },
+      etag: runs.etag,
+      changeEtag: open.etag,
+      rateLimit
+    }
   } catch (err) {
     if (err instanceof RateLimitError) {
-      return { pipelines: prevList, etag: etag ?? null, rateLimit: null, pausedUntil: err.resetAt }
+      return {
+        snapshot: prev,
+        etag: etag ?? null,
+        changeEtag: changeEtag ?? null,
+        rateLimit: null,
+        pausedUntil: err.resetAt
+      }
     }
     console.warn(`Poll failed for ${repo.name}:`, (err as Error).message)
-    return { pipelines: prevList, etag: etag ?? null, rateLimit: null }
+    return { snapshot: prev, etag: etag ?? null, changeEtag: changeEtag ?? null, rateLimit: null }
   }
 }
 
 /**
  * Badge count = default branches currently failing. Matches the "X failing on main"
- * headline, so a green set of default branches clears the badge even when feature
- * branches are red.
+ * headline, so a green set of default branches clears the badge even when PRs are red.
  */
 function countFailures(snapshots: Snapshots): number {
   let count = 0
-  for (const pipelines of Object.values(snapshots)) {
-    if (pipelines.some((p) => p.isDefaultBranch && p.status === 'failed')) {
+  for (const snapshot of Object.values(snapshots)) {
+    if (snapshot.default?.status === 'failed') {
       count++
     }
   }
   return count
 }
 
-/**
- * One full poll cycle: every watched repo, in parallel, diffed and announced.
- * Writes fresh snapshots (which the UIs subscribe to) and updates the badge.
- */
 /** Pause a connection's polling when its remaining rate-limit budget drops below this. */
 const RATE_LIMIT_FLOOR = 50
 
@@ -186,8 +176,8 @@ let inFlight: Promise<void> | null = null
 
 /**
  * `force` (manual Refresh) bypasses the health throttle for an immediate re-check.
- * `fresh` skips the pipeline ETag so GitHub can't answer a stale 304 — an open panel
- * polls fresh for real-time status; the background alarm keeps the ETag (rate-safe).
+ * `fresh` skips the ETags so GitHub can't answer a stale 304 — an open panel polls fresh
+ * for real-time status; the background alarm keeps the ETags (rate-safe).
  */
 export function poll(force = false, fresh = false): Promise<void> {
   if (inFlight) {
@@ -206,8 +196,8 @@ async function runPollCycle(force: boolean, fresh: boolean): Promise<void> {
     settings,
     prevSnapshots,
     repoEtags,
+    changeEtags,
     pausedUntil,
-    branchCache,
     prevHealth,
     lastHealthAt
   ] = await Promise.all([
@@ -216,8 +206,8 @@ async function runPollCycle(force: boolean, fresh: boolean): Promise<void> {
     storage.get('settings'),
     storage.get('snapshots'),
     storage.get('repoEtags'),
+    storage.get('changeEtags'),
     storage.get('rateLimitPausedUntil'),
-    storage.get('branchCache'),
     storage.get('accountHealth'),
     storage.get('lastHealthAt')
   ])
@@ -265,7 +255,7 @@ async function runPollCycle(force: boolean, fresh: boolean): Promise<void> {
 
   const results = await mapLimit(watchedRepos, POLL_CONCURRENCY, async (repo) => {
     const account = accountById.get(repo.accountId)
-    const keep = prevSnapshots[repo.id] ?? []
+    const keep = prevSnapshots[repo.id] ?? EMPTY_SNAPSHOT
     const accountPaused = account
       ? Math.max(pausedUntil[account.id] ?? 0, healthPaused[account.id] ?? 0)
       : 0
@@ -275,11 +265,11 @@ async function runPollCycle(force: boolean, fresh: boolean): Promise<void> {
       return {
         repo,
         account,
-        pipelines: keep,
+        snapshot: keep,
         etag: repoEtags[repo.id] ?? null,
+        changeEtag: changeEtags[repo.id] ?? null,
         rateLimit: null,
-        pausedUntil: undefined,
-        branches: branchCache[repo.id]
+        pausedUntil: undefined
       }
     }
     const result = await pollRepo(
@@ -288,7 +278,7 @@ async function runPollCycle(force: boolean, fresh: boolean): Promise<void> {
       prevSnapshots,
       settings.notifyOnSuccess,
       repoEtags[repo.id],
-      branchCache[repo.id],
+      changeEtags[repo.id],
       fresh
     )
     return { repo, account, ...result }
@@ -296,7 +286,7 @@ async function runPollCycle(force: boolean, fresh: boolean): Promise<void> {
 
   const snapshots: Snapshots = {}
   const nextEtags: Record<string, string> = {}
-  const nextBranchCache: Record<string, BranchCacheEntry> = {}
+  const nextChangeEtags: Record<string, string> = {}
   const nextPaused: Record<string, number> = { ...pausedUntil }
   const pause = (accountId: string, until: number) => {
     nextPaused[accountId] = Math.max(nextPaused[accountId] ?? 0, until)
@@ -307,18 +297,18 @@ async function runPollCycle(force: boolean, fresh: boolean): Promise<void> {
   for (const {
     repo,
     account,
-    pipelines,
+    snapshot,
     etag,
+    changeEtag,
     rateLimit,
-    pausedUntil: repoPaused,
-    branches
+    pausedUntil: repoPaused
   } of results) {
-    snapshots[repo.id] = pipelines
+    snapshots[repo.id] = snapshot
     if (etag) {
       nextEtags[repo.id] = etag
     }
-    if (branches) {
-      nextBranchCache[repo.id] = branches
+    if (changeEtag) {
+      nextChangeEtags[repo.id] = changeEtag
     }
     if (account && repoPaused) {
       pause(account.id, repoPaused)
@@ -334,7 +324,7 @@ async function runPollCycle(force: boolean, fresh: boolean): Promise<void> {
 
   await storage.set('snapshots', snapshots)
   await storage.set('repoEtags', nextEtags)
-  await storage.set('branchCache', nextBranchCache)
+  await storage.set('changeEtags', nextChangeEtags)
   await storage.set('rateLimitPausedUntil', prunedPaused)
   await storage.set('lastPolledAt', Date.now())
   await notify.setBadge(countFailures(snapshots))

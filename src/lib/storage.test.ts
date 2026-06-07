@@ -8,7 +8,8 @@ beforeEach(() => {
     storage: {
       local: {
         get: async (key: string) => ({ [key]: store[key] }),
-        set: async (items: Record<string, unknown>) => Object.assign(store, items)
+        set: async (items: Record<string, unknown>) => Object.assign(store, items),
+        remove: async (keys: string[]) => keys.forEach((key) => delete store[key])
       }
     }
   }
@@ -47,4 +48,22 @@ test('set stores a plain clone, not the live reference (strips Svelte $state pro
   expect((await storage.get('accounts'))[0].id).toBe('a')
   // And it survives the array shape guard (a proxy cloned as an object would not).
   expect(Array.isArray(await storage.get('accounts'))).toBe(true)
+})
+
+test('migrate clears shape-changed caches and stamps the schema version', async () => {
+  store.snapshots = { 'o/r': [{ ref: 'main' }] } // old per-ref shape
+  store.branchCache = { 'o/r': { names: ['main'], etag: 'x' } }
+  store.accounts = [{ id: 'a' }]
+  await storage.migrate()
+  expect(store.snapshots).toBeUndefined()
+  expect(store.branchCache).toBeUndefined()
+  expect(store.accounts).toEqual([{ id: 'a' }]) // accounts/settings untouched
+  expect(store.schemaVersion).toBe(2)
+})
+
+test('migrate is a no-op once the schema version matches', async () => {
+  store.schemaVersion = 2
+  store.snapshots = { keep: { default: null, changes: [] } }
+  await storage.migrate()
+  expect(store.snapshots).toEqual({ keep: { default: null, changes: [] } })
 })

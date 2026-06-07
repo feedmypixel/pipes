@@ -28,25 +28,22 @@ removing `/branches` + the Contents:read requirement.
   - [x] 1.3 `gitlab.ts`: `listOpenChanges` — `/merge_requests?state=opened&per_page=100` (ETag);
         status from `head_pipeline`, `isDraft`=mr.draft, `isBot` from author.
   - [x] 1.4 Provider `listOpenChanges` tests (200 mapping, worst-status, bot/draft, 304) — github + gitlab.
-- [ ] 2.0 **Snapshot + poll core** — switch the shape; retire `listBranches`
-  - [ ] 2.1 `storage.ts`: snapshot → `Record<repoId, { default: Pipeline | null, changes: Change[] }>`;
-        drop `branchCache`; add `changeEtags`; `schemaVersion` key.
-  - [ ] 2.2 upgrade: on a `schemaVersion` bump, clear `snapshots` + remove `branchCache`/`changeEtags`.
-  - [ ] 2.3 `poll.ts`: `pollRepo` fetches default (runs API, pick the default-branch run) + `listOpenChanges`;
-        build the new snapshot; ETags for both; fold both rate-limits into the floor.
-  - [ ] 2.4 diff + first-sight-silent over `default` + each `change` (key by PR number); retire `keepLiveBranches`.
-  - [ ] 2.5 badge = default branches failing (unchanged). Keep single-flight, `fresh`, back-off.
-- [ ] 3.0 **Notifications** — `notify.ts` `notifyChangeFailed`/recovery (copy "PR #N check failed", links
-      to the PR/run); default-branch failure unchanged; wire into the poll diff.
-- [ ] 4.0 **UI**
-  - [ ] 4.1 `group.ts`: reshape grouping/sort over `{ default, changes }` (pinned default + PR rows; rank by worst).
-  - [ ] 4.2 `RepoCard.svelte`: pinned default row + PR rows (number + title), drafts dimmed.
-  - [ ] 4.3 `RepoList` / popup / sidepanel: adapt to the new groups; status-filter over change statuses.
-- [ ] 5.0 **Token scopes + docs** — options token help + README: GitHub fine-grained
-      **Pull requests: read** (+ Actions: read for default branch), GitLab `read_api`; drop
-      Contents:read. Update health/validation messaging if it references branches.
-- [ ] 6.0 **Tests** — provider `listOpenChanges` mapping (200 + 304), poll diff/notify over the new
-      shape, storage upgrade clears old keys, RepoCard PR-row + dimmed-draft rendering.
+- [x] 2.0 **Snapshot + poll core** — switch the shape; retire `listBranches`
+  - [x] 2.1 `storage.ts`: snapshot → `Record<repoId, { default, changes }>`; drop `branchCache`; add `changeEtags`.
+  - [x] 2.2 `migrate()` on a `schemaVersion` bump clears `snapshots`/`repoEtags`/`changeEtags`/`branchCache`; wired into the worker.
+  - [x] 2.3 `poll.ts`: `pollRepo` fetches default (runs) + `listOpenChanges`; ETags for both; both rate-limits folded into the floor.
+  - [x] 2.4 diff + first-sight-silent over `default` + each `change` (keyed by number); `keepLiveBranches` retired.
+  - [x] 2.5 badge = default branches failing. Single-flight, `fresh`, back-off kept.
+- [x] 3.0 **Notifications** — `notifyChangeFailed` (links to the PR/MR) + generic `notifyRecovered`;
+      default-branch failure unchanged; wired into the poll diff.
+- [x] 4.0 **UI**
+  - [x] 4.1 `group.ts`: reshaped over `{ default, changes }` (pinned default + PR rows; rank by worst incl PRs).
+  - [x] 4.2 `RepoCard.svelte` + new `ChangeRow.svelte`: pinned default row + PR rows (number + title), drafts dimmed.
+  - [x] 4.3 RepoList/popup/sidepanel carry over unchanged (consume the same `OwnerGroup`s). Showcase updated.
+- [x] 5.0 **Token scopes + docs** — options token help + README: GitHub **Actions/Pull requests/Checks: read**,
+      GitLab `read_api`; Contents:read dropped.
+- [~] 6.0 **Tests** — provider mapping ✅, poll diff/notify over the new shape ✅, storage migration ✅.
+  _RepoCard PR-row + dimmed-draft browser test deferred (UI, low risk)._
 
 ## Notes
 

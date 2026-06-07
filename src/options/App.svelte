@@ -347,7 +347,10 @@
               <span>What permissions does my token need?</span>
             </summary>
             <ul>
-              <li><b>GitHub</b>: fine-grained — <b>Actions: read</b> + <b>Contents: read</b>.</li>
+              <li>
+                <b>GitHub</b>: fine-grained with <b>Actions: read</b>, <b>Pull requests: read</b>,
+                <b>Checks: read</b>.
+              </li>
               <li><b>GitLab</b>: PAT with <b>read_api</b>.</li>
             </ul>
           </details>

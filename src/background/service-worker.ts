@@ -47,6 +47,7 @@ chrome.runtime.onInstalled.addListener(async (details) => {
     if (details.reason === 'install') {
       await storage.set('settings', storage.DEFAULT_SETTINGS)
     }
+    await storage.migrate() // clear caches whose shape changed across this version
     await scheduleAlarm()
     await poll()
   } catch (err) {
@@ -55,7 +56,10 @@ chrome.runtime.onInstalled.addListener(async (details) => {
 })
 
 chrome.runtime.onStartup.addListener(() => {
-  poll().catch((err) => console.warn('Startup poll failed:', err))
+  storage
+    .migrate()
+    .then(() => poll())
+    .catch((err) => console.warn('Startup poll failed:', err))
 })
 
 chrome.alarms.onAlarm.addListener((alarm) => {

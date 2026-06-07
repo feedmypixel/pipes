@@ -1,4 +1,4 @@
-import type { Pipeline, Repo } from '../providers/types'
+import type { Change, Pipeline, Repo } from '../providers/types'
 import * as storage from './storage'
 import { BADGE_FAIL_COLOR, NOTIF_PREFIX } from './config'
 
@@ -14,51 +14,66 @@ async function rememberLink(notifId: string, url: string): Promise<void> {
   await storage.set('notifLinks', links)
 }
 
-interface NotifyArgs {
-  repo: Repo
-  pipeline: Pipeline
-}
-
 /** Repo name without the owner prefix — the notification is already short on space. */
 function shortName(repo: Repo): string {
   return repo.name.split('/').pop() ?? repo.name
 }
 
 /** Default-branch failure: sticky, high priority, you can't miss it. */
-export async function notifyMainFailed({ repo, pipeline }: NotifyArgs): Promise<void> {
-  const id = `${NOTIF_PREFIX.fail}${repo.id}-${pipeline.id}`
+export async function notifyMainFailed({
+  repo,
+  pipeline
+}: {
+  repo: Repo
+  pipeline: Pipeline
+}): Promise<void> {
+  const id = `${NOTIF_PREFIX.fail}${repo.id}-default`
   await rememberLink(id, pipeline.webUrl)
   await chrome.notifications.create(id, {
     type: 'basic',
     iconUrl: '/icons/icon-128.png',
-    title: `🔴 ${shortName(repo)} · ${pipeline.ref}`,
+    title: `🔴 ${shortName(repo)} · ${repo.defaultBranch}`,
     message: 'Default branch failed',
     priority: 2,
     requireInteraction: true
   })
 }
 
-/** Non-default-branch failure: normal toast. */
-export async function notifyBranchFailed({ repo, pipeline }: NotifyArgs): Promise<void> {
-  const id = `${NOTIF_PREFIX.fail}${repo.id}-${pipeline.id}`
-  await rememberLink(id, pipeline.webUrl)
+/** An open PR/MR's checks failed: normal toast, links to that PR/MR. */
+export async function notifyChangeFailed({
+  repo,
+  change
+}: {
+  repo: Repo
+  change: Change
+}): Promise<void> {
+  const id = `${NOTIF_PREFIX.fail}${repo.id}-pr-${change.number}`
+  await rememberLink(id, change.webUrl)
   await chrome.notifications.create(id, {
     type: 'basic',
     iconUrl: '/icons/icon-128.png',
-    title: `❌ ${shortName(repo)} · ${pipeline.ref}`,
-    message: 'Failed',
+    title: `❌ ${shortName(repo)} · #${change.number}`,
+    message: `Checks failed: ${change.title}`,
     priority: 1
   })
 }
 
-/** Recovery: a broken pipeline went green again. */
-export async function notifyRecovered({ repo, pipeline }: NotifyArgs): Promise<void> {
-  const id = `${NOTIF_PREFIX.recover}${repo.id}-${pipeline.id}`
-  await rememberLink(id, pipeline.webUrl)
+/** Recovery: a previously-failing default branch or PR/MR went green again. */
+export async function notifyRecovered({
+  repo,
+  label,
+  url
+}: {
+  repo: Repo
+  label: string
+  url: string
+}): Promise<void> {
+  const id = `${NOTIF_PREFIX.recover}${repo.id}-${label}`
+  await rememberLink(id, url)
   await chrome.notifications.create(id, {
     type: 'basic',
     iconUrl: '/icons/icon-128.png',
-    title: `✅ ${shortName(repo)} · ${pipeline.ref}`,
+    title: `✅ ${shortName(repo)} · ${label}`,
     message: 'Passed',
     priority: 0
   })

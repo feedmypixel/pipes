@@ -1,5 +1,5 @@
 import * as notify from './notify'
-import type { Pipeline, Repo } from '../providers/types'
+import type { Change, Pipeline, Repo } from '../providers/types'
 
 let store: Record<string, Record<string, string>>
 let created: Array<{ id: string; opts: chrome.notifications.NotificationOptions }>
@@ -61,6 +61,16 @@ const pipeline: Pipeline = {
   title: 't',
   updatedAt: '2026-06-07T00:00:00Z'
 }
+const change: Change = {
+  number: 9,
+  title: 'Add things',
+  headRef: 'feat',
+  headSha: 's9',
+  status: 'failed',
+  webUrl: 'https://x/pull/9',
+  isDraft: false,
+  isBot: false
+}
 
 test('setBadge shows the count, then clears at 0', async () => {
   await notify.setBadge(3)
@@ -78,11 +88,11 @@ test('default-branch failure is sticky + high priority and stores its link', asy
   expect(store.notifLinks[created[0].id]).toBe('https://x/run/1')
 })
 
-test('opening a notification opens the stored link, then clears + forgets it', async () => {
-  await notify.notifyBranchFailed({ repo, pipeline })
+test('a PR check failure stores its link, opening clears + forgets it', async () => {
+  await notify.notifyChangeFailed({ repo, change })
   const id = created[0].id
   await notify.openNotificationLink(id)
-  expect(opened).toEqual(['https://x/run/1'])
+  expect(opened).toEqual(['https://x/pull/9'])
   expect(cleared).toEqual([id])
   expect(store.notifLinks[id]).toBeUndefined()
 })
@@ -93,7 +103,7 @@ test('opening an unknown notification id is a no-op', async () => {
 })
 
 test('forgetNotificationLink drops a stored link', async () => {
-  await notify.notifyRecovered({ repo, pipeline })
+  await notify.notifyRecovered({ repo, label: 'main', url: 'https://x/run/1' })
   const id = created[0].id
   await notify.forgetNotificationLink(id)
   expect(store.notifLinks[id]).toBeUndefined()
