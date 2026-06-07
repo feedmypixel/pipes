@@ -13,7 +13,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        task: [lint, check, test, security-audit]
+        task: [lint, check, test, build, security-audit]
     steps:
       - uses: actions/checkout@v4
 
@@ -31,5 +31,3 @@ jobs:
         run: pnpm exec playwright install --with-deps chromium
 
       - run: pnpm ${{ matrix.task }}
-    # NOTE: `pnpm build` is not a check yet; surface entry points
-    # (src/popup/index.html etc.) arrive with the foundation/popup PRDs.

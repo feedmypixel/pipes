@@ -1,4 +1,28 @@
-import { mapGithubStatus } from './github'
+import { github, mapGithubStatus } from './github'
+import type { Account, Repo } from './types'
+
+const account: Account = {
+  id: 'a',
+  provider: 'github',
+  label: 'work',
+  host: 'https://github.com',
+  token: 't'
+}
+const repo: Repo = {
+  id: 'o/r',
+  accountId: 'a',
+  name: 'o/r',
+  defaultBranch: 'main',
+  webUrl: 'https://x'
+}
+
+function stubFetch(response: Response) {
+  const original = globalThis.fetch
+  globalThis.fetch = (async () => response) as typeof fetch
+  return () => {
+    globalThis.fetch = original
+  }
+}
 
 test('maps completed GitHub runs by conclusion', () => {
   expect(mapGithubStatus('completed', 'success')).toBe('success')
@@ -21,4 +45,33 @@ test('treats a completed run with no conclusion yet as still settling', () => {
 
 test('maps unrecognised conclusion to unknown', () => {
   expect(mapGithubStatus('completed', 'neutral')).toBe('unknown')
+})
+
+test('listBranches maps branch names and reads the response etag', async () => {
+  const restore = stubFetch(
+    new Response(JSON.stringify([{ name: 'main' }, { name: 'dev' }]), {
+      status: 200,
+      headers: { etag: 'W/"b"' }
+    })
+  )
+  try {
+    const result = await github.listBranches(account, repo)
+    expect(result.branches).toEqual(['main', 'dev'])
+    expect(result.notModified).toBe(false)
+    expect(result.etag).toBe('W/"b"')
+  } finally {
+    restore()
+  }
+})
+
+test('listBranches 304 keeps the sent etag and flags notModified', async () => {
+  const restore = stubFetch(new Response(null, { status: 304 }))
+  try {
+    const result = await github.listBranches(account, repo, 'W/"prev"')
+    expect(result.notModified).toBe(true)
+    expect(result.branches).toEqual([])
+    expect(result.etag).toBe('W/"prev"')
+  } finally {
+    restore()
+  }
 })
