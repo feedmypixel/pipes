@@ -1,6 +1,7 @@
 <script lang="ts">
   import ChevronRight from '@lucide/svelte/icons/chevron-right'
   import ExternalLink from '@lucide/svelte/icons/external-link'
+  import FolderGit2 from '@lucide/svelte/icons/folder-git-2'
   import type { OwnerGroup } from '../group'
   import type { PipelineStatus } from '../../providers/types'
   import RepoCard from './RepoCard.svelte'
@@ -76,7 +77,10 @@
       >
         <ChevronRight class="owner-caret" size={13} />
         <span class="owner-name">{group.owner}</span>
-        <span class="count" title="{group.repos.length} repositories">{group.repos.length}</span>
+        <span class="count" title="{group.repos.length} repositories">
+          <FolderGit2 size={12} />
+          {group.repos.length}
+        </span>
       </button>
       {#if url}
         <a
@@ -141,11 +145,14 @@
   }
   .count {
     margin-left: auto;
-    font: var(--weight-semibold) var(--font-size-2xs) / var(--leading-none) var(--font-mono);
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-3xs);
+    font: var(--weight-medium) var(--font-size-xs) / 1 var(--font-mono);
     color: var(--text-3);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-pill);
-    padding: var(--space-3xs) var(--space-sm);
+  }
+  .count :global(svg) {
+    flex: none;
   }
   .owner-link {
     flex: none;
