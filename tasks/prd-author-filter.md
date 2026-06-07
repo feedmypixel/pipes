@@ -26,6 +26,20 @@ Open questions for dogfooding to answer:
 - **Default** — all users checked, or "just me"?
 - **Default branches** — still always shown, or also filtered? (Lean: always shown — the core
   "is main broken" signal isn't author-scoped.)
-- **Where it lives** — the header multi-select above vs a per-account setting.
 
-Decide scope after the dogfood week.
+## Scope + placement (undecided)
+
+What the filter applies to:
+
+- **Connector (account) level** — set once per account.
+- **Repo level** — per watched repo (some repos you want everyone's, some just yours).
+- **A named group of people** — pick a set of authors you follow, not only yourself.
+
+Where the control lives:
+
+- **Buried in settings** — set-and-forget.
+- **Quick changer on the side panel** — toggle on the fly while working (like the branch-state pills).
+
+Probably not mutually exclusive (e.g. a per-repo default + a side-panel quick override).
+
+Decide after a week on a repo with other people on it — the real need will be obvious then.
