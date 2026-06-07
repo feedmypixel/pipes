@@ -45,36 +45,7 @@ test('maps unknown GitLab status to unknown', () => {
   expect(mapGitlabStatus('something-new')).toBe('unknown')
 })
 
-test('listBranches maps branch names and reads the response etag', async () => {
-  const restore = stubFetch(
-    new Response(JSON.stringify([{ name: 'main' }, { name: 'dev' }]), {
-      status: 200,
-      headers: { etag: 'W/"b"' }
-    })
-  )
-  try {
-    const result = await gitlab.listBranches(account, repo)
-    expect(result.branches).toEqual(['main', 'dev'])
-    expect(result.notModified).toBe(false)
-    expect(result.etag).toBe('W/"b"')
-  } finally {
-    restore()
-  }
-})
-
-test('listBranches 304 keeps the sent etag and flags notModified', async () => {
-  const restore = stubFetch(new Response(null, { status: 304 }))
-  try {
-    const result = await gitlab.listBranches(account, repo, 'W/"prev"')
-    expect(result.notModified).toBe(true)
-    expect(result.branches).toEqual([])
-    expect(result.etag).toBe('W/"prev"')
-  } finally {
-    restore()
-  }
-})
-
-test('listOpenChanges maps MRs with their inline head pipeline status', async () => {
+test('listOpenChanges maps open MRs to metadata (status is joined in poll)', async () => {
   const restore = stubFetch(
     new Response(
       JSON.stringify([
@@ -85,8 +56,7 @@ test('listOpenChanges maps MRs with their inline head pipeline status', async ()
           web_url: 'https://x/mr/3',
           source_branch: 'fix',
           sha: 's3',
-          author: { bot: false },
-          head_pipeline: { status: 'running' }
+          author: { bot: false }
         }
       ]),
       { status: 200, headers: { etag: 'W/"m"' } }
@@ -100,7 +70,6 @@ test('listOpenChanges maps MRs with their inline head pipeline status', async ()
         title: 'Fix',
         headRef: 'fix',
         headSha: 's3',
-        status: 'running',
         webUrl: 'https://x/mr/3',
         isDraft: false,
         isBot: false
@@ -112,7 +81,7 @@ test('listOpenChanges maps MRs with their inline head pipeline status', async ()
   }
 })
 
-test('listOpenChanges: an MR with no pipeline is unknown', async () => {
+test('listOpenChanges flags draft + bot MRs', async () => {
   const restore = stubFetch(
     new Response(
       JSON.stringify([
@@ -123,8 +92,7 @@ test('listOpenChanges: an MR with no pipeline is unknown', async () => {
           web_url: 'https://x/mr/4',
           source_branch: 'wip',
           sha: 's4',
-          author: { bot: true },
-          head_pipeline: null
+          author: { bot: true }
         }
       ]),
       { status: 200 }
@@ -132,7 +100,6 @@ test('listOpenChanges: an MR with no pipeline is unknown', async () => {
   )
   try {
     const [change] = await gitlab.listOpenChanges(account, repo).then((r) => r.changes)
-    expect(change.status).toBe('unknown')
     expect(change.isDraft).toBe(true)
     expect(change.isBot).toBe(true)
   } finally {

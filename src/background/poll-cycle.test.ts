@@ -63,9 +63,21 @@ function defaultPipe(status: PipelineStatus) {
     updatedAt: '2026-06-07T00:00:00Z'
   }
 }
-function runs(status?: PipelineStatus) {
+function prPipe(ref: string, status: PipelineStatus) {
   return {
-    pipelines: status ? [defaultPipe(status)] : [],
+    id: `${ref}-${status}`,
+    ref,
+    isDefaultBranch: false,
+    status,
+    webUrl: `https://x/${ref}`,
+    sha: 's',
+    title: ref,
+    updatedAt: '2026-06-07T00:00:00Z'
+  }
+}
+function runs(status?: PipelineStatus, extra: ReturnType<typeof prPipe>[] = []) {
+  return {
+    pipelines: [...(status ? [defaultPipe(status)] : []), ...extra],
     etag: 'e',
     notModified: false,
     rateLimit: null
@@ -131,9 +143,11 @@ test('default-branch recovery notifies', async () => {
   expect(h.notify.notifyRecovered).toHaveBeenCalledTimes(1)
 })
 
-test('a PR check going failed notifies', async () => {
+test('a PR check going failed notifies (status joined from runs by head ref)', async () => {
   seed({ snapshots: { 'o/r': { default: null, changes: [change(7, 'success')] } } })
-  h.provider.listOpenChanges.mockResolvedValue(openChanges([change(7, 'failed')]))
+  // PR #7's head branch is f7; a failed run on f7 flips it.
+  h.provider.listPipelines.mockResolvedValue(runs(undefined, [prPipe('f7', 'failed')]))
+  h.provider.listOpenChanges.mockResolvedValue(openChanges([change(7, 'success')]))
   await poll()
   expect(h.notify.notifyChangeFailed).toHaveBeenCalledTimes(1)
 })
@@ -176,9 +190,9 @@ test('a background poll sends the stored ETags', async () => {
   expect(h.provider.listOpenChanges).toHaveBeenCalledWith(account, repo, 'change-etag')
 })
 
-test('a fresh poll skips the ETags for live status', async () => {
+test('a fresh poll skips the runs ETag but keeps the PR-list ETag', async () => {
   seed({ repoEtags: { 'o/r': 'pipe-etag' }, changeEtags: { 'o/r': 'change-etag' } })
   await poll(false, true)
   expect(h.provider.listPipelines).toHaveBeenCalledWith(account, repo, undefined)
-  expect(h.provider.listOpenChanges).toHaveBeenCalledWith(account, repo, undefined)
+  expect(h.provider.listOpenChanges).toHaveBeenCalledWith(account, repo, 'change-etag')
 })

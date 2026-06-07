@@ -105,9 +105,10 @@ interface RepoPollResult {
 const EMPTY_SNAPSHOT: RepoSnapshot = { default: null, changes: [] }
 
 /**
- * Fetch + diff one repo: the default-branch run (the headline) plus its open PRs/MRs with head
- * status. Sends prior ETags for conditional requests; a 304 keeps the cached side. Any error
- * keeps the old snapshot. `fresh` skips the ETags so an open panel gets live status.
+ * Fetch + diff one repo with two parallel calls and no per-PR fan-out: the runs list gives every
+ * ref's status (default branch + PR head branches); the open-PR list is joined to those statuses
+ * by head ref. `fresh` skips only the runs ETag (the status source) so the PR-list call stays
+ * 304-cheap. A 304 keeps the cached side; any error keeps the old snapshot.
  */
 async function pollRepo(
   account: Account,
@@ -122,25 +123,41 @@ async function pollRepo(
   try {
     const provider = providerFor(account)
 
-    const runs = await provider.listPipelines(account, repo, fresh ? undefined : etag)
+    const [runs, open] = await Promise.all([
+      provider.listPipelines(account, repo, fresh ? undefined : etag),
+      provider.listOpenChanges(account, repo, changeEtag)
+    ])
+    // Pause off whichever call is closer to the budget floor, so neither fetch is invisible.
+    const rateLimit = worstRateLimit(runs.rateLimit, open.rateLimit)
+
     const nextDefault = runs.notModified
       ? prev.default
       : (runs.pipelines.find((pipeline) => pipeline.isDefaultBranch) ?? null)
 
-    const open = await provider.listOpenChanges(account, repo, fresh ? undefined : changeEtag)
-    const nextChanges = open.notModified ? prev.changes : open.changes
+    // Join each open PR/MR to its pipeline status by head ref. When runs is a 304 (no new run, so
+    // no status change) we fall back to the previously-known status per PR number.
+    const statusByRef = new Map(
+      runs.notModified ? [] : runs.pipelines.map((pipeline) => [pipeline.ref, pipeline.status])
+    )
+    const prevStatus = new Map(prev.changes.map((change) => [change.number, change.status]))
+    const metas = open.notModified ? prev.changes : open.changes
+    const nextChanges: Change[] = metas.map((meta) => ({
+      number: meta.number,
+      title: meta.title,
+      headRef: meta.headRef,
+      headSha: meta.headSha,
+      webUrl: meta.webUrl,
+      isDraft: meta.isDraft,
+      isBot: meta.isBot,
+      status: statusByRef.get(meta.headRef) ?? prevStatus.get(meta.number) ?? 'unknown'
+    }))
 
-    // Pause off whichever call is closer to the budget floor, so neither fetch is invisible.
-    const rateLimit = worstRateLimit(runs.rateLimit, open.rateLimit)
-
-    if (!runs.notModified && nextDefault) {
+    if (nextDefault) {
       await diffDefault(repo, prev.default, nextDefault, notifyOnSuccess)
     }
-    if (!open.notModified) {
-      const prevByNumber = new Map(prev.changes.map((change) => [change.number, change]))
-      for (const change of nextChanges) {
-        await diffChange(repo, prevByNumber.get(change.number), change, notifyOnSuccess)
-      }
+    const prevByNumber = new Map(prev.changes.map((change) => [change.number, change]))
+    for (const change of nextChanges) {
+      await diffChange(repo, prevByNumber.get(change.number), change, notifyOnSuccess)
     }
     return {
       snapshot: { default: nextDefault, changes: nextChanges },

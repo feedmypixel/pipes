@@ -1,6 +1,7 @@
 <script lang="ts">
   import type { Change } from '../../providers/types'
   import GitPullRequest from '@lucide/svelte/icons/git-pull-request'
+  import GitBranch from '@lucide/svelte/icons/git-branch'
   import StatusIcon from './StatusIcon.svelte'
 
   let { change }: { change: Change } = $props()
@@ -21,12 +22,16 @@
     <span class="number">#{change.number}</span>
     <span class="name">{change.title}</span>
   </span>
+  <span class="branch">
+    <GitBranch size={11} aria-hidden="true" />
+    <span class="branch-name">{change.headRef}</span>
+  </span>
 </a>
 
 <style>
   .row {
     display: grid;
-    grid-template-columns: auto 1fr;
+    grid-template-columns: auto 1fr auto;
     align-items: center;
     gap: var(--space-md);
     /* indented: these rows always sit under a repo-name header */
@@ -76,5 +81,22 @@
   .row:hover .name {
     text-decoration: underline;
     text-underline-offset: 2px;
+  }
+  .branch {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2xs);
+    min-width: 0;
+    max-width: 11rem;
+    color: var(--text-3);
+  }
+  .branch :global(svg) {
+    flex: none;
+  }
+  .branch-name {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font: var(--weight-regular) var(--font-size-xs) / var(--leading-none) var(--font-mono);
   }
 </style>
