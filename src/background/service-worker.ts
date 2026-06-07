@@ -53,8 +53,8 @@ chrome.notifications.onClosed.addListener((notifId) => {
 // Manual "refresh now" from popup / side panel.
 chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
   if (message?.type === 'poll-now') {
-    // The Refresh button forces a full check (bypasses throttles); the panel's interval doesn't.
-    poll(message.force === true)
+    // Refresh forces a full re-check; the panel's interval polls fresh (no ETag) for live status.
+    poll(message.force === true, message.fresh === true)
       .then(() => sendResponse({ ok: true }))
       .catch((err) => sendResponse({ ok: false, error: (err as Error).message }))
     return true // keep the channel open for the async response

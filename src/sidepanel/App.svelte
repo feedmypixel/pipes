@@ -117,12 +117,13 @@
   )
 
   function pollNow() {
-    chrome.runtime.sendMessage({ type: 'poll-now' })
+    // Panel is open and watched — poll fresh (no ETag) so status is real-time, not a cached 304.
+    chrome.runtime.sendMessage({ type: 'poll-now', fresh: true })
   }
   async function refresh() {
     refreshing = true
     try {
-      await chrome.runtime.sendMessage({ type: 'poll-now', force: true })
+      await chrome.runtime.sendMessage({ type: 'poll-now', force: true, fresh: true })
     } finally {
       refreshing = false
     }

@@ -91,7 +91,8 @@ async function pollRepo(
   prevSnapshots: Snapshots,
   notifyOnSuccess: boolean,
   etag: string | undefined,
-  branchCache: BranchCacheEntry | undefined
+  branchCache: BranchCacheEntry | undefined,
+  fresh: boolean
 ): Promise<RepoPollResult> {
   const prevList = prevSnapshots[repo.id] ?? []
   try {
@@ -119,7 +120,8 @@ async function pollRepo(
     }
     const filterLive = (pipelines: Pipeline[]): Pipeline[] => keepLiveBranches(pipelines, liveSet)
 
-    const result = await provider.listPipelines(account, repo, etag)
+    // Skip the ETag on a fresh (foreground) poll so GitHub returns live status, not a cached 304.
+    const result = await provider.listPipelines(account, repo, fresh ? undefined : etag)
     if (result.notModified) {
       // Pipelines unchanged; re-filter the cached snapshot in case branches changed.
       return {
@@ -170,18 +172,22 @@ const RATE_LIMIT_FLOOR = 50
 // so they can't race on chrome.storage.
 let inFlight: Promise<void> | null = null
 
-/** `force` (manual Refresh) bypasses the health + branch throttles for an immediate full check. */
-export function poll(force = false): Promise<void> {
+/**
+ * `force` (manual Refresh) bypasses the health throttle for an immediate re-check.
+ * `fresh` skips the pipeline ETag so GitHub can't answer a stale 304 — an open panel
+ * polls fresh for real-time status; the background alarm keeps the ETag (rate-safe).
+ */
+export function poll(force = false, fresh = false): Promise<void> {
   if (inFlight) {
     return inFlight
   }
-  inFlight = runPollCycle(force).finally(() => {
+  inFlight = runPollCycle(force, fresh).finally(() => {
     inFlight = null
   })
   return inFlight
 }
 
-async function runPollCycle(force: boolean): Promise<void> {
+async function runPollCycle(force: boolean, fresh: boolean): Promise<void> {
   const [
     accounts,
     watchedRepos,
@@ -270,7 +276,8 @@ async function runPollCycle(force: boolean): Promise<void> {
       prevSnapshots,
       settings.notifyOnSuccess,
       repoEtags[repo.id],
-      branchCache[repo.id]
+      branchCache[repo.id],
+      fresh
     )
     return { repo, account, ...result }
   })

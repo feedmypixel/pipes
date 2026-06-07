@@ -180,3 +180,15 @@ test('a paused account is skipped and keeps its snapshot', async () => {
   expect(h.provider.listPipelines).not.toHaveBeenCalled()
   expect(snapshot().map((p) => p.ref)).toEqual(['main'])
 })
+
+test('a background poll sends the stored pipeline ETag', async () => {
+  seed({ repoEtags: { 'o/r': 'pipe-etag' } })
+  await poll()
+  expect(h.provider.listPipelines).toHaveBeenCalledWith(account, repo, 'pipe-etag')
+})
+
+test('a fresh poll skips the pipeline ETag for live status', async () => {
+  seed({ repoEtags: { 'o/r': 'pipe-etag' } })
+  await poll(false, true)
+  expect(h.provider.listPipelines).toHaveBeenCalledWith(account, repo, undefined)
+})
