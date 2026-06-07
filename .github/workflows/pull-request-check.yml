@@ -1,8 +1,9 @@
 name: Pull request check
 
 on:
+  # Every PR, whatever its base — stacked PRs (base != main) must get checks too,
+  # else they show no status. Push checks stay on main (the branch signal).
   pull_request:
-    branches: [main]
   push:
     branches: [main]
 
