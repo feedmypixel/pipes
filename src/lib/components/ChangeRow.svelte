@@ -4,9 +4,14 @@
   import GitBranch from '@lucide/svelte/icons/git-branch'
   import StatusIcon from './StatusIcon.svelte'
   import RelativeTime from './RelativeTime.svelte'
+  import { statusVisual } from './status-icon'
   import { tooltip } from '../tooltip'
 
   let { change }: { change: Change } = $props()
+
+  let label = $derived(
+    `#${change.number} ${change.title} on ${change.headRef}, ${statusVisual(change.status).label}${change.isDraft ? ', draft' : ''}`
+  )
 </script>
 
 <a
@@ -16,6 +21,7 @@
   href={change.webUrl}
   target="_blank"
   rel="noopener noreferrer"
+  aria-label={label}
 >
   <StatusIcon status={change.status} size={16} />
   <span class="ref">

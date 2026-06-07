@@ -4,9 +4,14 @@
   import Star from '@lucide/svelte/icons/star'
   import StatusIcon from './StatusIcon.svelte'
   import RelativeTime from './RelativeTime.svelte'
+  import { statusVisual } from './status-icon'
   import { tooltip } from '../tooltip'
 
   let { pipeline }: { pipeline: Pipeline } = $props()
+
+  let label = $derived(
+    `${pipeline.ref}${pipeline.isDefaultBranch ? ' (default branch)' : ''}, ${statusVisual(pipeline.status).label}`
+  )
 </script>
 
 <a
@@ -15,6 +20,7 @@
   href={pipeline.webUrl}
   target="_blank"
   rel="noopener noreferrer"
+  aria-label={label}
 >
   <StatusIcon status={pipeline.status} size={16} />
   <span class="ref">

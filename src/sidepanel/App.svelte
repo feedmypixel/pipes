@@ -161,7 +161,12 @@
     <div class="controls">
       <span class="search">
         <Search size={14} />
-        <input type="text" placeholder="Filter repositories…" bind:value={search} />
+        <input
+          type="text"
+          placeholder="Filter repositories…"
+          aria-label="Filter repositories"
+          bind:value={search}
+        />
         {#if search}
           <button class="search-clear" aria-label="Clear filter" onclick={() => (search = '')}>
             <X size={14} />
@@ -303,6 +308,10 @@
     border: 1px solid var(--border-2);
     border-radius: var(--radius);
     background: var(--bg);
+  }
+  .search:focus-within {
+    outline: 2px solid var(--brand);
+    outline-offset: 1px;
   }
   .search :global(svg) {
     color: var(--text-3);

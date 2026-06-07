@@ -13,7 +13,7 @@ provider APIs directly using the user's read-only token and keeps all state in `
 
 ## Stack
 
-- Svelte 5 (runes) + Vite 6 + `@crxjs/vite-plugin` (typed MV3 manifest + HMR) + TypeScript
+- Svelte 5 (runes) + Vite 8 + `@crxjs/vite-plugin` (typed MV3 manifest + HMR) + TypeScript
 - `@lucide/svelte` icons · `sharp` rasterizes SVGs → icon PNGs
 - Vitest 4 · ESLint flat config + Prettier + eslint-plugin-svelte/-security
 - `pnpm` only (pinned in `.npmrc`, Node in `.nvmrc` — `nvm use` first)

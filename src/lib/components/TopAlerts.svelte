@@ -32,7 +32,7 @@
 {/each}
 
 {#each rateLimited as account (account.id)}
-  <div class="rate-limited">
+  <div class="rate-limited" role="status">
     <Clock size={15} />
     <span>{account.label} rate limited — resumes in {resumesIn(account.resumesAt)}</span>
   </div>
@@ -46,7 +46,7 @@
     </strong>
   </div>
 {:else if ready}
-  <div class="all-clear">
+  <div class="all-clear" role="status">
     <Check size={15} />
     <span>All default branches passing</span>
   </div>
