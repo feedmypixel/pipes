@@ -23,11 +23,14 @@ test('maps terminal + in-flight statuses to colour, symbol, label', () => {
   })
 })
 
-test('canceled, skipped, unknown share the neutral colour with distinct symbols', () => {
+test('canceled + skipped share the neutral colour with distinct symbols', () => {
   expect(statusVisual('canceled').colour).toBe('var(--neutral)')
   expect(statusVisual('skipped').colour).toBe('var(--neutral)')
-  expect(statusVisual('unknown').colour).toBe('var(--neutral)')
   expect(statusVisual('canceled').symbol).toBe('slash')
   expect(statusVisual('skipped').symbol).toBe('chevrons')
-  expect(statusVisual('unknown').symbol).toBe('dot')
+})
+
+test('unknown is its own violet, question-mark state (not a neutral dot)', () => {
+  expect(statusVisual('unknown').colour).toBe('var(--unknown)')
+  expect(statusVisual('unknown').symbol).toBe('question')
 })

@@ -1,6 +1,6 @@
 import type { PipelineStatus } from '../../providers/types'
 
-export type StatusSymbol = 'check' | 'cross' | 'arc' | 'pause' | 'slash' | 'chevrons' | 'dot'
+export type StatusSymbol = 'check' | 'cross' | 'arc' | 'pause' | 'slash' | 'chevrons' | 'question'
 
 export interface StatusVisual {
   /** CSS custom-property reference for the circle fill. */
@@ -17,7 +17,7 @@ const VISUALS: Record<PipelineStatus, StatusVisual> = {
   pending: { colour: 'var(--pending)', symbol: 'pause', label: 'pending' },
   canceled: { colour: 'var(--neutral)', symbol: 'slash', label: 'canceled' },
   skipped: { colour: 'var(--neutral)', symbol: 'chevrons', label: 'skipped' },
-  unknown: { colour: 'var(--neutral)', symbol: 'dot', label: 'unknown' }
+  unknown: { colour: 'var(--unknown)', symbol: 'question', label: 'unknown' }
 }
 
 export function statusVisual(status: PipelineStatus): StatusVisual {
