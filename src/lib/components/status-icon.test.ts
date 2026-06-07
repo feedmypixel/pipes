@@ -30,7 +30,8 @@ test('canceled is neutral, skipped is purple, each with its own symbol', () => {
   expect(statusVisual('skipped').symbol).toBe('chevrons')
 })
 
-test('unknown is a neutral question mark', () => {
-  expect(statusVisual('unknown').colour).toBe('var(--neutral)')
+test('unknown is an ink circle (flips per theme) with a question mark', () => {
+  expect(statusVisual('unknown').colour).toBe('var(--text)')
+  expect(statusVisual('unknown').ink).toBe('var(--bg)')
   expect(statusVisual('unknown').symbol).toBe('question')
 })

@@ -12,7 +12,8 @@
 <span
   class="status"
   class:spin={visual.symbol === 'arc'}
-  style="--circle: {visual.colour}; --size: {size}px; --symbol: {symbolSize}px"
+  style="--circle: {visual.colour}; --ink: {visual.ink ??
+    'var(--status-ink)'}; --size: {size}px; --symbol: {symbolSize}px"
   role="img"
   aria-label={visual.label}
   use:tooltip={visual.label}
@@ -50,7 +51,7 @@
   svg {
     width: var(--symbol);
     height: var(--symbol);
-    color: var(--status-ink);
+    color: var(--ink);
     fill: none;
     stroke: currentcolor;
     stroke-width: 3;
