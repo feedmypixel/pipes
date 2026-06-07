@@ -11,15 +11,15 @@
       <path
         d="M7 12.5l3.2 3.2L17 8.5"
         fill="none"
-        stroke="white"
+        stroke="var(--status-ink)"
         stroke-width="2.4"
         stroke-linecap="round"
         stroke-linejoin="round"
       />
     {:else if variant === 'info'}
       <circle cx="12" cy="12" r="11" fill="var(--brand)" />
-      <circle cx="12" cy="7.7" r="1.4" fill="white" />
-      <rect x="10.7" y="10.7" width="2.6" height="6.4" rx="1.3" fill="white" />
+      <circle cx="12" cy="7.7" r="1.4" fill="var(--status-ink)" />
+      <rect x="10.7" y="10.7" width="2.6" height="6.4" rx="1.3" fill="var(--status-ink)" />
     {:else}
       <path
         d="M12 4L20.5 19H3.5Z"
@@ -28,8 +28,8 @@
         stroke-width="2.2"
         stroke-linejoin="round"
       />
-      <rect x="10.85" y="9" width="2.3" height="5.4" rx="1.15" fill="white" />
-      <circle cx="12" cy="16.7" r="1.2" fill="white" />
+      <rect x="10.85" y="9" width="2.3" height="5.4" rx="1.15" fill="var(--status-ink)" />
+      <circle cx="12" cy="16.7" r="1.2" fill="var(--status-ink)" />
     {/if}
   </svg>
 </span>

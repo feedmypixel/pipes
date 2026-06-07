@@ -48,7 +48,7 @@
   svg {
     width: var(--symbol);
     height: var(--symbol);
-    color: white;
+    color: var(--status-ink);
     fill: none;
     stroke: currentcolor;
     stroke-width: 3;

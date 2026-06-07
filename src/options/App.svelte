@@ -382,7 +382,7 @@
               <Plug size={14} />
               {submitting ? 'Adding connection…' : 'Add connection'}
             </Button>
-            <Button variant="secondary" disabled={submitting} onclick={validate}>
+            <Button variant="secondary" onclick={validate}>
               <BadgeCheck size={14} /> Validate
             </Button>
           </div>
@@ -940,7 +940,7 @@
     width: 18px;
     height: 18px;
     border-radius: 50%;
-    background: white;
+    background: var(--status-ink);
     transition: transform 0.15s;
   }
   .toggle[aria-checked='true'] {
