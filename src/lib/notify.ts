@@ -2,6 +2,11 @@ import type { Change, Pipeline, Repo } from '../providers/types'
 import * as storage from './storage'
 import { BADGE_FAIL_COLOR, NOTIF_PREFIX } from './config'
 
+// Packaged status glyphs (see manifest web_accessible_resources). Used as the notification icon
+// so the toast leads with a red cross / green tick, not the app's green-tick logo.
+const ICON_FAILED = '/icons/status-failed.png'
+const ICON_SUCCESS = '/icons/status-success.png'
+
 /**
  * Notifications and the toolbar badge. The badge is the always-on glance signal;
  * notifications fire only on transitions (handled by the poll loop).
@@ -31,7 +36,7 @@ export async function notifyMainFailed({
   await rememberLink(id, pipeline.webUrl)
   await chrome.notifications.create(id, {
     type: 'basic',
-    iconUrl: '/icons/icon-128.png',
+    iconUrl: ICON_FAILED,
     title: `${shortName(repo)} · ${repo.defaultBranch} failed`,
     message: pipeline.title,
     contextMessage: repo.name,
@@ -53,7 +58,7 @@ export async function notifyChangeFailed({
   await rememberLink(id, change.webUrl)
   await chrome.notifications.create(id, {
     type: 'basic',
-    iconUrl: '/icons/icon-128.png',
+    iconUrl: ICON_FAILED,
     title: `${shortName(repo)} · #${change.number} failed`,
     message: change.title,
     contextMessage: change.headRef,
@@ -82,7 +87,7 @@ export async function notifyRecovered({
   await rememberLink(id, url)
   await chrome.notifications.create(id, {
     type: 'basic',
-    iconUrl: '/icons/icon-128.png',
+    iconUrl: ICON_SUCCESS,
     title: `${shortName(repo)} · ${label} recovered`,
     message: 'Back to green',
     contextMessage: repo.name,

@@ -22,3 +22,12 @@ for (const size of SIZES) {
   await writeFile(join(OUT_DIR, `icon-${size}.png`), png)
   console.log(`icons/icon-${size}.png (${size}x${size})`)
 }
+
+// Status glyphs for notifications — the success tick + failed cross, 128px (logo size).
+// Imported by src/lib/notify.ts so the bundler ships them; not part of the manifest icon set.
+for (const name of ['status-success', 'status-failed']) {
+  const statusSvg = await readFile(join(ROOT, 'assets', `${name}.svg`))
+  const png = await sharp(statusSvg).resize(128, 128).png().toBuffer()
+  await writeFile(join(OUT_DIR, `${name}.png`), png)
+  console.log(`icons/${name}.png (128x128)`)
+}
