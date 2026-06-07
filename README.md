@@ -77,6 +77,7 @@ Nothing is sent anywhere except your configured GitHub/GitLab hosts.
 - [`docs/faq.md`](docs/faq.md) — freshness (GitHub's ~60s cache), rate limits, token scopes, notifications.
 - [`docs/releasing-to-chrome-web-store.md`](docs/releasing-to-chrome-web-store.md) — package + publish.
 - [`docs/notifications.md`](docs/notifications.md) — when notifications fire + platform limits.
+- [`docs/accessibility.md`](docs/accessibility.md) — WCAG 2.1 AA, the `/a11y-sweep` audit, axe-core setup.
 - [`docs/README.md`](docs/README.md) — docs index (+ engineering principles, WIP).
 - Styling (tokens, theming): [`src/lib/styles/README.md`](src/lib/styles/README.md).
 
