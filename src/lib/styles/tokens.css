@@ -6,9 +6,9 @@
   color-scheme: light;
 
   /* surfaces + ink */
-  --bg: #ffffff;
+  --bg: #fff;
   --canvas: #eef1f7;
-  --surface: #ffffff;
+  --surface: #fff;
   --surface-2: #f4f6fb;
   --hover: #eaeef6;
   --border: #e3e8f1;
@@ -19,40 +19,39 @@
 
   /* brand (identity/links/focus only, never status) */
   --brand: #3194fc;
-  --brand-ink: #ffffff;
-  --brand-soft: oklch(0.95 0.04 256);
-  --link: oklch(0.55 0.17 256);
+  --brand-ink: #fff;
+  --brand-soft: oklch(95% 0.04 256deg);
+  --link: oklch(55% 0.17 256deg);
 
   /* status (OKLCH, harmonised) */
-  --success: oklch(0.64 0.15 152);
-  --success-bg: oklch(0.95 0.04 152);
-  --success-line: oklch(0.86 0.09 152);
-  --failed: oklch(0.6 0.2 27);
-  --failed-bg: oklch(0.95 0.04 27);
-  --failed-line: oklch(0.86 0.1 27);
-  --running: oklch(0.66 0.17 256);
-  --running-bg: oklch(0.95 0.04 256);
-  --running-line: oklch(0.86 0.09 256);
-  --pending: oklch(0.72 0.14 80);
-  --pending-bg: oklch(0.95 0.05 85);
-  --pending-line: oklch(0.86 0.1 85);
-  --neutral: oklch(0.6 0.025 256);
-  --neutral-bg: oklch(0.95 0.008 256);
-  --neutral-line: oklch(0.88 0.012 256);
+  --success: oklch(64% 0.15 152deg);
+  --success-bg: oklch(95% 0.04 152deg);
+  --success-line: oklch(86% 0.09 152deg);
+  --failed: oklch(60% 0.2 27deg);
+  --failed-bg: oklch(95% 0.04 27deg);
+  --failed-line: oklch(86% 0.1 27deg);
+  --running: oklch(66% 0.17 256deg);
+  --running-bg: oklch(95% 0.04 256deg);
+  --running-line: oklch(86% 0.09 256deg);
+  --pending: oklch(72% 0.14 80deg);
+  --pending-bg: oklch(95% 0.05 85deg);
+  --pending-line: oklch(86% 0.1 85deg);
+  --neutral: oklch(60% 0.025 256deg);
+  --neutral-bg: oklch(95% 0.008 256deg);
+  --neutral-line: oklch(88% 0.012 256deg);
 
   /* default-branch star marker (decorative, not a status) */
-  --star: oklch(0.78 0.15 85);
+  --star: oklch(78% 0.15 85deg);
 
   /* ink on a saturated status fill (e.g. white on the red fail badge) */
-  --status-ink: #ffffff;
+  --status-ink: #fff;
 
   /* alarm strip (default branch broken) */
-  --alarm-strip: oklch(0.96 0.035 27);
-  --alarm-ink: oklch(0.52 0.2 27);
-  --alarm-line: oklch(0.87 0.1 27);
-
-  --shadow: 0 1px 0 rgba(15, 22, 32, 0.04), 0 1px 3px rgba(15, 22, 32, 0.1);
-  --shadow-lg: 0 8px 28px rgba(15, 22, 32, 0.16);
+  --alarm-strip: oklch(96% 0.035 27deg);
+  --alarm-ink: oklch(52% 0.2 27deg);
+  --alarm-line: oklch(87% 0.1 27deg);
+  --shadow: 0 1px 0 rgb(15 22 32 / 4%), 0 1px 3px rgb(15 22 32 / 10%);
+  --shadow-lg: 0 8px 28px rgb(15 22 32 / 16%);
 
   /* theme-independent */
   --font-sans: -apple-system, blinkmacsystemfont, 'Segoe UI', system-ui, sans-serif;
@@ -116,6 +115,7 @@
   --toast-z: 2147483000;
   --toast-gap: 10px;
   --toast-width: 320px;
+
   /* tinted toast fill, built from the status colour via relative-colour:
      -l = lightness, -sat = chroma as a fraction of the status chroma (the
      saturation dial; raise -sat for a punchier tint). Themed per scheme. */
@@ -144,39 +144,39 @@
     --text-3: #687284;
     --brand: #5aa8ff;
     --brand-ink: #06152b;
-    --brand-soft: oklch(0.3 0.07 256);
+    --brand-soft: oklch(30% 0.07 256deg);
     --toast-success-fill: var(--success-bg);
     --toast-success-edge: var(--success-line);
     --toast-error-fill: var(--failed-bg);
     --toast-error-edge: var(--failed-line);
     --toast-info-fill: var(--brand-soft);
     --toast-info-edge: color-mix(in oklab, var(--brand) 45%, var(--surface));
-    --link: oklch(0.78 0.13 256);
-    --success: oklch(0.76 0.16 152);
-    --success-bg: oklch(0.3 0.06 152);
-    --success-line: oklch(0.43 0.08 152);
-    --failed: oklch(0.7 0.19 27);
-    --failed-bg: oklch(0.3 0.09 27);
-    --failed-line: oklch(0.44 0.11 27);
-    --running: oklch(0.74 0.15 256);
-    --running-bg: oklch(0.3 0.07 256);
-    --running-line: oklch(0.44 0.1 256);
-    --pending: oklch(0.8 0.13 85);
-    --pending-bg: oklch(0.33 0.06 85);
-    --pending-line: oklch(0.46 0.09 85);
-    --neutral: oklch(0.72 0.025 256);
-    --neutral-bg: oklch(0.28 0.012 256);
-    --neutral-line: oklch(0.4 0.02 256);
-    --star: oklch(0.85 0.14 85);
-    --alarm-strip: oklch(0.3 0.1 27);
-    --alarm-ink: oklch(0.82 0.13 27);
-    --alarm-line: oklch(0.45 0.11 27);
+    --link: oklch(78% 0.13 256deg);
+    --success: oklch(76% 0.16 152deg);
+    --success-bg: oklch(30% 0.06 152deg);
+    --success-line: oklch(43% 0.08 152deg);
+    --failed: oklch(70% 0.19 27deg);
+    --failed-bg: oklch(30% 0.09 27deg);
+    --failed-line: oklch(44% 0.11 27deg);
+    --running: oklch(74% 0.15 256deg);
+    --running-bg: oklch(30% 0.07 256deg);
+    --running-line: oklch(44% 0.1 256deg);
+    --pending: oklch(80% 0.13 85deg);
+    --pending-bg: oklch(33% 0.06 85deg);
+    --pending-line: oklch(46% 0.09 85deg);
+    --neutral: oklch(72% 0.025 256deg);
+    --neutral-bg: oklch(28% 0.012 256deg);
+    --neutral-line: oklch(40% 0.02 256deg);
+    --star: oklch(85% 0.14 85deg);
+    --alarm-strip: oklch(30% 0.1 27deg);
+    --alarm-ink: oklch(82% 0.13 27deg);
+    --alarm-line: oklch(45% 0.11 27deg);
     --appbar: #0d1219;
     --appbar-text: #f4f6fb;
     --appbar-muted: #9aa3b2;
     --appbar-hover: rgb(255 255 255 / 8%);
-    --shadow: 0 0 0 1px rgba(0, 0, 0, 0.2), 0 2px 6px rgba(0, 0, 0, 0.4);
-    --shadow-lg: 0 12px 36px rgba(0, 0, 0, 0.55);
+    --shadow: 0 0 0 1px rgb(0 0 0 / 20%), 0 2px 6px rgb(0 0 0 / 40%);
+    --shadow-lg: 0 12px 36px rgb(0 0 0 / 55%);
   }
 }
 
@@ -196,33 +196,33 @@
   --text-3: #687284;
   --brand: #5aa8ff;
   --brand-ink: #06152b;
-  --brand-soft: oklch(0.3 0.07 256);
-  --link: oklch(0.78 0.13 256);
-  --success: oklch(0.76 0.16 152);
-  --success-bg: oklch(0.3 0.06 152);
-  --success-line: oklch(0.43 0.08 152);
-  --failed: oklch(0.7 0.19 27);
-  --failed-bg: oklch(0.3 0.09 27);
-  --failed-line: oklch(0.44 0.11 27);
-  --running: oklch(0.74 0.15 256);
-  --running-bg: oklch(0.3 0.07 256);
-  --running-line: oklch(0.44 0.1 256);
-  --pending: oklch(0.8 0.13 85);
-  --pending-bg: oklch(0.33 0.06 85);
-  --pending-line: oklch(0.46 0.09 85);
-  --neutral: oklch(0.72 0.025 256);
-  --neutral-bg: oklch(0.28 0.012 256);
-  --neutral-line: oklch(0.4 0.02 256);
-  --star: oklch(0.85 0.14 85);
-  --alarm-strip: oklch(0.3 0.1 27);
-  --alarm-ink: oklch(0.82 0.13 27);
-  --alarm-line: oklch(0.45 0.11 27);
+  --brand-soft: oklch(30% 0.07 256deg);
+  --link: oklch(78% 0.13 256deg);
+  --success: oklch(76% 0.16 152deg);
+  --success-bg: oklch(30% 0.06 152deg);
+  --success-line: oklch(43% 0.08 152deg);
+  --failed: oklch(70% 0.19 27deg);
+  --failed-bg: oklch(30% 0.09 27deg);
+  --failed-line: oklch(44% 0.11 27deg);
+  --running: oklch(74% 0.15 256deg);
+  --running-bg: oklch(30% 0.07 256deg);
+  --running-line: oklch(44% 0.1 256deg);
+  --pending: oklch(80% 0.13 85deg);
+  --pending-bg: oklch(33% 0.06 85deg);
+  --pending-line: oklch(46% 0.09 85deg);
+  --neutral: oklch(72% 0.025 256deg);
+  --neutral-bg: oklch(28% 0.012 256deg);
+  --neutral-line: oklch(40% 0.02 256deg);
+  --star: oklch(85% 0.14 85deg);
+  --alarm-strip: oklch(30% 0.1 27deg);
+  --alarm-ink: oklch(82% 0.13 27deg);
+  --alarm-line: oklch(45% 0.11 27deg);
   --appbar: #0d1219;
   --appbar-text: #f4f6fb;
   --appbar-muted: #9aa3b2;
   --appbar-hover: rgb(255 255 255 / 8%);
-  --shadow: 0 0 0 1px rgba(0, 0, 0, 0.2), 0 2px 6px rgba(0, 0, 0, 0.4);
-  --shadow-lg: 0 12px 36px rgba(0, 0, 0, 0.55);
+  --shadow: 0 0 0 1px rgb(0 0 0 / 20%), 0 2px 6px rgb(0 0 0 / 40%);
+  --shadow-lg: 0 12px 36px rgb(0 0 0 / 55%);
   --toast-success-fill: var(--success-bg);
   --toast-success-edge: var(--success-line);
   --toast-error-fill: var(--failed-bg);
