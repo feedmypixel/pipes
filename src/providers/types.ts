@@ -80,21 +80,12 @@ export interface PipelinesResult {
   rateLimit: { remaining: number; reset: number } | null
 }
 
-/** Result of a conditional live-branches fetch. */
-export interface BranchesResult {
-  /** Names of branches that currently exist. Empty when notModified. */
-  branches: string[]
-  etag: string | null
-  notModified: boolean
-  rateLimit: { remaining: number; reset: number } | null
-}
-
 /** An open pull request / merge request with its head pipeline status. */
 export interface Change {
   /** PR/MR number, e.g. 42. Stable identity for diffing. */
   number: number
   title: string
-  /** Source branch name. */
+  /** Source branch name — how poll joins the PR to its pipeline status. */
   headRef: string
   /** Head commit SHA the status reflects. */
   headSha: string
@@ -107,10 +98,16 @@ export interface Change {
   isBot: boolean
 }
 
-/** Result of a conditional open-PR/MR fetch. */
+/**
+ * Open-PR/MR metadata without status. Providers return just the list; poll joins each one's
+ * status from the repo's pipelines (by head ref) — one shared runs fetch, no per-PR fan-out.
+ */
+export type ChangeMeta = Omit<Change, 'status'>
+
+/** Result of a conditional open-PR/MR fetch (metadata only — status is joined in poll). */
 export interface OpenChangesResult {
-  /** Open PRs/MRs with head status. Empty when notModified. */
-  changes: Change[]
+  /** Open PRs/MRs (no status). Empty when notModified. */
+  changes: ChangeMeta[]
   etag: string | null
   notModified: boolean
   rateLimit: { remaining: number; reset: number } | null
@@ -124,18 +121,14 @@ export interface Provider {
   validateToken(account: Account): Promise<ValidationResult>
   listRepos(account: Account): Promise<Repo[]>
   /**
-   * Latest pipeline per ref, newest first. Pass the prior `etag` for a
-   * conditional request; a 304 returns `notModified` with the same etag.
+   * Newest pipeline per ref (default branch + every active branch incl. PR heads). Pass the prior
+   * `etag` for a conditional request; a 304 returns `notModified`. Poll reads the default branch
+   * here and joins each open PR/MR's status by head ref.
    */
   listPipelines(account: Account, repo: Repo, etag?: string | null): Promise<PipelinesResult>
   /**
-   * Names of branches that currently exist, for dropping ghost refs (runs whose
-   * branch was merged/deleted). Conditional via `etag`; a 304 returns notModified.
-   */
-  listBranches(account: Account, repo: Repo, etag?: string | null): Promise<BranchesResult>
-  /**
-   * Open PRs/MRs with their head pipeline status. Conditional via `etag`; a 304 returns
-   * notModified. The unit of display in the PR/MR-centric model (see prd-pr-mr-model.md).
+   * Open PRs/MRs (metadata only — status is joined from listPipelines by head ref). Conditional
+   * via `etag`. The unit of display in the PR/MR-centric model (see prd-pr-mr-model.md).
    */
   listOpenChanges(account: Account, repo: Repo, etag?: string | null): Promise<OpenChangesResult>
 }

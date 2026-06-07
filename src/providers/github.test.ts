@@ -24,15 +24,6 @@ function stubFetch(response: Response) {
   }
 }
 
-/** listOpenChanges hits /pulls then a /check-runs per PR — route the response by URL. */
-function stubFetchByUrl(route: (url: string) => Response) {
-  const original = globalThis.fetch
-  globalThis.fetch = (async (url: string) => route(String(url))) as typeof fetch
-  return () => {
-    globalThis.fetch = original
-  }
-}
-
 test('maps completed GitHub runs by conclusion', () => {
   expect(mapGithubStatus('completed', 'success')).toBe('success')
   expect(mapGithubStatus('completed', 'failure')).toBe('failed')
@@ -56,60 +47,21 @@ test('maps unrecognised conclusion to unknown', () => {
   expect(mapGithubStatus('completed', 'neutral')).toBe('unknown')
 })
 
-test('listBranches maps branch names and reads the response etag', async () => {
+test('listOpenChanges maps open PRs to metadata (status is joined in poll)', async () => {
   const restore = stubFetch(
-    new Response(JSON.stringify([{ name: 'main' }, { name: 'dev' }]), {
-      status: 200,
-      headers: { etag: 'W/"b"' }
-    })
-  )
-  try {
-    const result = await github.listBranches(account, repo)
-    expect(result.branches).toEqual(['main', 'dev'])
-    expect(result.notModified).toBe(false)
-    expect(result.etag).toBe('W/"b"')
-  } finally {
-    restore()
-  }
-})
-
-test('listBranches 304 keeps the sent etag and flags notModified', async () => {
-  const restore = stubFetch(new Response(null, { status: 304 }))
-  try {
-    const result = await github.listBranches(account, repo, 'W/"prev"')
-    expect(result.notModified).toBe(true)
-    expect(result.branches).toEqual([])
-    expect(result.etag).toBe('W/"prev"')
-  } finally {
-    restore()
-  }
-})
-
-test('listOpenChanges maps PRs and collapses head-SHA runs to the worst status', async () => {
-  const restore = stubFetchByUrl((url) =>
-    url.includes('/pulls')
-      ? new Response(
-          JSON.stringify([
-            {
-              number: 7,
-              title: 'Add x',
-              draft: false,
-              html_url: 'https://x/pull/7',
-              user: { type: 'User' },
-              head: { ref: 'feat', sha: 'sha7' }
-            }
-          ]),
-          { status: 200, headers: { etag: 'W/"p"' } }
-        )
-      : new Response(
-          JSON.stringify({
-            workflow_runs: [
-              { status: 'completed', conclusion: 'success', workflow_id: 1, updated_at: 't1' },
-              { status: 'completed', conclusion: 'failure', workflow_id: 2, updated_at: 't1' }
-            ]
-          }),
-          { status: 200 }
-        )
+    new Response(
+      JSON.stringify([
+        {
+          number: 7,
+          title: 'Add x',
+          draft: false,
+          html_url: 'https://x/pull/7',
+          user: { type: 'User' },
+          head: { ref: 'feat', sha: 'sha7' }
+        }
+      ]),
+      { status: 200, headers: { etag: 'W/"p"' } }
+    )
   )
   try {
     const result = await github.listOpenChanges(account, repo)
@@ -119,7 +71,6 @@ test('listOpenChanges maps PRs and collapses head-SHA runs to the worst status',
         title: 'Add x',
         headRef: 'feat',
         headSha: 'sha7',
-        status: 'failed',
         webUrl: 'https://x/pull/7',
         isDraft: false,
         isBot: false
@@ -131,29 +82,26 @@ test('listOpenChanges maps PRs and collapses head-SHA runs to the worst status',
   }
 })
 
-test('listOpenChanges flags bots and drafts; no runs → unknown', async () => {
-  const restore = stubFetchByUrl((url) =>
-    url.includes('/pulls')
-      ? new Response(
-          JSON.stringify([
-            {
-              number: 9,
-              title: 'Bump dep',
-              draft: true,
-              html_url: 'https://x/pull/9',
-              user: { type: 'Bot' },
-              head: { ref: 'dependabot/x', sha: 's9' }
-            }
-          ]),
-          { status: 200 }
-        )
-      : new Response(JSON.stringify({ workflow_runs: [] }), { status: 200 })
+test('listOpenChanges flags bots and drafts', async () => {
+  const restore = stubFetch(
+    new Response(
+      JSON.stringify([
+        {
+          number: 9,
+          title: 'Bump dep',
+          draft: true,
+          html_url: 'https://x/pull/9',
+          user: { type: 'Bot' },
+          head: { ref: 'dependabot/x', sha: 's9' }
+        }
+      ]),
+      { status: 200 }
+    )
   )
   try {
     const [change] = await github.listOpenChanges(account, repo).then((r) => r.changes)
     expect(change.isBot).toBe(true)
     expect(change.isDraft).toBe(true)
-    expect(change.status).toBe('unknown')
   } finally {
     restore()
   }

@@ -1,7 +1,6 @@
 import type {
   Account,
-  BranchesResult,
-  Change,
+  ChangeMeta,
   OpenChangesResult,
   Pipeline,
   PipelineStatus,
@@ -13,7 +12,8 @@ import type {
 import { fetchJson, type RateLimitHeaders } from './http'
 
 const REPO_PAGES = 3 // up to 300 projects
-const PIPELINES_PER_PROJECT = 30
+// Enough recent pipelines to cover every active ref (default + open MR source branches) in one fetch.
+const PIPELINES_PER_PROJECT = 100
 const RATE_LIMIT_HEADERS: RateLimitHeaders = {
   remaining: 'ratelimit-remaining',
   reset: 'ratelimit-reset'
@@ -54,7 +54,6 @@ interface GlMergeRequest {
   source_branch: string
   sha: string
   author: { bot?: boolean } | null
-  head_pipeline: { status: string } | null
 }
 
 export function mapGitlabStatus(status: string): PipelineStatus {
@@ -155,23 +154,6 @@ export const gitlab: Provider = {
     return { pipelines, etag: newEtag, notModified: false, rateLimit }
   },
 
-  async listBranches(account: Account, repo: Repo, etag?: string | null): Promise<BranchesResult> {
-    const {
-      status,
-      data,
-      etag: newEtag,
-      rateLimit
-    } = await fetchJson<{ name: string }[]>(
-      `${apiBase(account)}/projects/${repo.id}/repository/branches?per_page=100`,
-      { 'PRIVATE-TOKEN': account.token },
-      { etag, rateLimitHeaders: RATE_LIMIT_HEADERS }
-    )
-    if (status === 304 || data === null) {
-      return { branches: [], etag: etag ?? null, notModified: true, rateLimit }
-    }
-    return { branches: data.map((b) => b.name), etag: newEtag, notModified: false, rateLimit }
-  },
-
   async listOpenChanges(
     account: Account,
     repo: Repo,
@@ -190,13 +172,13 @@ export const gitlab: Provider = {
     if (status === 304 || data === null) {
       return { changes: [], etag: etag ?? null, notModified: true, rateLimit }
     }
-    const changes: Change[] = data.map((mr) => ({
+    // Just the open-MR list — poll joins each one's status from the project's pipelines (by source
+    // branch), the same path GitHub uses.
+    const changes: ChangeMeta[] = data.map((mr) => ({
       number: mr.iid,
       title: mr.title,
       headRef: mr.source_branch,
       headSha: mr.sha,
-      // The MR carries its head pipeline inline — no per-MR fan-out needed.
-      status: mr.head_pipeline ? mapGitlabStatus(mr.head_pipeline.status) : 'unknown',
       webUrl: mr.web_url,
       isDraft: mr.draft,
       isBot: mr.author?.bot ?? false
