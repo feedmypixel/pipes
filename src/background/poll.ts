@@ -17,6 +17,19 @@ function byRef(pipelines: Pipeline[]): Map<string, Pipeline> {
   return new Map(pipelines.map((p) => [p.ref, p]))
 }
 
+type RateLimit = { remaining: number; reset: number }
+
+/** The reading closer to exhaustion, so the budget floor sees the worst of a repo's calls. */
+function worstRateLimit(a: RateLimit | null, b: RateLimit | null): RateLimit | null {
+  if (!a) {
+    return b
+  }
+  if (!b) {
+    return a
+  }
+  return a.remaining <= b.remaining ? a : b
+}
+
 export type TransitionAction = 'main-fail' | 'branch-fail' | 'recover' | null
 
 /**
@@ -99,13 +112,15 @@ async function pollRepo(
     const provider = providerFor(account)
 
     // Live branches drop ghost refs (merged/deleted branches whose runs linger). Fetched every
-    // poll, ETag-conditional so a 304 costs no rate budget — a new branch shows within one cycle.
-    // On failure we fall back to the last-known-good list so ghosts never reappear; with no prior
-    // list we show only the default branch. Rate limits propagate to pause the account.
+    // poll, ETag-conditional (GitHub doesn't count a 304 against the rate limit). When /branches
+    // is readable a new branch appears within one cycle; on failure we fall back to the
+    // last-known-good list (else default-only) so ghosts never reappear. Rate limits propagate.
     let branches = branchCache
     let liveSet: Set<string>
+    let branchRate: RateLimit | null = null
     try {
       const branchResult = await provider.listBranches(account, repo, branchCache?.etag)
+      branchRate = branchResult.rateLimit
       const liveNames = branchResult.notModified
         ? (branchCache?.names ?? [])
         : branchResult.branches
@@ -115,28 +130,25 @@ async function pollRepo(
       if (err instanceof RateLimitError) {
         throw err
       }
-      console.warn(`Branches unreadable for ${repo.name}:`, (err as Error).message)
+      console.warn(`Branch fetch failed for ${repo.name}:`, (err as Error).message)
       liveSet = new Set(branchCache?.names ?? []) // last-known-good, else default-only
     }
     const filterLive = (pipelines: Pipeline[]): Pipeline[] => keepLiveBranches(pipelines, liveSet)
 
     // Skip the ETag on a fresh (foreground) poll so GitHub returns live status, not a cached 304.
     const result = await provider.listPipelines(account, repo, fresh ? undefined : etag)
+    // Pause off whichever call is closer to the budget floor, so the branch fetch isn't invisible.
+    const rateLimit = worstRateLimit(branchRate, result.rateLimit)
     if (result.notModified) {
       // Pipelines unchanged; re-filter the cached snapshot in case branches changed.
-      return {
-        pipelines: filterLive(prevList),
-        etag: result.etag,
-        rateLimit: result.rateLimit,
-        branches
-      }
+      return { pipelines: filterLive(prevList), etag: result.etag, rateLimit, branches }
     }
     const live = filterLive(result.pipelines)
     const prev = byRef(prevList)
     for (const pipeline of live) {
       await announceTransition(repo, prev.get(pipeline.ref), pipeline, notifyOnSuccess)
     }
-    return { pipelines: live, etag: result.etag, rateLimit: result.rateLimit, branches }
+    return { pipelines: live, etag: result.etag, rateLimit, branches }
   } catch (err) {
     if (err instanceof RateLimitError) {
       return { pipelines: prevList, etag: etag ?? null, rateLimit: null, pausedUntil: err.resetAt }
