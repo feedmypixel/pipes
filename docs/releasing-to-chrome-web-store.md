@@ -2,6 +2,15 @@
 
 MV3 package + publish. To dogfood first, see [Testers](#testers).
 
+- [Setup (one-time)](#setup-one-time)
+- [Build + package](#build--package)
+- [Listing assets](#listing-assets)
+- [Permissions + data](#permissions--data-the-review-sensitive-bit)
+- [Submit](#submit)
+- [Testers](#testers)
+- [Updates](#updates)
+- [Checklist](#checklist)
+
 ## Setup (one-time)
 
 - Register a Chrome Web Store developer account ($5): <https://chrome.google.com/webstore/devconsole>

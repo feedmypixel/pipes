@@ -1,5 +1,10 @@
 # FAQ
 
+- [Why isn't status instant?](#why-isnt-status-instant)
+- [Will watching lots of repos blow my rate limit?](#will-watching-lots-of-repos-blow-my-rate-limit)
+- [What token scopes do I need?](#what-token-scopes-do-i-need)
+- [Self-hosted GitHub Enterprise or GitLab?](#self-hosted-github-enterprise-or-gitlab)
+
 ## Why isn't status instant?
 
 GitHub caches its Actions runs API (`/actions/runs`) for about **60 seconds**
@@ -24,17 +29,6 @@ just get choppier updates, not errors.
 - **GitLab** — a PAT with **read_api**.
 
 Read-only, stored in `chrome.storage.local`, never synced, never sent anywhere except your Git host.
-
-## A branch I deleted vanished from the list — is that a bug?
-
-No. Pipes shows your **default branch + open PRs/MRs**, not raw branches. When a PR is merged or
-closed it drops off on its own — no stale "ghost" rows.
-
-## Why does the notification show the Chrome icon on the left?
-
-macOS always puts the **sending app's** icon (Chrome) on the left of a notification — an extension
-can't change it. Pipes' status icon (red cross / green tick) is the image on the **right**, which
-is the part we control.
 
 ## Self-hosted GitHub Enterprise or GitLab?
 

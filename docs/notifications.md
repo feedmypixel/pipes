@@ -7,6 +7,11 @@ when), `src/background/service-worker.ts` (click handling).
 Notifications are the product's core value: loud the moment a watched pipeline breaks, and a
 click takes you straight to the failing job.
 
+- [When they fire](#when-they-fire)
+- [Click → the job](#click--the-job)
+- [What we control](#what-we-control)
+- [Permissions](#permissions)
+
 ## When they fire
 
 The poll loop diffs each fresh pipeline against the last snapshot and only notifies on a
