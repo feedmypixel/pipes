@@ -3,30 +3,16 @@
   import Settings from '@lucide/svelte/icons/settings'
   import Search from '@lucide/svelte/icons/search'
   import X from '@lucide/svelte/icons/x'
-  import * as storage from '../lib/storage'
-  import type { Snapshots, AccountHealth } from '../lib/storage'
-  import {
-    groupByOwner,
-    filterGroups,
-    ALL_BRANCH_STATES,
-    BRANCH_STATE_ORDER,
-    countDefaultBranchFailures
-  } from '../lib/group'
-  import type { Account, PipelineStatus, Repo } from '../providers/types'
+  import { groupByOwner, filterGroups, ALL_BRANCH_STATES, BRANCH_STATE_ORDER } from '../lib/group'
+  import type { PipelineStatus } from '../providers/types'
   import { SvelteSet } from 'svelte/reactivity'
   import RepoList from '../lib/components/RepoList.svelte'
   import TopAlerts from '../lib/components/TopAlerts.svelte'
   import UpdatedFooter from '../lib/components/UpdatedFooter.svelte'
-  import { holdLivePort } from '../lib/live-port'
+  import { useDashboard } from '../lib/dashboard.svelte'
 
-  let accounts = $state<Account[]>([])
-  let watchedRepos = $state<Repo[]>([])
-  let snapshots = $state<Snapshots>({})
-  let accountHealth = $state<Record<string, AccountHealth>>({})
-  let rateLimitPaused = $state<Record<string, number>>({})
+  const dash = useDashboard()
   let search = $state('')
-  let lastPolledAt = $state(0)
-  let refreshing = $state(false)
   const allowed = new SvelteSet<PipelineStatus>(readAllowed())
 
   // View prefs are panel-local, so they live in localStorage, not chrome.storage.
@@ -62,63 +48,16 @@
     }
   }
 
-  $effect(() => {
-    storage.get('accounts').then((value) => (accounts = value))
-    storage.get('watchedRepos').then((value) => (watchedRepos = value))
-    storage.get('snapshots').then((value) => (snapshots = value))
-    storage.get('accountHealth').then((value) => (accountHealth = value))
-    storage.get('rateLimitPausedUntil').then((value) => (rateLimitPaused = value))
-    storage.get('lastPolledAt').then((value) => (lastPolledAt = value))
-    const unsubscribers = [
-      storage.subscribe('accounts', (value) => (accounts = value)),
-      storage.subscribe('watchedRepos', (value) => (watchedRepos = value)),
-      storage.subscribe('snapshots', (value) => (snapshots = value)),
-      storage.subscribe('accountHealth', (value) => (accountHealth = value)),
-      storage.subscribe('rateLimitPausedUntil', (value) => (rateLimitPaused = value)),
-      storage.subscribe('lastPolledAt', (value) => (lastPolledAt = value))
-    ]
-    return () => unsubscribers.forEach((off) => off())
-  })
-
-  // While the panel is open, hold a live port so the worker drives a fast fresh poll loop. A
-  // panel-side setInterval gets throttled to ~1/min when the panel isn't the focused document; the
-  // worker's timer doesn't. The worker stays the single owner of notifications + the badge.
-  $effect(holdLivePort)
-
   const matched = $derived(
-    watchedRepos.filter((repo) => repo.name.toLowerCase().includes(search.trim().toLowerCase()))
+    dash.watchedRepos.filter((repo) =>
+      repo.name.toLowerCase().includes(search.trim().toLowerCase())
+    )
   )
-  const groups = $derived(filterGroups(groupByOwner(matched, snapshots, accounts), allowed))
+  const groups = $derived(
+    filterGroups(groupByOwner(matched, dash.snapshots, dash.accounts), allowed)
+  )
   const allStatesOn = $derived(BRANCH_STATE_ORDER.every((state) => allowed.has(state)))
-  const mainFailing = $derived(countDefaultBranchFailures(watchedRepos, snapshots))
-  const configured = $derived(accounts.length > 0)
-  const connectionIssues = $derived(
-    accounts
-      .filter((account) => accountHealth[account.id] && !accountHealth[account.id].ok)
-      .map((account) => ({
-        id: account.id,
-        label: account.label,
-        error: accountHealth[account.id].error
-      }))
-  )
-  const rateLimited = $derived(
-    accounts
-      .filter((account) => (rateLimitPaused[account.id] ?? 0) > Math.floor(Date.now() / 1000))
-      .map((account) => ({
-        id: account.id,
-        label: account.label,
-        resumesAt: rateLimitPaused[account.id]
-      }))
-  )
 
-  async function refresh() {
-    refreshing = true
-    try {
-      await chrome.runtime.sendMessage({ type: 'poll-now', force: true })
-    } finally {
-      refreshing = false
-    }
-  }
   function openOptions() {
     chrome.runtime.openOptionsPage()
   }
@@ -130,10 +69,10 @@
     <span class="live"><span class="pulse"></span> live · 10s</span>
     <button
       class="icon-button"
-      class:spinning={refreshing}
+      class:spinning={dash.refreshing}
       title="Refresh now"
       aria-label="Refresh now"
-      onclick={refresh}
+      onclick={dash.refresh}
     >
       <RefreshCw size={16} />
     </button>
@@ -143,18 +82,18 @@
   </header>
 
   <TopAlerts
-    {connectionIssues}
-    {rateLimited}
-    {mainFailing}
-    ready={configured && watchedRepos.length > 0}
+    connectionIssues={dash.connectionIssues}
+    rateLimited={dash.rateLimited}
+    mainFailing={dash.mainFailing}
+    ready={dash.configured && dash.watchedRepos.length > 0}
     onOpenSettings={openOptions}
   />
 
-  {#if !configured || watchedRepos.length === 0}
+  {#if !dash.configured || dash.watchedRepos.length === 0}
     <div class="empty">
-      <p>{configured ? 'No repositories watched yet.' : 'No connections yet.'}</p>
+      <p>{dash.configured ? 'No repositories watched yet.' : 'No connections yet.'}</p>
       <button class="empty-action" onclick={openOptions}>
-        {configured ? 'Choose repos' : 'Open setup'}
+        {dash.configured ? 'Choose repos' : 'Open setup'}
       </button>
     </div>
   {:else}
@@ -206,7 +145,7 @@
         </p>
       {/if}
     </main>
-    <UpdatedFooter {lastPolledAt} {configured} />
+    <UpdatedFooter lastPolledAt={dash.lastPolledAt} configured={dash.configured} />
   {/if}
 </div>
 
