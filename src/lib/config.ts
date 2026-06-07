@@ -25,3 +25,9 @@ export const NOTIF_PREFIX = {
   fail: 'pw-fail-',
   recover: 'pw-ok-'
 } as const
+
+/** How often to re-validate a connection's token (ms). Changes rarely — no need every poll. */
+export const HEALTH_REFRESH_MS = 5 * 60 * 1000
+
+/** How often to re-fetch a repo's live branches (ms). Branch membership changes slowly. */
+export const BRANCH_REFRESH_MS = 10 * 60 * 1000
