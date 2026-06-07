@@ -2,9 +2,27 @@
   "name": "pipes",
   "version": "0.1.0",
   "description": "Watch GitHub Actions and GitLab CI/CD pipeline status across the repos you care about. Loud when main breaks.",
+  "keywords": [
+    "chrome-extension",
+    "manifest-v3",
+    "github-actions",
+    "gitlab-ci",
+    "ci-cd",
+    "pipelines",
+    "svelte"
+  ],
   "private": true,
   "type": "module",
   "license": "MIT",
+  "author": "Ben Chidgey <ben@feedmypixel.com>",
+  "homepage": "https://github.com/feedmypixel/pipes#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/feedmypixel/pipes.git"
+  },
+  "bugs": {
+    "url": "https://github.com/feedmypixel/pipes/issues"
+  },
   "packageManager": "pnpm@10.33.0",
   "engines": {
     "node": ">=24",
