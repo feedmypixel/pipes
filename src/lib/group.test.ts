@@ -57,12 +57,7 @@ test('groupReposByOwner: a name with no slash uses the whole name as owner', () 
   expect(groupReposByOwner([repo('solo', 'solo')])[0].owner).toBe('solo')
 })
 
-test('sortGroups name keeps the A-Z owner order', () => {
-  const groups = groupByOwner([repo('zeta/x'), repo('alpha/y')], {})
-  expect(sortGroups(groups, 'name').map((g) => g.owner)).toEqual(['alpha', 'zeta'])
-})
-
-test('sortGroups status floats failing repos + their groups to the top', () => {
+test('sortGroups floats failing repos + their groups to the top, A-Z within rank', () => {
   const snapshots = {
     'alpha/ok': [pipe('main', 'success', true, '2026-01-01')],
     'zeta/broken': [pipe('main', 'failed', true, '2026-01-01')]
@@ -71,7 +66,7 @@ test('sortGroups status floats failing repos + their groups to the top', () => {
     [repo('alpha/ok', 'alpha/ok'), repo('zeta/broken', 'zeta/broken')],
     snapshots
   )
-  expect(sortGroups(groups, 'status').map((g) => g.owner)).toEqual(['zeta', 'alpha'])
+  expect(sortGroups(groups).map((g) => g.owner)).toEqual(['zeta', 'alpha'])
 })
 
 test('visibleBranches: filters non-default branches by state, newest first', () => {

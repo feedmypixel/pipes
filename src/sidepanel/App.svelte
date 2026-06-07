@@ -11,8 +11,7 @@
     filterGroups,
     ALL_BRANCH_STATES,
     BRANCH_STATE_ORDER,
-    countDefaultBranchFailures,
-    type SortMode
+    countDefaultBranchFailures
   } from '../lib/group'
   import type { Account, PipelineStatus, Repo } from '../providers/types'
   import { SvelteSet } from 'svelte/reactivity'
@@ -30,13 +29,9 @@
   let search = $state('')
   let lastPolledAt = $state(0)
   let refreshing = $state(false)
-  let sort = $state<SortMode>(readSort())
   const allowed = new SvelteSet<PipelineStatus>(readAllowed())
 
   // View prefs are panel-local, so they live in localStorage, not chrome.storage.
-  function readSort(): SortMode {
-    return localStorage.getItem('pipes-sort') === 'name' ? 'name' : 'status'
-  }
   function readAllowed(): PipelineStatus[] {
     const saved = localStorage.getItem('pipes-branch-states')
     if (!saved) {
@@ -48,7 +43,6 @@
       return [...ALL_BRANCH_STATES]
     }
   }
-  $effect(() => localStorage.setItem('pipes-sort', sort))
   $effect(() => localStorage.setItem('pipes-branch-states', JSON.stringify([...allowed])))
 
   function toggleState(state: PipelineStatus) {
@@ -99,7 +93,7 @@
   const matched = $derived(
     watchedRepos.filter((repo) => repo.name.toLowerCase().includes(search.trim().toLowerCase()))
   )
-  const groups = $derived(filterGroups(sortGroups(groupByOwner(matched, snapshots), sort), allowed))
+  const groups = $derived(filterGroups(sortGroups(groupByOwner(matched, snapshots)), allowed))
   const allStatesOn = $derived(BRANCH_STATE_ORDER.every((state) => allowed.has(state)))
   const mainFailing = $derived(countDefaultBranchFailures(watchedRepos, snapshots))
   const configured = $derived(accounts.length > 0)
@@ -182,10 +176,6 @@
           </button>
         {/if}
       </span>
-      <div class="segmented" role="group" aria-label="Sort">
-        <button class:active={sort === 'name'} onclick={() => (sort = 'name')}>Name</button>
-        <button class:active={sort === 'status'} onclick={() => (sort = 'status')}>Status</button>
-      </div>
     </div>
     <div class="filters">
       <div class="pills" role="group" aria-label="Show branch states">
@@ -351,31 +341,6 @@
   .search-clear:hover {
     background: var(--hover);
     color: var(--text);
-  }
-  .segmented {
-    display: inline-flex;
-    flex: none;
-    border: 1px solid var(--border-2);
-    border-radius: var(--radius);
-    overflow: hidden;
-  }
-  .segmented button {
-    padding: var(--space-3xs) var(--space-md);
-    border: 0;
-    background: var(--surface);
-    color: var(--text-2);
-    font: var(--weight-regular) var(--font-size-xs) / var(--leading-none) var(--font-sans);
-    cursor: pointer;
-  }
-  .segmented button + button {
-    border-left: 1px solid var(--border-2);
-  }
-  .segmented button:hover {
-    background: var(--hover);
-  }
-  .segmented button.active {
-    background: var(--control-on);
-    color: var(--control-on-ink);
   }
 
   .filters {
