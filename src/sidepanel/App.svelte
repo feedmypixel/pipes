@@ -7,7 +7,6 @@
   import type { Snapshots, AccountHealth } from '../lib/storage'
   import {
     groupByOwner,
-    sortGroups,
     filterGroups,
     ALL_BRANCH_STATES,
     BRANCH_STATE_ORDER,
@@ -89,7 +88,7 @@
   const matched = $derived(
     watchedRepos.filter((repo) => repo.name.toLowerCase().includes(search.trim().toLowerCase()))
   )
-  const groups = $derived(filterGroups(sortGroups(groupByOwner(matched, snapshots)), allowed))
+  const groups = $derived(filterGroups(groupByOwner(matched, snapshots), allowed))
   const allStatesOn = $derived(BRANCH_STATE_ORDER.every((state) => allowed.has(state)))
   const mainFailing = $derived(countDefaultBranchFailures(watchedRepos, snapshots))
   const configured = $derived(accounts.length > 0)

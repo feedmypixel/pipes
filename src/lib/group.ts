@@ -72,39 +72,6 @@ export function groupReposByOwner(repos: Repo[]): RepoOwnerGroup[] {
     .sort((a, b) => a.owner.localeCompare(b.owner))
 }
 
-/** Sort priority of a repo by its default-branch state: trouble first. */
-const STATUS_RANK: Record<PipelineStatus, number> = {
-  failed: 0,
-  running: 1,
-  pending: 2,
-  canceled: 3,
-  skipped: 3,
-  unknown: 3,
-  success: 4
-}
-
-function viewRank(view: RepoView): number {
-  const statuses = [view.default?.status, ...view.changes.map((c) => c.status)].filter(
-    (s): s is PipelineStatus => s !== undefined
-  )
-  return statuses.length ? Math.min(...statuses.map((s) => STATUS_RANK[s])) : 5
-}
-
-/**
- * Re-order owner groups for the side panel: float troubled repos (and the groups
- * containing them) to the top, A-Z within an equal rank.
- */
-export function sortGroups(groups: OwnerGroup[]): OwnerGroup[] {
-  return groups
-    .map((group) => ({
-      owner: group.owner,
-      repos: [...group.repos].sort(
-        (a, b) => viewRank(a) - viewRank(b) || a.displayName.localeCompare(b.displayName)
-      )
-    }))
-    .sort((a, b) => viewRank(a.repos[0]) - viewRank(b.repos[0]) || a.owner.localeCompare(b.owner))
-}
-
 /** Branch states that mean "needs attention" — the popup's problems-only set. */
 export const PROBLEM_STATES: ReadonlySet<PipelineStatus> = new Set(['failed', 'running', 'pending'])
 

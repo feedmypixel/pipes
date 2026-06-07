@@ -1,7 +1,6 @@
 import {
   groupByOwner,
   groupReposByOwner,
-  sortGroups,
   visibleChanges,
   defaultVisible,
   hasVisibleRows,
@@ -68,28 +67,16 @@ test('groupReposByOwner: a name with no slash uses the whole name as owner', () 
   expect(groupReposByOwner([repo('solo', 'solo')])[0].owner).toBe('solo')
 })
 
-test('sortGroups floats failing repos + their groups to the top, A-Z within rank', () => {
+test('owners and repos stay A-Z regardless of status', () => {
   const snapshots: Snapshots = {
-    'alpha/ok': snapshot(mainPipe('success')),
-    'zeta/broken': snapshot(mainPipe('failed'))
+    'zeta/broken': snapshot(mainPipe('failed')),
+    'alpha/ok': snapshot(mainPipe('success'))
   }
   const groups = groupByOwner(
-    [repo('alpha/ok', 'alpha/ok'), repo('zeta/broken', 'zeta/broken')],
+    [repo('zeta/broken', 'zeta/broken'), repo('alpha/ok', 'alpha/ok')],
     snapshots
   )
-  expect(sortGroups(groups).map((g) => g.owner)).toEqual(['zeta', 'alpha'])
-})
-
-test('sortGroups: a failing PR floats a repo with a green default to the top', () => {
-  const snapshots: Snapshots = {
-    'alpha/ok': snapshot(mainPipe('success')),
-    'zeta/pr-broken': snapshot(mainPipe('success'), [change(1, 'failed')])
-  }
-  const groups = groupByOwner(
-    [repo('alpha/ok', 'alpha/ok'), repo('zeta/pr-broken', 'zeta/pr-broken')],
-    snapshots
-  )
-  expect(sortGroups(groups).map((g) => g.owner)).toEqual(['zeta', 'alpha'])
+  expect(groups.map((g) => g.owner)).toEqual(['alpha', 'zeta'])
 })
 
 test('changes are listed newest number first', () => {
