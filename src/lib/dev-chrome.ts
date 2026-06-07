@@ -4,7 +4,8 @@
 // Guarded by import.meta.env.DEV and a "is chrome already here?" check, so it never runs
 // in the real extension and is tree-shaken out of production.
 
-import type { Account, Pipeline, PipelineStatus, Repo } from '../providers/types'
+import type { Account, Change, Pipeline, PipelineStatus, Repo } from '../providers/types'
+import type { RepoSnapshot } from './storage'
 
 function pipe(
   id: string,
@@ -35,6 +36,27 @@ function repo(name: string): Repo {
   }
 }
 
+function change(
+  number: number,
+  title: string,
+  headRef: string,
+  status: PipelineStatus,
+  agoMinutes: number,
+  isDraft = false
+): Change {
+  return {
+    number,
+    title,
+    headRef,
+    headSha: 'abc1234',
+    status,
+    updatedAt: new Date(Date.now() - agoMinutes * 60_000).toISOString(),
+    webUrl: `https://example.test/pull/${number}`,
+    isDraft,
+    isBot: false
+  }
+}
+
 function seedData() {
   const accounts: Account[] = [
     {
@@ -52,16 +74,19 @@ function seedData() {
     repo('globex/api'),
     repo('globex/database')
   ]
-  const snapshots: Record<string, Pipeline[]> = {
-    'octo-org/marketing-site': [pipe('1', 'main', 'success', true, 90)],
-    'octo-org/cli': [pipe('2', 'main', 'running', true, 1)],
-    'octo-org/status-api': [
-      pipe('3', 'main', 'failed', true, 4),
-      pipe('4', 'pr/210-retry', 'failed', false, 9),
-      pipe('5', 'fix/timeout', 'success', false, 120)
-    ],
-    'globex/api': [pipe('6', 'main', 'success', true, 40)],
-    'globex/database': [pipe('7', 'main', 'failed', true, 30)]
+  const snapshots: Record<string, RepoSnapshot> = {
+    'octo-org/marketing-site': { default: pipe('1', 'main', 'success', true, 90), changes: [] },
+    'octo-org/cli': { default: pipe('2', 'main', 'running', true, 1), changes: [] },
+    'octo-org/status-api': {
+      default: pipe('3', 'main', 'failed', true, 4),
+      changes: [
+        change(210, 'Retry flaky integration test', 'pr/210-retry', 'failed', 9),
+        change(208, 'Bump request timeout', 'fix/timeout', 'success', 120),
+        change(205, 'WIP: caching layer', 'feat/cache', 'pending', 200, true)
+      ]
+    },
+    'globex/api': { default: pipe('6', 'main', 'success', true, 40), changes: [] },
+    'globex/database': { default: pipe('7', 'main', 'failed', true, 30), changes: [] }
   }
   return { accounts, watchedRepos, snapshots, settings: { pollMinutes: 1, notifyOnSuccess: true } }
 }
