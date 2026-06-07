@@ -5,6 +5,7 @@ cross-cutting behaviour.
 
 - [`faq.md`](faq.md) — why status isn't instant (60s cache), rate limits, token scopes, notifications.
 - [`notifications.md`](notifications.md) — when notifications fire, what we control, platform limits.
+- [`accessibility.md`](accessibility.md) — WCAG 2.1 AA: what's in place, the `/a11y-sweep` audit, axe-core setup.
 - [`releasing-to-chrome-web-store.md`](releasing-to-chrome-web-store.md) — package + publish to the CWS.
 
 ## Principles (WIP)
