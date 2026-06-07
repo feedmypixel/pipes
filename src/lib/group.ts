@@ -97,16 +97,11 @@ function viewRank(view: RepoView): number {
   return view.primary ? STATUS_RANK[view.primary.status] : 5
 }
 
-export type SortMode = 'name' | 'status'
-
 /**
- * Re-order owner groups for the side panel. `name` keeps the A-Z grouping;
- * `status` floats troubled repos (and the groups containing them) to the top.
+ * Re-order owner groups for the side panel: float troubled repos (and the groups
+ * containing them) to the top, A-Z within an equal rank.
  */
-export function sortGroups(groups: OwnerGroup[], mode: SortMode): OwnerGroup[] {
-  if (mode === 'name') {
-    return groups
-  }
+export function sortGroups(groups: OwnerGroup[]): OwnerGroup[] {
   return groups
     .map((group) => ({
       owner: group.owner,
