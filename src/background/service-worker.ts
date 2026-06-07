@@ -2,6 +2,7 @@ import { poll } from './poll'
 import * as storage from '../lib/storage'
 import { POLL_ALARM, MIN_POLL_MINUTES, LIVE_PORT, LIVE_POLL_MS } from '../lib/config'
 import { openNotificationLink, forgetNotificationLink } from '../lib/notify'
+import { log } from '../lib/log'
 
 async function scheduleAlarm(): Promise<void> {
   const { pollMinutes } = await storage.get('settings')
@@ -18,7 +19,7 @@ let liveConnections = 0
 let liveTimer: ReturnType<typeof setTimeout> | undefined
 
 function liveLoop(): void {
-  poll().catch((err) => console.warn('Live poll failed:', err))
+  poll().catch((err) => log.warn(`Live poll failed: ${(err as Error).message}`))
   liveTimer = setTimeout(liveLoop, LIVE_POLL_MS)
 }
 
@@ -51,7 +52,7 @@ chrome.runtime.onInstalled.addListener(async (details) => {
     await scheduleAlarm()
     await poll()
   } catch (err) {
-    console.warn('onInstalled setup failed:', err)
+    log.warn(`onInstalled setup failed: ${(err as Error).message}`)
   }
 })
 
@@ -59,12 +60,12 @@ chrome.runtime.onStartup.addListener(() => {
   storage
     .migrate()
     .then(() => poll())
-    .catch((err) => console.warn('Startup poll failed:', err))
+    .catch((err) => log.warn(`Startup poll failed: ${(err as Error).message}`))
 })
 
 chrome.alarms.onAlarm.addListener((alarm) => {
   if (alarm.name === POLL_ALARM) {
-    poll().catch((err) => console.warn('Alarm poll failed:', err))
+    poll().catch((err) => log.warn(`Alarm poll failed: ${(err as Error).message}`))
   }
 })
 

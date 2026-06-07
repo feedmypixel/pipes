@@ -6,6 +6,7 @@ import * as storage from '../lib/storage'
 import type { RepoSnapshot, Snapshots, StorageShape } from '../lib/storage'
 import { mapLimit } from '../lib/async'
 import { HEALTH_REFRESH_MS } from '../lib/config'
+import { log } from '../lib/log'
 import * as notify from '../lib/notify'
 
 /** Max provider requests in flight at once, so many repos don't burst the API. */
@@ -178,7 +179,7 @@ async function pollRepo(
         pausedUntil: err.resetAt
       }
     }
-    console.warn(`Poll failed for ${repo.name}:`, (err as Error).message)
+    log.warn(`Poll failed for ${repo.name}: ${(err as Error).message}`)
     return { snapshot: prev, etag: etag ?? null, changeEtag: changeEtag ?? null, rateLimit: null }
   }
 }
