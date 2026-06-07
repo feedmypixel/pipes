@@ -26,6 +26,10 @@
   const showDefault = $derived(defaultVisible(view, allowed))
   const hasChanges = $derived(changes.length > 0)
   const failing = $derived(failingCount(view))
+
+  const count = $derived(view.changes.length)
+  const changeNoun = $derived(view.providerId === 'gitlab' ? 'merge request' : 'pull request')
+  const changeTooltip = $derived(`${count} open ${changeNoun}${count === 1 ? '' : 's'}`)
 </script>
 
 <div class="repo">
@@ -46,7 +50,7 @@
       {/if}
     </button>
     {#if view.changes.length > 0}
-      <span class="pr-count" use:tooltip={`${view.changes.length} open pull/merge requests`}>
+      <span class="pr-count" use:tooltip={changeTooltip}>
         <GitPullRequest size={12} />
         {view.changes.length}
       </span>

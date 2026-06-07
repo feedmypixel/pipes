@@ -45,7 +45,9 @@
   // Hold a live port while open so the worker drives a fast fresh poll loop.
   $effect(holdLivePort)
 
-  const groups = $derived(filterGroups(groupByOwner(watchedRepos, snapshots), ALL_BRANCH_STATES))
+  const groups = $derived(
+    filterGroups(groupByOwner(watchedRepos, snapshots, accounts), ALL_BRANCH_STATES)
+  )
   const mainFailing = $derived(countDefaultBranchFailures(watchedRepos, snapshots))
   const configured = $derived(accounts.length > 0)
   const connectionIssues = $derived(
