@@ -11,10 +11,11 @@
   import type { Settings } from '../lib/storage'
   import { getProvider, normaliseHost, saasProvider } from '../providers'
   import type { Account, ProviderId, Repo } from '../providers/types'
-  import { MIN_POLL_MINUTES } from '../lib/config'
+  import { MIN_POLL_MINUTES, SAAS_HOST } from '../lib/config'
   import { groupReposByOwner } from '../lib/group'
   import Field from '../lib/components/forms/Field.svelte'
   import Input from '../lib/components/forms/Input.svelte'
+  import Select from '../lib/components/forms/Select.svelte'
   import PasswordInput from '../lib/components/forms/PasswordInput.svelte'
   import FormSummary from '../lib/components/forms/FormSummary.svelte'
   import ChevronRight from '@lucide/svelte/icons/chevron-right'
@@ -28,8 +29,10 @@
   let watchedRepos = $state<Repo[]>([])
   let settings = $state<Settings>({ pollMinutes: 1, notifyOnSuccess: true })
 
+  type HostChoice = 'github' | 'gitlab' | 'self'
   let label = $state('')
-  let host = $state('')
+  let hostChoice = $state<HostChoice>('github')
+  let host = $state<string>(SAAS_HOST.github)
   let token = $state('')
   let errors = $state<{ host?: string; token?: string }>({})
   let availability = $state<{ state: 'busy' | 'ok' | 'bad'; text: string } | null>(null)
@@ -69,6 +72,13 @@
     ].filter((e): e is { name: string; message: string } => e !== null)
   )
 
+  // The select picks the SaaS origin for us; only self-hosted needs the URL field.
+  function syncHost() {
+    host = hostChoice === 'self' ? '' : SAAS_HOST[hostChoice]
+    errors.host = undefined
+    availability = null
+    detected = null
+  }
   function checkHost() {
     errors.host = host.trim() ? undefined : 'Enter a host'
   }
@@ -162,7 +172,8 @@
     addResult = { variant: 'ok', text: 'Connection added' }
     toastSuccess('Connection added')
     label = ''
-    host = ''
+    hostChoice = 'github'
+    host = SAAS_HOST.github
     token = ''
     availability = null
     detected = null
@@ -306,20 +317,29 @@
         <Field name="label" label="Label" optional>
           <Input placeholder="work" autocomplete="off" bind:value={label} />
         </Field>
-        <Field
-          name="host"
-          label="Host"
-          hint="github.com, gitlab.com, or a self-hosted origin"
-          error={errors.host}
-        >
-          <Input
-            placeholder="github.com"
-            autocomplete="off"
-            bind:value={host}
-            onblur={checkHost}
-            oninput={clearHostIfValid}
-          />
+        <Field name="provider" label="Provider">
+          <Select bind:value={hostChoice} onchange={syncHost}>
+            <option value="github">GitHub (github.com)</option>
+            <option value="gitlab">GitLab (gitlab.com)</option>
+            <option value="self">Self-hosted…</option>
+          </Select>
         </Field>
+        {#if hostChoice === 'self'}
+          <Field
+            name="host"
+            label="Host URL"
+            hint="your GitHub Enterprise or GitLab origin, e.g. gitlab.example.com"
+            error={errors.host}
+          >
+            <Input
+              placeholder="gitlab.example.com"
+              autocomplete="off"
+              bind:value={host}
+              onblur={checkHost}
+              oninput={clearHostIfValid}
+            />
+          </Field>
+        {/if}
         {#snippet tokenHint()}
           <details class="token-help">
             <summary>
