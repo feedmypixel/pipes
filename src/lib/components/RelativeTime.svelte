@@ -1,5 +1,6 @@
 <script lang="ts">
-  import { relativeTime } from '../relative-time'
+  import { relativeTime, absoluteTime } from '../relative-time'
+  import Tooltip from './Tooltip.svelte'
 
   let { iso }: { iso: string } = $props()
 
@@ -13,9 +14,12 @@
   })
 
   const label = $derived(relativeTime(iso, now))
+  const exact = $derived(absoluteTime(iso))
 </script>
 
-<time class="relative-time" datetime={iso}>{label}</time>
+<Tooltip text={exact}>
+  <time class="relative-time" datetime={iso}>{label}</time>
+</Tooltip>
 
 <style>
   .relative-time {

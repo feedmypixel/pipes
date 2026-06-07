@@ -14,3 +14,15 @@ export function relativeTime(iso: string, now: number): string {
   }
   return `${Math.floor(hours / 24)}d ago`
 }
+
+/** Full timestamp for a hover tooltip: "7 Jun 2026, 17:34" (24-hour). */
+export function absoluteTime(iso: string): string {
+  return new Date(iso).toLocaleString(undefined, {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false
+  })
+}

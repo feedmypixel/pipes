@@ -17,6 +17,7 @@
   import type { ToastItem } from '../lib/toasts.svelte'
   import Button from '../lib/components/Button.svelte'
   import PermissionNote from '../lib/components/PermissionNote.svelte'
+  import Tooltip from '../lib/components/Tooltip.svelte'
   import Plus from '@lucide/svelte/icons/plus'
 
   type ThemeChoice = 'auto' | 'light' | 'dark'
@@ -259,12 +260,21 @@
   </section>
 
   <section>
-    <p class="eyebrow">RefChip · RelativeTime</p>
+    <p class="eyebrow">RefChip · RelativeTime (hover for the exact time)</p>
     <div class="inline">
       <RefChip ref="main" />
       <RefChip ref="feature/a-very-long-branch-name-that-truncates" />
       <RelativeTime iso={new Date(Date.now() - 5 * 60_000).toISOString()} />
       <RelativeTime iso={new Date(Date.now() - 5 * 3_600_000).toISOString()} />
+    </div>
+  </section>
+
+  <section>
+    <p class="eyebrow">Tooltip (hover / focus)</p>
+    <div class="inline">
+      <Tooltip text="7 Jun 2026, 17:34">
+        <span class="tooltip-demo">hover me</span>
+      </Tooltip>
     </div>
   </section>
 
@@ -461,6 +471,12 @@
     font: var(--weight-semibold) var(--font-size-xs) / var(--leading-none) var(--font-mono);
     letter-spacing: 0.08em;
     color: var(--text-3);
+  }
+  .tooltip-demo {
+    text-decoration: underline dotted;
+    text-underline-offset: 3px;
+    cursor: default;
+    color: var(--text-2);
   }
   .icons {
     display: flex;

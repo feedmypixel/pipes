@@ -1,4 +1,4 @@
-import { relativeTime } from './relative-time'
+import { relativeTime, absoluteTime } from './relative-time'
 
 const now = Date.parse('2026-06-05T12:00:00Z')
 
@@ -11,4 +11,10 @@ test('formats recent times by the largest fitting unit', () => {
 
 test('clamps future timestamps to just now', () => {
   expect(relativeTime('2026-06-05T12:05:00Z', now)).toBe('just now')
+})
+
+test('absoluteTime gives a full timestamp (year + 24h time), locale/tz aside', () => {
+  const out = absoluteTime('2026-06-07T17:34:00Z')
+  expect(out).toMatch(/2026/)
+  expect(out).toMatch(/\d{1,2}:\d{2}/)
 })
