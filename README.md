@@ -4,14 +4,15 @@ Chrome (Manifest V3) extension to watch **GitHub Actions** and **GitLab CI/CD**
 pipeline status across the repos you care about, at a glance, without leaving a
 tab open on the pipelines page. **Loud when the default branch breaks.**
 
-> Status: **in development.** Background engine (providers, polling, notifications,
-> badge) is built and type-checks clean. The popup / side panel / options UI is
-> being built against designs in [`design/`](design/).
+> Status: **working.** Background engine + popup / side panel / options are built (UI recreated
+> from the bundles in [`design/`](design/)). Polishing toward a Chrome Web Store release — see
+> [`docs/releasing-to-chrome-web-store.md`](docs/releasing-to-chrome-web-store.md).
 
 ## Contents
 
 - [What it does](#what-it-does)
 - [Architecture](#architecture)
+- [Docs](#docs)
 - [Develop](#develop)
 - [Tokens](#tokens)
 - [Notes](#notes)
@@ -43,35 +44,41 @@ Svelte 5 + Vite + [`@crxjs/vite-plugin`](https://crxjs.dev) + TypeScript, MV3.
 src/
 ├── manifest.config.ts        # typed MV3 manifest (crxjs)
 ├── providers/                # normalize GitHub & GitLab into one model
-│   ├── types.ts              #   Account, Repo, Pipeline, Provider interface
-│   ├── github.ts             #   GitHub Actions runs API
-│   ├── gitlab.ts             #   GitLab pipelines API
+│   ├── types.ts              #   Account, Repo, Pipeline, Change, Provider interface
+│   ├── github.ts             #   GitHub Actions runs + open pulls
+│   ├── gitlab.ts             #   GitLab pipelines + open merge requests
 │   └── index.ts              #   registry + host helpers
 ├── lib/
 │   ├── storage.ts            # typed chrome.storage wrappers + change subscribe
-│   └── notify.ts             # notifications + toolbar badge
+│   ├── group.ts              # owner/repo grouping + status view model
+│   ├── live-port.ts          # keep-alive port that drives the live poll loop
+│   ├── notify.ts             # notifications + toolbar badge
+│   └── components/           # shared Svelte UI (RepoCard, ChangeRow, …)
 ├── background/
-│   ├── service-worker.ts     # alarm scheduling, message handling, lifecycle
-│   └── poll.ts               # fetch → diff vs last snapshot → announce
-├── popup/                    # (pending design) glance UI
-├── sidepanel/                # (pending design) persistent UI
-└── options/                  # (pending design) accounts, repo picker, settings
+│   ├── service-worker.ts     # alarm + live-port loop, messages, lifecycle
+│   └── poll.ts               # fetch → join status → diff vs snapshot → announce
+├── popup/                    # glance UI
+├── sidepanel/                # persistent UI
+└── options/                  # accounts, repo picker, settings
 ```
 
-**Data flow:** options writes `accounts` + `watchedRepos` + `settings` to
-`chrome.storage.local`. The service worker polls on a `chrome.alarms` interval,
-asks each provider for the latest pipeline per ref, diffs against the stored
-`snapshots`, fires notifications on terminal-state transitions, and writes fresh
+**Data flow:** options writes `accounts` + `watchedRepos` + `settings` to `chrome.storage.local`.
+The service worker polls (a `chrome.alarms` interval, or a ~10s loop while a panel is open), and per
+repo fetches the **default-branch run + open PRs/MRs**, joins each PR/MR to its pipeline status by
+head ref, diffs against the stored `snapshots`, fires notifications on transitions, and writes fresh
 snapshots. The popup and side panel subscribe to `snapshots` and live-update.
 
 Nothing is sent anywhere except your configured GitHub/GitLab hosts.
 
-**Styling** (tokens, theming, conventions): see
-[`src/lib/styles/README.md`](src/lib/styles/README.md).
+---
 
-**Notifications** (when they fire, what's controllable): see
-[`docs/notifications.md`](docs/notifications.md). Engineering principles (CSS, forms) are WIP —
-see [`docs/README.md`](docs/README.md).
+## Docs
+
+- [`docs/faq.md`](docs/faq.md) — freshness (GitHub's ~60s cache), rate limits, token scopes, notifications.
+- [`docs/releasing-to-chrome-web-store.md`](docs/releasing-to-chrome-web-store.md) — package + publish.
+- [`docs/notifications.md`](docs/notifications.md) — when notifications fire + platform limits.
+- [`docs/README.md`](docs/README.md) — docs index (+ engineering principles, WIP).
+- Styling (tokens, theming): [`src/lib/styles/README.md`](src/lib/styles/README.md).
 
 ---
 
