@@ -18,7 +18,7 @@
   import RepoList from '../lib/components/RepoList.svelte'
   import TopAlerts from '../lib/components/TopAlerts.svelte'
   import UpdatedFooter from '../lib/components/UpdatedFooter.svelte'
-  import { LIVE_PORT } from '../lib/config'
+  import { holdLivePort } from '../lib/live-port'
 
   let accounts = $state<Account[]>([])
   let watchedRepos = $state<Repo[]>([])
@@ -84,10 +84,7 @@
   // While the panel is open, hold a live port so the worker drives a fast fresh poll loop. A
   // panel-side setInterval gets throttled to ~1/min when the panel isn't the focused document; the
   // worker's timer doesn't. The worker stays the single owner of notifications + the badge.
-  $effect(() => {
-    const port = chrome.runtime.connect({ name: LIVE_PORT })
-    return () => port.disconnect()
-  })
+  $effect(holdLivePort)
 
   const matched = $derived(
     watchedRepos.filter((repo) => repo.name.toLowerCase().includes(search.trim().toLowerCase()))
