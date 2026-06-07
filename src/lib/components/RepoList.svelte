@@ -9,12 +9,15 @@
     groups,
     allowed,
     storageKey,
-    defaultCollapsed = false
+    defaultCollapsed = false,
+    forceExpanded = false
   }: {
     groups: OwnerGroup[]
     allowed: ReadonlySet<PipelineStatus>
     storageKey: string
     defaultCollapsed?: boolean
+    /** Ignore stored collapse and show every owner + repo open (the Problems view). */
+    forceExpanded?: boolean
   } = $props()
 
   let repoCollapsed = $state<Record<string, boolean>>({})
@@ -69,8 +72,9 @@
     <div class="owner-row">
       <button
         class="owner"
-        class:open={!ownerCollapsed[group.owner]}
-        aria-expanded={!ownerCollapsed[group.owner]}
+        class:open={forceExpanded || !ownerCollapsed[group.owner]}
+        aria-expanded={forceExpanded || !ownerCollapsed[group.owner]}
+        disabled={forceExpanded}
         onclick={() => toggleOwner(group)}
       >
         <ChevronRight class="owner-caret" size={13} />
@@ -89,12 +93,12 @@
         </a>
       {/if}
     </div>
-    {#if !ownerCollapsed[group.owner]}
+    {#if forceExpanded || !ownerCollapsed[group.owner]}
       {#each group.repos as view (view.repo.id)}
         <RepoCard
           {view}
           {allowed}
-          collapsed={repoCollapsed[view.repo.id] ?? defaultCollapsed}
+          collapsed={forceExpanded ? false : (repoCollapsed[view.repo.id] ?? defaultCollapsed)}
           onToggle={() =>
             (repoCollapsed[view.repo.id] = !(repoCollapsed[view.repo.id] ?? defaultCollapsed))}
         />

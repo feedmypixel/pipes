@@ -7,7 +7,7 @@
   import {
     groupByOwner,
     filterGroups,
-    failingCount,
+    PROBLEM_STATES,
     ALL_BRANCH_STATES,
     countDefaultBranchFailures
   } from '../lib/group'
@@ -22,9 +22,9 @@
   let accountHealth = $state<Record<string, AccountHealth>>({})
   let lastPolledAt = $state(0)
   let refreshing = $state(false)
-  let failuresOnly = $state(localStorage.getItem('pipes-popup-failures-only') === 'true')
+  let problemsOnly = $state(localStorage.getItem('pipes-popup-problems-only') === 'true')
 
-  $effect(() => localStorage.setItem('pipes-popup-failures-only', String(failuresOnly)))
+  $effect(() => localStorage.setItem('pipes-popup-problems-only', String(problemsOnly)))
 
   $effect(() => {
     storage.get('accounts').then((value) => (accounts = value))
@@ -42,17 +42,8 @@
     return () => unsubscribers.forEach((off) => off())
   })
 
-  const allGroups = $derived(filterGroups(groupByOwner(watchedRepos, snapshots), ALL_BRANCH_STATES))
-  const groups = $derived(
-    failuresOnly
-      ? allGroups
-          .map((group) => ({
-            owner: group.owner,
-            repos: group.repos.filter((view) => failingCount(view) > 0)
-          }))
-          .filter((group) => group.repos.length > 0)
-      : allGroups
-  )
+  const allowed = $derived(problemsOnly ? PROBLEM_STATES : ALL_BRANCH_STATES)
+  const groups = $derived(filterGroups(groupByOwner(watchedRepos, snapshots), allowed))
   const mainFailing = $derived(countDefaultBranchFailures(watchedRepos, snapshots))
   const configured = $derived(accounts.length > 0)
   const connectionIssues = $derived(
@@ -139,22 +130,28 @@
   {:else}
     <div class="filter-bar">
       <button
-        class="failures"
-        class:on={failuresOnly}
-        aria-pressed={failuresOnly}
-        title="Show only repos with a failure"
-        onclick={() => (failuresOnly = !failuresOnly)}
+        class="attention"
+        class:on={problemsOnly}
+        aria-pressed={problemsOnly}
+        title="Show only repos that need attention (failed, running, pending), expanded"
+        onclick={() => (problemsOnly = !problemsOnly)}
       >
-        <span class="dot"></span> Failures only
+        <span class="dot"></span> Needs attention
       </button>
     </div>
     <main class="body">
       {#if groups.length === 0}
         <p class="body-empty">
-          {failuresOnly ? 'No failures' : 'Nothing to show'}
+          {problemsOnly ? 'Nothing needs attention' : 'Nothing to show'}
         </p>
       {:else}
-        <RepoList {groups} allowed={ALL_BRANCH_STATES} storageKey="pipes-popup" defaultCollapsed />
+        <RepoList
+          {groups}
+          {allowed}
+          storageKey="pipes-popup"
+          defaultCollapsed
+          forceExpanded={problemsOnly}
+        />
       {/if}
     </main>
   {/if}
@@ -233,7 +230,7 @@
     padding: var(--space-sm) var(--space-lg);
     border-bottom: 1px solid var(--border);
   }
-  .failures {
+  .attention {
     display: inline-flex;
     align-items: center;
     gap: var(--space-xs);
@@ -245,16 +242,16 @@
     font: var(--weight-medium) var(--font-size-sm) / var(--leading-none) var(--font-sans);
     cursor: pointer;
   }
-  .failures:hover {
+  .attention:hover {
     background: var(--hover);
   }
-  .failures .dot {
+  .attention .dot {
     width: 7px;
     height: 7px;
     border-radius: 50%;
     background: var(--failed);
   }
-  .failures.on {
+  .attention.on {
     background: var(--failed-bg);
     border-color: var(--failed-line);
     color: var(--failed);
