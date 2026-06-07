@@ -9,6 +9,7 @@ MV3 package + publish. To dogfood first, see [Testers](#testers).
 - [Submit](#submit)
 - [Testers](#testers)
 - [Updates](#updates)
+- [CI (intended)](#ci-intended)
 - [Checklist](#checklist)
 
 ## Setup (one-time)
@@ -64,6 +65,24 @@ Dogfood before a public launch:
 ## Updates
 
 Bump version → rebuild → re-zip → upload → resubmit.
+
+## CI (intended)
+
+Not built yet — the release is hand-driven today. Two stages, added in order of risk.
+
+**Stage 1 — versioning (local, low-risk).** On merge to `main`:
+
+1. **Bump version** — [`commit-and-tag-version`](https://github.com/absolute-version/commit-and-tag-version)
+   reads the conventional commits and picks the next semver (`fix:` → patch, `feat:` →
+   minor, `feat!:` → major). The manifest tracks `package.json`, so this is the release version.
+2. **Changelog + tag** — the same step writes `CHANGELOG.md` and tags `vX.Y.Z` (handy as the
+   CWS "what's new" text).
+
+**Stage 2 — package + upload (holds credentials, add deliberately).** Once Stage 1 is proven, a
+GitHub Action builds `dist/`, zips it, and pushes to the store via
+[`chrome-webstore-upload-cli`](https://github.com/fregante/chrome-webstore-upload-cli) (the CWS
+API; needs an OAuth client + refresh token in repo secrets). Review still gates publication, so
+this automates the upload, not the going-live.
 
 ## Checklist
 
