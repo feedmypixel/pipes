@@ -40,7 +40,7 @@ export async function notifyMainFailed({
     title: `${shortName(repo)} · ${repo.defaultBranch} failed`,
     message: pipeline.title,
     contextMessage: repo.name,
-    buttons: [{ title: 'Open run' }],
+    buttons: [{ title: 'Open' }],
     priority: 2,
     requireInteraction: true
   })
@@ -62,7 +62,7 @@ export async function notifyChangeFailed({
     title: `${shortName(repo)} · #${change.number} failed`,
     message: change.title,
     contextMessage: change.headRef,
-    buttons: [{ title: 'Open PR' }],
+    buttons: [{ title: 'Open' }],
     priority: 1
   })
 }
