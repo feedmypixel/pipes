@@ -8,6 +8,7 @@
   import { ALL_BRANCH_STATES, type RepoView } from '../lib/group'
   import Field from '../lib/components/forms/Field.svelte'
   import Input from '../lib/components/forms/Input.svelte'
+  import Select from '../lib/components/forms/Select.svelte'
   import PasswordInput from '../lib/components/forms/PasswordInput.svelte'
   import FormSummary from '../lib/components/forms/FormSummary.svelte'
   import Banner from '../lib/components/Banner.svelte'
@@ -121,7 +122,8 @@
   ]
   let repoCollapsed = $state<Record<string, boolean>>({})
 
-  let goodHost = $state('github.com')
+  let provider = $state('github')
+  let goodHost = $state('gitlab.example.com')
   let goodToken = $state('ghp_xxxxxxxxxxxx')
   let badHost = $state('')
   let badToken = $state('')
@@ -278,8 +280,12 @@
 
   <section>
     <p class="eyebrow">Forms · valid</p>
-    <Field name="host-ok" label="Host" hint="github.com, gitlab.com, or a self-hosted origin">
-      <Input bind:value={goodHost} type="text" placeholder="github.com" />
+    <Field name="provider-ok" label="Provider">
+      <Select bind:value={provider}>
+        <option value="github">GitHub (github.com)</option>
+        <option value="gitlab">GitLab (gitlab.com)</option>
+        <option value="self">Self-hosted…</option>
+      </Select>
     </Field>
     <Field
       name="token-ok"
@@ -291,11 +297,11 @@
     </Field>
     <Field
       name="host-busy"
-      label="Host"
+      label="Host URL (self-hosted)"
       hint="below line, busy state"
-      below={{ state: 'busy', text: 'Checking github.com…' }}
+      below={{ state: 'busy', text: 'Checking gitlab.example.com…' }}
     >
-      <Input bind:value={goodHost} type="text" placeholder="github.com" />
+      <Input bind:value={goodHost} type="text" placeholder="gitlab.example.com" />
     </Field>
   </section>
 
@@ -346,11 +352,11 @@
     <FormSummary errors={summaryErrors} />
     <Field
       name="host"
-      label="Host"
-      hint="github.com, gitlab.com, or a self-hosted origin"
+      label="Host URL (self-hosted)"
+      hint="your GitHub Enterprise or GitLab origin"
       error="Enter a host"
     >
-      <Input bind:value={badHost} type="text" placeholder="github.com" />
+      <Input bind:value={badHost} type="text" placeholder="gitlab.example.com" />
     </Field>
     <Field
       name="token"
