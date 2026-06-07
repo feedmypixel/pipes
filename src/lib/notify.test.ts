@@ -86,7 +86,7 @@ test('default-branch failure is sticky + high priority, with context + an open b
   expect(created[0].opts.requireInteraction).toBe(true)
   expect(created[0].opts.priority).toBe(2)
   expect(created[0].opts.contextMessage).toBe('o/r')
-  expect(created[0].opts.buttons).toEqual([{ title: 'Open run' }])
+  expect(created[0].opts.buttons).toEqual([{ title: 'Open' }])
   expect(created[0].opts.title).toBe('r · main failed') // plain text, no emoji glyph
   expect(store.notifLinks[created[0].id]).toBe('https://x/run/1')
 })
