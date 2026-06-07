@@ -71,6 +71,12 @@ export async function fetchJson<T>(
       etag: res.headers.get('etag'),
       rateLimit
     }
+  } catch (err) {
+    // The abort fires on our timeout; surface it as something a user can read.
+    if ((err as Error).name === 'AbortError') {
+      throw new Error('Request timed out', { cause: err })
+    }
+    throw err
   } finally {
     clearTimeout(timer)
   }

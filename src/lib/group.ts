@@ -120,8 +120,8 @@ export function sortGroups(groups: OwnerGroup[], mode: SortMode): OwnerGroup[] {
 /** Branch states that mean "needs attention" — the popup's problems-only set. */
 export const PROBLEM_STATES: ReadonlySet<PipelineStatus> = new Set(['failed', 'running', 'pending'])
 
-/** Every branch state — the side panel's default (show all). */
-export const ALL_BRANCH_STATES: ReadonlySet<PipelineStatus> = new Set([
+/** Branch states in display order — single source for the side-panel pills + the "all" set. */
+export const BRANCH_STATE_ORDER: PipelineStatus[] = [
   'failed',
   'running',
   'pending',
@@ -129,7 +129,10 @@ export const ALL_BRANCH_STATES: ReadonlySet<PipelineStatus> = new Set([
   'canceled',
   'skipped',
   'unknown'
-])
+]
+
+/** Every branch state — the side panel's default (show all). */
+export const ALL_BRANCH_STATES: ReadonlySet<PipelineStatus> = new Set(BRANCH_STATE_ORDER)
 
 /**
  * Non-default branch pipelines for a repo whose status is in `allowed`, newest first.

@@ -115,7 +115,7 @@
     padding: 0 var(--space-2xs);
     border-radius: var(--radius-pill);
     background: var(--failed);
-    color: #fff;
+    color: var(--status-ink);
     font: var(--weight-bold) var(--font-size-2xs) / 1 var(--font-mono);
   }
   .repo-link {

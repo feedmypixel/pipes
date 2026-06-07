@@ -43,6 +43,9 @@
   /* default-branch star marker (decorative, not a status) */
   --star: oklch(0.78 0.15 85);
 
+  /* ink on a saturated status fill (e.g. white on the red fail badge) */
+  --status-ink: #ffffff;
+
   /* alarm strip (default branch broken) */
   --alarm-strip: oklch(0.96 0.035 27);
   --alarm-ink: oklch(0.52 0.2 27);

@@ -126,6 +126,8 @@ export async function poll(): Promise<void> {
     ])
   if (accounts.length === 0) {
     await storage.set('accountHealth', {})
+    await notify.setBadge(0)
+    await storage.set('lastPolledAt', Date.now())
     return
   }
 
@@ -144,6 +146,8 @@ export async function poll(): Promise<void> {
   await storage.set('accountHealth', health)
 
   if (watchedRepos.length === 0) {
+    await notify.setBadge(0)
+    await storage.set('lastPolledAt', Date.now())
     return
   }
 

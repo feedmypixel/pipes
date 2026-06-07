@@ -15,20 +15,24 @@ async function scheduleAlarm(): Promise<void> {
 // --- All listeners registered synchronously at top level (SW may restart). ---
 
 chrome.runtime.onInstalled.addListener(async (details) => {
-  if (details.reason === 'install') {
-    await storage.set('settings', storage.DEFAULT_SETTINGS)
+  try {
+    if (details.reason === 'install') {
+      await storage.set('settings', storage.DEFAULT_SETTINGS)
+    }
+    await scheduleAlarm()
+    await poll()
+  } catch (err) {
+    console.warn('onInstalled setup failed:', err)
   }
-  await scheduleAlarm()
-  await poll()
 })
 
 chrome.runtime.onStartup.addListener(() => {
-  poll()
+  poll().catch((err) => console.warn('Startup poll failed:', err))
 })
 
 chrome.alarms.onAlarm.addListener((alarm) => {
   if (alarm.name === ALARM_NAME) {
-    poll()
+    poll().catch((err) => console.warn('Alarm poll failed:', err))
   }
 })
 
