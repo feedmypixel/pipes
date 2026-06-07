@@ -1,14 +1,12 @@
 import { poll } from './poll'
 import * as storage from '../lib/storage'
+import { POLL_ALARM, MIN_POLL_MINUTES } from '../lib/config'
 import { openNotificationLink, forgetNotificationLink } from '../lib/notify'
-
-const ALARM_NAME = 'pw-poll'
-const MIN_INTERVAL = 0.5 // Chrome's floor for alarm periods.
 
 async function scheduleAlarm(): Promise<void> {
   const { pollMinutes } = await storage.get('settings')
-  await chrome.alarms.create(ALARM_NAME, {
-    periodInMinutes: Math.max(MIN_INTERVAL, pollMinutes)
+  await chrome.alarms.create(POLL_ALARM, {
+    periodInMinutes: Math.max(MIN_POLL_MINUTES, pollMinutes)
   })
 }
 
@@ -31,7 +29,7 @@ chrome.runtime.onStartup.addListener(() => {
 })
 
 chrome.alarms.onAlarm.addListener((alarm) => {
-  if (alarm.name === ALARM_NAME) {
+  if (alarm.name === POLL_ALARM) {
     poll().catch((err) => console.warn('Alarm poll failed:', err))
   }
 })

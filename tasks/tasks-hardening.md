@@ -46,9 +46,10 @@ Each parent task is its own small PR. Check off sub-tasks as completed.
   - [ ] 3.4 Component tests (RepoCard/RepoList/TopAlerts/UpdatedFooter/Row).
   - [ ] 3.5 CI: coverage report (non-gating) + `pnpm build` job + Playwright-install parity.
 
-- [ ] 4.0 **Central config** (`src/lib/config.ts`)
-  - [ ] 4.1 SaaS hosts. 4.2 alarm floor (worker ↔ options). 4.3 badge colour, notif prefixes,
-        page sizes. 4.4 update consumers.
+- [x] 4.0 **Central config** (`src/lib/config.ts`)
+  - [x] 4.1 SaaS hosts (`SAAS_HOST`). 4.2 alarm floor `MIN_POLL_MINUTES` (worker ↔ options) +
+        `POLL_ALARM`. 4.3 `BADGE_FAIL_COLOR`, `NOTIF_PREFIX`. 4.4 consumers updated. (Provider
+        page sizes left in their adapters — provider-specific, not cross-cutting.)
 
 ### P2 — quality + safety
 

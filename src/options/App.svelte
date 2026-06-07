@@ -11,6 +11,7 @@
   import type { Settings } from '../lib/storage'
   import { getProvider, normaliseHost, saasProvider } from '../providers'
   import type { Account, ProviderId, Repo } from '../providers/types'
+  import { MIN_POLL_MINUTES } from '../lib/config'
   import { groupReposByOwner } from '../lib/group'
   import Field from '../lib/components/forms/Field.svelte'
   import Input from '../lib/components/forms/Input.svelte'
@@ -249,7 +250,7 @@
   }
 
   async function setPoll(next: number) {
-    settings = { ...settings, pollMinutes: Math.max(0.5, Math.round(next * 2) / 2) }
+    settings = { ...settings, pollMinutes: Math.max(MIN_POLL_MINUTES, Math.round(next * 2) / 2) }
     await storage.set('settings', settings)
     toastSuccess('Settings saved')
   }
@@ -444,15 +445,18 @@
         <div class="set-row">
           <span class="setting-item">
             <span class="title">Poll interval</span>
-            <span class="description">How often Pipes checks (minimum 0.5 min).</span>
+            <span class="description">How often Pipes checks (minimum {MIN_POLL_MINUTES} min).</span
+            >
           </span>
           <span class="stepper">
-            <button onclick={() => setPoll(settings.pollMinutes - 0.5)} aria-label="Less often"
-              >−</button
+            <button
+              onclick={() => setPoll(settings.pollMinutes - MIN_POLL_MINUTES)}
+              aria-label="Less often">−</button
             >
             <span class="val">{settings.pollMinutes}<small>min</small></span>
-            <button onclick={() => setPoll(settings.pollMinutes + 0.5)} aria-label="More often"
-              >+</button
+            <button
+              onclick={() => setPoll(settings.pollMinutes + MIN_POLL_MINUTES)}
+              aria-label="More often">+</button
             >
           </span>
         </div>
