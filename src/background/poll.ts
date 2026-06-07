@@ -3,7 +3,7 @@ import { TERMINAL_STATUSES } from '../providers/types'
 import type { Account, Change, Pipeline, PipelineStatus, Repo } from '../providers/types'
 import { RateLimitError } from '../providers/http'
 import * as storage from '../lib/storage'
-import type { RepoSnapshot, Snapshots } from '../lib/storage'
+import type { RepoSnapshot, Snapshots, StorageShape } from '../lib/storage'
 import { mapLimit } from '../lib/async'
 import { HEALTH_REFRESH_MS } from '../lib/config'
 import * as notify from '../lib/notify'
@@ -349,10 +349,18 @@ async function runPollCycle(force: boolean, fresh: boolean): Promise<void> {
     Object.entries(nextPaused).filter(([, until]) => until > now)
   )
 
-  await storage.set('snapshots', snapshots)
-  await storage.set('repoEtags', nextEtags)
-  await storage.set('changeEtags', nextChangeEtags)
-  await storage.set('rateLimitPausedUntil', prunedPaused)
-  await storage.set('lastPolledAt', Date.now())
+  // One batched write: a single chrome.storage round-trip + a single onChanged, so panels react
+  // once per cycle, not once per key. Only include `snapshots` when it actually changed, so a quiet
+  // cycle doesn't re-broadcast + re-derive the whole tree (the steady-state lag with the live loop).
+  const writes: Partial<StorageShape> = {
+    repoEtags: nextEtags,
+    changeEtags: nextChangeEtags,
+    rateLimitPausedUntil: prunedPaused,
+    lastPolledAt: Date.now()
+  }
+  if (JSON.stringify(snapshots) !== JSON.stringify(prevSnapshots)) {
+    writes.snapshots = snapshots
+  }
+  await storage.setMany(writes)
   await notify.setBadge(countFailures(snapshots))
 }

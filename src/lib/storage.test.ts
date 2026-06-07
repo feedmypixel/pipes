@@ -50,6 +50,12 @@ test('set stores a plain clone, not the live reference (strips Svelte $state pro
   expect(Array.isArray(await storage.get('accounts'))).toBe(true)
 })
 
+test('setMany writes several keys in one go', async () => {
+  await storage.setMany({ lastPolledAt: 42, repoEtags: { 'o/r': 'e' } })
+  expect(await storage.get('lastPolledAt')).toBe(42)
+  expect(await storage.get('repoEtags')).toEqual({ 'o/r': 'e' })
+})
+
 test('migrate clears shape-changed caches and stamps the schema version', async () => {
   store.snapshots = { 'o/r': [{ ref: 'main' }] } // old per-ref shape
   store.branchCache = { 'o/r': { names: ['main'], etag: 'x' } }
