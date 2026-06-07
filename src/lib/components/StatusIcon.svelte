@@ -1,6 +1,7 @@
 <script lang="ts">
   import type { PipelineStatus } from '../../providers/types'
   import { statusVisual } from './status-icon'
+  import { tooltip } from '../tooltip'
 
   let { status, size = 20 }: { status: PipelineStatus; size?: number } = $props()
 
@@ -14,7 +15,7 @@
   style="--circle: {visual.colour}; --size: {size}px; --symbol: {symbolSize}px"
   role="img"
   aria-label={visual.label}
-  title={visual.label}
+  use:tooltip={visual.label}
 >
   <svg viewBox="0 0 24 24" aria-hidden="true">
     {#if visual.symbol === 'check'}
@@ -30,7 +31,8 @@
     {:else if visual.symbol === 'arc'}
       <path d="M12 3a9 9 0 1 1-9 9" />
     {:else}
-      <circle cx="12" cy="12" r="4" fill="currentColor" stroke="none" />
+      <path d="M9.1 9a3 3 0 0 1 5.8 1c0 2-3 3-3 3" />
+      <path d="M12 17h.01" />
     {/if}
   </svg>
 </span>
