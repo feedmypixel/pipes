@@ -25,7 +25,9 @@
   <StatusIcon status={pipeline.status} size={16} />
   <span class="ref">
     {#if pipeline.isDefaultBranch}
-      <Star class="default-mark" size={12} aria-label="Default branch" />
+      <span class="mark" use:tooltip={'Default branch'}>
+        <Star class="default-mark" size={12} aria-hidden="true" />
+      </span>
     {:else}
       <GitBranch class="branch-mark" size={12} aria-hidden="true" />
     {/if}
@@ -56,6 +58,11 @@
   }
   .row[data-status='running'] {
     box-shadow: inset 2px 0 0 var(--running);
+  }
+  .mark {
+    display: inline-flex;
+    flex: none;
+    align-items: center;
   }
   .ref {
     display: inline-flex;
