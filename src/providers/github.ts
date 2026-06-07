@@ -1,5 +1,6 @@
 import type {
   Account,
+  BranchesResult,
   Pipeline,
   PipelineStatus,
   PipelinesResult,
@@ -130,26 +131,47 @@ export const github: Provider = {
       return { pipelines: [], etag: etag ?? null, notModified: true, rateLimit }
     }
 
-    // Collapse to the newest run per ref. The API already returns newest first.
-    const seen = new Set<string>()
-    const pipelines: Pipeline[] = []
+    // Newest run per ref by updated_at (don't trust list order across workflows), newest first.
+    const newestByRef = new Map<string, GhRun>()
     for (const run of data.workflow_runs) {
       const ref = run.head_branch ?? '(detached)'
-      if (seen.has(ref)) {
-        continue
+      const existing = newestByRef.get(ref)
+      if (!existing || run.updated_at > existing.updated_at) {
+        newestByRef.set(ref, run)
       }
-      seen.add(ref)
-      pipelines.push({
-        id: String(run.id),
-        ref,
-        isDefaultBranch: ref === repo.defaultBranch,
-        status: mapGithubStatus(run.status, run.conclusion),
-        webUrl: run.html_url,
-        sha: run.head_sha,
-        title: run.display_title,
-        updatedAt: run.updated_at
-      })
     }
+    const pipelines: Pipeline[] = [...newestByRef.values()]
+      .sort((a, b) => b.updated_at.localeCompare(a.updated_at))
+      .map((run) => {
+        const ref = run.head_branch ?? '(detached)'
+        return {
+          id: String(run.id),
+          ref,
+          isDefaultBranch: ref === repo.defaultBranch,
+          status: mapGithubStatus(run.status, run.conclusion),
+          webUrl: run.html_url,
+          sha: run.head_sha,
+          title: run.display_title,
+          updatedAt: run.updated_at
+        }
+      })
     return { pipelines, etag: newEtag, notModified: false, rateLimit }
+  },
+
+  async listBranches(account: Account, repo: Repo, etag?: string | null): Promise<BranchesResult> {
+    const {
+      status,
+      data,
+      etag: newEtag,
+      rateLimit
+    } = await fetchJson<{ name: string }[]>(
+      `${apiBase(account)}/repos/${repo.id}/branches?per_page=100`,
+      headers(account),
+      { etag, rateLimitHeaders: RATE_LIMIT_HEADERS }
+    )
+    if (status === 304 || data === null) {
+      return { branches: [], etag: etag ?? null, notModified: true, rateLimit }
+    }
+    return { branches: data.map((b) => b.name), etag: newEtag, notModified: false, rateLimit }
   }
 }

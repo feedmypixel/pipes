@@ -80,6 +80,15 @@ export interface PipelinesResult {
   rateLimit: { remaining: number; reset: number } | null
 }
 
+/** Result of a conditional live-branches fetch. */
+export interface BranchesResult {
+  /** Names of branches that currently exist. Empty when notModified. */
+  branches: string[]
+  etag: string | null
+  notModified: boolean
+  rateLimit: { remaining: number; reset: number } | null
+}
+
 /**
  * One adapter per provider. Stateless: every call takes the account so the
  * service worker never has to hold provider instances across its short life.
@@ -92,4 +101,9 @@ export interface Provider {
    * conditional request; a 304 returns `notModified` with the same etag.
    */
   listPipelines(account: Account, repo: Repo, etag?: string | null): Promise<PipelinesResult>
+  /**
+   * Names of branches that currently exist, for dropping ghost refs (runs whose
+   * branch was merged/deleted). Conditional via `etag`; a 304 returns notModified.
+   */
+  listBranches(account: Account, repo: Repo, etag?: string | null): Promise<BranchesResult>
 }
