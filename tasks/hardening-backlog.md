@@ -104,12 +104,29 @@ product). Captured so nothing is lost.
 
 ## Data / freshness
 
-- **Stale (deleted-branch) refs linger** — GitHub Actions + GitLab keep workflow **runs**
-  after a branch is deleted; Pipes builds its list from runs grouped by ref, so deleted
-  branches with historical runs still show. Fix options: (1) **recency window** — only show
-  pipelines updated within N days (cheap, no extra calls; preferred default), or (2)
-  cross-check the live branches API and drop missing refs (accurate but costs rate-limit
-  budget). Default branch always kept regardless.
+- **Branch-centric model: show live branches, not raw runs** (headline — likely its own PRD).
+  Pipes currently lists pipeline **runs** grouped by `head_branch`. GitHub Actions + GitLab keep
+  runs after a branch is merged/deleted, so the UI fills with ghost rows for branches that no
+  longer exist — programmatically correct, mentally wrong. Confirmed on `feedmypixel/pipes`:
+  live branches = `main` + `feat/popup-failures-showcase-alerts` (2), but run `head_branch`es =
+  17 (all the merged/deleted ones).
+
+  **Target model:** show each **branch that still exists** + its **latest run** (pass/fail);
+  when a branch is merged + deleted it drops out of the view.
+
+  **Approach:** fetch the repo's live branches (GitHub `GET /repos/{o}/{r}/branches`, GitLab
+  `GET /projects/:id/repository/branches`), then intersect the existing latest-run-per-ref with
+  that set (default branch always kept). Deleted branches fall out automatically.
+
+  **Rate limit (be mindful):** ~1 extra request per repo per poll. Make it **ETag-conditional**
+  so a 304 costs no GitHub budget (GitLab list ETag support is uncertain — verify; lean on the
+  rate-limit floor back-off). Cache the branch list + its ETag per repo (new storage key, same
+  pattern as `repoEtags`). Page at 100; for huge repos cap + note.
+
+  **Sub-decisions:** (a) GitLab `refs/merge-requests/*/merge` pipelines aren't branches — drop
+  from the branch view (revisit MR pipelines as a separate concept later); (b) a branch with no
+  runs yet — omit (nothing to report) vs show as "no runs"; (c) keep a recency window as a cheap
+  secondary guard? Probably unnecessary once the intersection lands.
 
 ## Loose ends captured from build sessions (verify when writing the PRD)
 
