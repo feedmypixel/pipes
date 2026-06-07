@@ -3,7 +3,7 @@
 From `prd-pr-mr-model.md`. Switches the display unit from "live branch" to "open PR/MR",
 removing `/branches` + the Contents:read requirement.
 
-> **Parent tasks below. Sub-tasks are generated after a "Go".**
+> Sub-tasks expanded. Executed one at a time, kept green per CLAUDE.md gates.
 
 ## Relevant files
 
@@ -20,17 +20,28 @@ removing `/branches` + the Contents:read requirement.
 
 ## Tasks
 
-- [ ] 0.0 Create feature branch `feat/pr-mr-model`.
-- [ ] 1.0 **Provider model** — `Change` type + `listOpenChanges` on the `Provider` interface; GitHub
-      (`/pulls` → head SHA → checks) + GitLab (`/merge_requests` → head pipeline) adapters,
-      ETag-conditional; include bot PRs; map to the shared status set. Retire `listBranches`.
-- [ ] 2.0 **Snapshot + poll core** — new per-repo shape `{ default, changes }`; poll fetches default
-      (runs API) + open changes; diff + first-sight-silent on `changes`; storage upgrade clears the
-      old `snapshots`/`branchCache`. Keep single-flight, `fresh` foreground polling, rate back-off.
-- [ ] 3.0 **Notifications** — a PR/MR check going failed notifies (links to that PR/run); recovery on
-      green; default-branch failure unchanged. Badge = default branches failing (unchanged).
-- [ ] 4.0 **UI** — RepoCard/RepoList: pinned default-branch row, open PRs below with number + title,
-      drafts dimmed (no cap). Status-filter pills + collapse carry over. No provider brand marks.
+- [x] 0.0 Create feature branch `feat/pr-mr-model`.
+- [x] 1.0 **Provider model** (additive — `listBranches` kept until 2.0 switches over; stays green)
+  - [x] 1.1 `types.ts`: add `Change` ({ number, title, headRef, headSha, status, webUrl, isDraft, isBot }) + `OpenChangesResult` ({ changes, etag, notModified, rateLimit }); add `listOpenChanges` to `Provider`.
+  - [x] 1.2 `github.ts`: `listOpenChanges` — `/pulls?state=open&per_page=100` (ETag); per PR map head
+        SHA via `/commits/{sha}/check-runs` (mapLimit), `isDraft`=pr.draft, `isBot`=user.type==='Bot'.
+  - [x] 1.3 `gitlab.ts`: `listOpenChanges` — `/merge_requests?state=opened&per_page=100` (ETag);
+        status from `head_pipeline`, `isDraft`=mr.draft, `isBot` from author.
+  - [x] 1.4 Provider `listOpenChanges` tests (200 mapping, worst-status, bot/draft, 304) — github + gitlab.
+- [ ] 2.0 **Snapshot + poll core** — switch the shape; retire `listBranches`
+  - [ ] 2.1 `storage.ts`: snapshot → `Record<repoId, { default: Pipeline | null, changes: Change[] }>`;
+        drop `branchCache`; add `changeEtags`; `schemaVersion` key.
+  - [ ] 2.2 upgrade: on a `schemaVersion` bump, clear `snapshots` + remove `branchCache`/`changeEtags`.
+  - [ ] 2.3 `poll.ts`: `pollRepo` fetches default (runs API, pick the default-branch run) + `listOpenChanges`;
+        build the new snapshot; ETags for both; fold both rate-limits into the floor.
+  - [ ] 2.4 diff + first-sight-silent over `default` + each `change` (key by PR number); retire `keepLiveBranches`.
+  - [ ] 2.5 badge = default branches failing (unchanged). Keep single-flight, `fresh`, back-off.
+- [ ] 3.0 **Notifications** — `notify.ts` `notifyChangeFailed`/recovery (copy "PR #N check failed", links
+      to the PR/run); default-branch failure unchanged; wire into the poll diff.
+- [ ] 4.0 **UI**
+  - [ ] 4.1 `group.ts`: reshape grouping/sort over `{ default, changes }` (pinned default + PR rows; rank by worst).
+  - [ ] 4.2 `RepoCard.svelte`: pinned default row + PR rows (number + title), drafts dimmed.
+  - [ ] 4.3 `RepoList` / popup / sidepanel: adapt to the new groups; status-filter over change statuses.
 - [ ] 5.0 **Token scopes + docs** — options token help + README: GitHub fine-grained
       **Pull requests: read** (+ Actions: read for default branch), GitLab `read_api`; drop
       Contents:read. Update health/validation messaging if it references branches.

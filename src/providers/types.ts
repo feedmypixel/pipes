@@ -89,6 +89,33 @@ export interface BranchesResult {
   rateLimit: { remaining: number; reset: number } | null
 }
 
+/** An open pull request / merge request with its head pipeline status. */
+export interface Change {
+  /** PR/MR number, e.g. 42. Stable identity for diffing. */
+  number: number
+  title: string
+  /** Source branch name. */
+  headRef: string
+  /** Head commit SHA the status reflects. */
+  headSha: string
+  status: PipelineStatus
+  /** Deep link to the PR/MR (its checks). */
+  webUrl: string
+  /** Draft / work-in-progress — shown dimmed. */
+  isDraft: boolean
+  /** Opened by a bot (Dependabot, Renovate, …). */
+  isBot: boolean
+}
+
+/** Result of a conditional open-PR/MR fetch. */
+export interface OpenChangesResult {
+  /** Open PRs/MRs with head status. Empty when notModified. */
+  changes: Change[]
+  etag: string | null
+  notModified: boolean
+  rateLimit: { remaining: number; reset: number } | null
+}
+
 /**
  * One adapter per provider. Stateless: every call takes the account so the
  * service worker never has to hold provider instances across its short life.
@@ -106,4 +133,9 @@ export interface Provider {
    * branch was merged/deleted). Conditional via `etag`; a 304 returns notModified.
    */
   listBranches(account: Account, repo: Repo, etag?: string | null): Promise<BranchesResult>
+  /**
+   * Open PRs/MRs with their head pipeline status. Conditional via `etag`; a 304 returns
+   * notModified. The unit of display in the PR/MR-centric model (see prd-pr-mr-model.md).
+   */
+  listOpenChanges(account: Account, repo: Repo, etag?: string | null): Promise<OpenChangesResult>
 }

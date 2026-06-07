@@ -1,6 +1,8 @@
 import type {
   Account,
   BranchesResult,
+  Change,
+  OpenChangesResult,
   Pipeline,
   PipelineStatus,
   PipelinesResult,
@@ -42,6 +44,17 @@ interface GlPipeline {
   sha: string
   web_url: string
   updated_at: string
+}
+
+interface GlMergeRequest {
+  iid: number
+  title: string
+  draft: boolean
+  web_url: string
+  source_branch: string
+  sha: string
+  author: { bot?: boolean } | null
+  head_pipeline: { status: string } | null
 }
 
 export function mapGitlabStatus(status: string): PipelineStatus {
@@ -157,5 +170,37 @@ export const gitlab: Provider = {
       return { branches: [], etag: etag ?? null, notModified: true, rateLimit }
     }
     return { branches: data.map((b) => b.name), etag: newEtag, notModified: false, rateLimit }
+  },
+
+  async listOpenChanges(
+    account: Account,
+    repo: Repo,
+    etag?: string | null
+  ): Promise<OpenChangesResult> {
+    const {
+      status,
+      data,
+      etag: newEtag,
+      rateLimit
+    } = await fetchJson<GlMergeRequest[]>(
+      `${apiBase(account)}/projects/${repo.id}/merge_requests?state=opened&per_page=100`,
+      { 'PRIVATE-TOKEN': account.token },
+      { etag, rateLimitHeaders: RATE_LIMIT_HEADERS }
+    )
+    if (status === 304 || data === null) {
+      return { changes: [], etag: etag ?? null, notModified: true, rateLimit }
+    }
+    const changes: Change[] = data.map((mr) => ({
+      number: mr.iid,
+      title: mr.title,
+      headRef: mr.source_branch,
+      headSha: mr.sha,
+      // The MR carries its head pipeline inline — no per-MR fan-out needed.
+      status: mr.head_pipeline ? mapGitlabStatus(mr.head_pipeline.status) : 'unknown',
+      webUrl: mr.web_url,
+      isDraft: mr.draft,
+      isBot: mr.author?.bot ?? false
+    }))
+    return { changes, etag: newEtag, notModified: false, rateLimit }
   }
 }

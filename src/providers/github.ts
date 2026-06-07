@@ -1,6 +1,8 @@
 import type {
   Account,
   BranchesResult,
+  Change,
+  OpenChangesResult,
   Pipeline,
   PipelineStatus,
   PipelinesResult,
@@ -9,6 +11,7 @@ import type {
   ValidationResult
 } from './types'
 import { fetchJson, type RateLimitHeaders } from './http'
+import { mapLimit } from '../lib/async'
 import { SAAS_HOST } from '../lib/config'
 
 const SAAS_API = 'https://api.github.com'
@@ -54,6 +57,33 @@ interface GhRun {
   updated_at: string
   display_title: string
   id: number
+}
+
+interface GhPull {
+  number: number
+  title: string
+  draft: boolean
+  html_url: string
+  user: { type: string } | null
+  head: { ref: string; sha: string }
+}
+
+interface GhCheckRuns {
+  check_runs: { status: string | null; conclusion: string | null }[]
+}
+
+/** Worst-first, so a PR's many check runs collapse to one status (any failure dominates). */
+const STATUS_PRIORITY: PipelineStatus[] = [
+  'failed',
+  'running',
+  'pending',
+  'canceled',
+  'skipped',
+  'unknown',
+  'success'
+]
+function worstStatus(statuses: PipelineStatus[]): PipelineStatus {
+  return STATUS_PRIORITY.find((status) => statuses.includes(status)) ?? 'unknown'
 }
 
 export function mapGithubStatus(status: string | null, conclusion: string | null): PipelineStatus {
@@ -173,5 +203,51 @@ export const github: Provider = {
       return { branches: [], etag: etag ?? null, notModified: true, rateLimit }
     }
     return { branches: data.map((b) => b.name), etag: newEtag, notModified: false, rateLimit }
+  },
+
+  async listOpenChanges(
+    account: Account,
+    repo: Repo,
+    etag?: string | null
+  ): Promise<OpenChangesResult> {
+    const {
+      status,
+      data,
+      etag: newEtag,
+      rateLimit
+    } = await fetchJson<GhPull[]>(
+      `${apiBase(account)}/repos/${repo.id}/pulls?state=open&per_page=100`,
+      headers(account),
+      { etag, rateLimitHeaders: RATE_LIMIT_HEADERS }
+    )
+    if (status === 304 || data === null) {
+      return { changes: [], etag: etag ?? null, notModified: true, rateLimit }
+    }
+    // The PR list has no check status, so fan out to each head SHA's check-runs (bounded).
+    const changes = await mapLimit<GhPull, Change>(data, 4, async (pull) => {
+      let pullStatus: PipelineStatus = 'unknown'
+      try {
+        const checks = await request<GhCheckRuns>(
+          account,
+          `/repos/${repo.id}/commits/${pull.head.sha}/check-runs`
+        )
+        pullStatus = worstStatus(
+          checks.check_runs.map((c) => mapGithubStatus(c.status, c.conclusion))
+        )
+      } catch (err) {
+        console.warn(`Checks unreadable for ${repo.name}#${pull.number}:`, (err as Error).message)
+      }
+      return {
+        number: pull.number,
+        title: pull.title,
+        headRef: pull.head.ref,
+        headSha: pull.head.sha,
+        status: pullStatus,
+        webUrl: pull.html_url,
+        isDraft: pull.draft,
+        isBot: pull.user?.type === 'Bot'
+      }
+    })
+    return { changes, etag: newEtag, notModified: false, rateLimit }
   }
 }

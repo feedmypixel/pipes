@@ -73,3 +73,80 @@ test('listBranches 304 keeps the sent etag and flags notModified', async () => {
     restore()
   }
 })
+
+test('listOpenChanges maps MRs with their inline head pipeline status', async () => {
+  const restore = stubFetch(
+    new Response(
+      JSON.stringify([
+        {
+          iid: 3,
+          title: 'Fix',
+          draft: false,
+          web_url: 'https://x/mr/3',
+          source_branch: 'fix',
+          sha: 's3',
+          author: { bot: false },
+          head_pipeline: { status: 'running' }
+        }
+      ]),
+      { status: 200, headers: { etag: 'W/"m"' } }
+    )
+  )
+  try {
+    const result = await gitlab.listOpenChanges(account, repo)
+    expect(result.changes).toEqual([
+      {
+        number: 3,
+        title: 'Fix',
+        headRef: 'fix',
+        headSha: 's3',
+        status: 'running',
+        webUrl: 'https://x/mr/3',
+        isDraft: false,
+        isBot: false
+      }
+    ])
+    expect(result.etag).toBe('W/"m"')
+  } finally {
+    restore()
+  }
+})
+
+test('listOpenChanges: an MR with no pipeline is unknown', async () => {
+  const restore = stubFetch(
+    new Response(
+      JSON.stringify([
+        {
+          iid: 4,
+          title: 'WIP',
+          draft: true,
+          web_url: 'https://x/mr/4',
+          source_branch: 'wip',
+          sha: 's4',
+          author: { bot: true },
+          head_pipeline: null
+        }
+      ]),
+      { status: 200 }
+    )
+  )
+  try {
+    const [change] = await gitlab.listOpenChanges(account, repo).then((r) => r.changes)
+    expect(change.status).toBe('unknown')
+    expect(change.isDraft).toBe(true)
+    expect(change.isBot).toBe(true)
+  } finally {
+    restore()
+  }
+})
+
+test('listOpenChanges 304 flags notModified', async () => {
+  const restore = stubFetch(new Response(null, { status: 304 }))
+  try {
+    const result = await gitlab.listOpenChanges(account, repo, 'W/"prev"')
+    expect(result.notModified).toBe(true)
+    expect(result.changes).toEqual([])
+  } finally {
+    restore()
+  }
+})
