@@ -279,7 +279,7 @@
 </script>
 
 <div class="options">
-  <div class="inner">
+  <main class="inner">
     <header class="masthead">
       <img src="/icons/icon-48.png" alt="" width="34" height="34" />
       <div>
@@ -396,7 +396,12 @@
         <div class="card-body">
           <div class="repo-search">
             <Search size={15} />
-            <input type="text" placeholder="Filter repositories…" bind:value={search} />
+            <input
+              type="text"
+              placeholder="Filter repositories…"
+              aria-label="Filter repositories"
+              bind:value={search}
+            />
             {#if search}
               <button class="repo-clear" aria-label="Clear search" onclick={() => (search = '')}>
                 <X size={15} />
@@ -447,6 +452,7 @@
                       <button
                         class="repo-item"
                         class:on={watchedIds.has(repo.id)}
+                        aria-pressed={watchedIds.has(repo.id)}
                         onclick={() => toggleRepo(repo)}
                       >
                         <span class="checkbox">
@@ -510,7 +516,7 @@
         synced or logged.</span
       >
     </p>
-  </div>
+  </main>
 </div>
 
 <ToastHost />
@@ -703,6 +709,10 @@
     border-radius: var(--radius);
     background: var(--bg);
     margin-bottom: var(--space-lg);
+  }
+  .repo-search:focus-within {
+    outline: 2px solid var(--brand);
+    outline-offset: 1px;
   }
   .repo-search :global(svg) {
     color: var(--text-3);
