@@ -83,6 +83,25 @@ product). Captured so nothing is lost.
 - **Notification icon** — use the greyscale logo on notifications (not the green tick).
 - **Prod `web_accessible_resources`** — verify crxjs output isn't over-broad (`<all_urls>`).
 
+## Dependencies & dev-only boundaries
+
+- **Dependency minimalism** — runtime deps are currently just `@lucide/svelte` (Svelte compiles
+  away; no date/util libs — `RelativeTime` is hand-rolled). Keep it that way: prefer platform
+  APIs / small hand-rolled code over deps (supply-chain + npm-security surface). Specifically,
+  **reconsider the planned hardening deps**: **pino** → a ~20-line level-gated `console` wrapper
+  is enough for a client-only extension; **zod** → extend the existing `matchesShape` hand
+  guards rather than add zod. Optional zero-dep stretch: inline the ~18 lucide SVGs to drop the
+  last runtime dep (low value vs maintenance — probably keep lucide).
+- **Dev-only module boundary** — make "dev only" enforced, not just named (`dev-chrome.ts`,
+  `dev-theme.ts`). (1) Co-locate in `src/dev/` (the directory is the signal, like `*.test.ts`).
+  (2) Fail loud: `if (import.meta.env.PROD) throw new Error('dev-only module loaded in production')`
+  at the top of each — turns a future un-guarded import from a silent prod leak into an obvious
+  error (Vite already strips them via the `import.meta.env.DEV` guard). (3) ESLint
+  `no-restricted-imports` so only the surface `main.ts` entries may import `src/dev/*`.
+- **Bundle-size review** — a `chevron-right-*.js` chunk shipped at ~55 kB (20 kB gzip); likely
+  the Svelte-runtime + lucide vendor chunk just named after a module in it, but confirm lucide
+  is per-icon tree-shaken and the chunk isn't pulling in more than expected.
+
 ## Data / freshness
 
 - **Stale (deleted-branch) refs linger** — GitHub Actions + GitLab keep workflow **runs**
