@@ -30,6 +30,35 @@ async function request<T>(account: Account, path: string): Promise<T> {
   return data as T
 }
 
+interface GlCommit {
+  title: string
+}
+
+// GitLab's pipelines list has no commit message, so look it up by sha for the row tooltip. Cached
+// per sha (transient, per worker activation) so the same commit isn't refetched across polls.
+const commitTitleBySha = new Map<string, string>()
+
+async function commitTitle(
+  account: Account,
+  projectId: string,
+  sha: string
+): Promise<string | null> {
+  const cached = commitTitleBySha.get(sha)
+  if (cached !== undefined) {
+    return cached
+  }
+  try {
+    const commit = await request<GlCommit>(
+      account,
+      `/projects/${projectId}/repository/commits/${sha}`
+    )
+    commitTitleBySha.set(sha, commit.title)
+    return commit.title
+  } catch {
+    return null
+  }
+}
+
 interface GlProject {
   id: number
   path_with_namespace: string
@@ -151,6 +180,17 @@ export const gitlab: Provider = {
         updatedAt: pipeline.updated_at
       })
     }
+
+    // Give the default-branch row a useful tooltip: the commit message, so a hover on a failing
+    // main shows which commit broke it (GitHub already carries this; GitLab needs the lookup).
+    const defaultPipeline = pipelines.find((pipeline) => pipeline.isDefaultBranch)
+    if (defaultPipeline) {
+      const title = await commitTitle(account, repo.id, defaultPipeline.sha)
+      if (title) {
+        defaultPipeline.title = title
+      }
+    }
+
     return { pipelines, etag: newEtag, notModified: false, rateLimit }
   },
 

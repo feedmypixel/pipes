@@ -117,3 +117,45 @@ test('listOpenChanges 304 flags notModified', async () => {
     restore()
   }
 })
+
+function stubByUrl(map: Record<string, Response>) {
+  const original = globalThis.fetch
+  globalThis.fetch = (async (input: RequestInfo | URL) => {
+    const url = String(input)
+    const key = Object.keys(map).find((part) => url.includes(part))
+    return key ? map[key].clone() : new Response('{}', { status: 404 })
+  }) as typeof fetch
+  return () => {
+    globalThis.fetch = original
+  }
+}
+
+test('listPipelines sets the default-branch title to its commit message', async () => {
+  const restore = stubByUrl({
+    '/pipelines?': new Response(
+      JSON.stringify([
+        {
+          id: 99,
+          status: 'failed',
+          ref: 'main',
+          sha: 'titlesha1',
+          web_url: 'https://x/p/99',
+          updated_at: '2026-06-08T00:00:00Z'
+        }
+      ]),
+      { status: 200 }
+    ),
+    '/repository/commits/titlesha1': new Response(
+      JSON.stringify({ title: 'fix: broke the build' }),
+      { status: 200 }
+    )
+  })
+  try {
+    const { pipelines } = await gitlab.listPipelines(account, repo)
+    expect(pipelines.find((pipeline) => pipeline.isDefaultBranch)?.title).toBe(
+      'fix: broke the build'
+    )
+  } finally {
+    restore()
+  }
+})
