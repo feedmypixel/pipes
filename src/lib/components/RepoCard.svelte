@@ -3,11 +3,12 @@
   import ExternalLink from '@lucide/svelte/icons/external-link'
   import GitPullRequest from '@lucide/svelte/icons/git-pull-request'
   import type { RepoView } from '../group'
-  import { visibleChanges, defaultVisible, failingCount } from '../group'
+  import { visibleChanges, defaultVisible, statusCounts } from '../group'
   import type { PipelineStatus } from '../../providers/types'
   import { tooltip } from '../tooltip'
   import Row from './Row.svelte'
   import ChangeRow from './ChangeRow.svelte'
+  import StatusCounts from './StatusCounts.svelte'
 
   let {
     view,
@@ -25,7 +26,7 @@
   const changes = $derived(visibleChanges(view, allowed))
   const showDefault = $derived(defaultVisible(view, allowed))
   const hasChanges = $derived(changes.length > 0)
-  const failing = $derived(failingCount(view))
+  const counts = $derived(statusCounts(view))
 
   const count = $derived(view.changes.length)
   const changeNoun = $derived(view.providerId === 'gitlab' ? 'merge request' : 'pull request')
@@ -41,9 +42,6 @@
     {#if canToggle}<ChevronRight size={16} />{/if}
   </span>
   <span class="repo-name">{view.displayName}</span>
-  {#if failing > 0}
-    <span class="fail-badge" use:tooltip={`${failing} failing`}>{failing}</span>
-  {/if}
 {/snippet}
 
 <div class="repo">
@@ -60,6 +58,7 @@
     {:else}
       <div class="repo-toggle">{@render head()}</div>
     {/if}
+    <StatusCounts {counts} />
     {#if view.changes.length > 0}
       <span class="pr-count" use:tooltip={changeTooltip}>
         <GitPullRequest size={12} />
@@ -130,18 +129,6 @@
     font-weight: var(--weight-bold);
     font-size: var(--font-size-lg);
     color: var(--text);
-  }
-  .fail-badge {
-    flex: none;
-    display: inline-grid;
-    place-items: center;
-    min-width: 20px;
-    height: 20px;
-    padding: 0 var(--space-2xs);
-    border-radius: var(--radius-pill);
-    background: var(--failed);
-    color: var(--status-ink);
-    font: var(--weight-bold) var(--font-size-2xs) / 1 var(--font-mono);
   }
   .pr-count {
     flex: none;

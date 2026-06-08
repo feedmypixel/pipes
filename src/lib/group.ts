@@ -116,6 +116,25 @@ export function failingCount(view: RepoView): number {
   return fromDefault + view.changes.filter((change) => change.status === 'failed').length
 }
 
+/**
+ * Per-status row counts for the repo header badges — default branch + open PRs/MRs, in
+ * severity order, zero-count statuses omitted. Lets a collapsed drawer show what's inside.
+ */
+export function statusCounts(view: RepoView): { status: PipelineStatus; count: number }[] {
+  const counts = new Map<PipelineStatus, number>()
+  const tally = (status: PipelineStatus) => counts.set(status, (counts.get(status) ?? 0) + 1)
+  if (view.default) {
+    tally(view.default.status)
+  }
+  for (const change of view.changes) {
+    tally(change.status)
+  }
+  return BRANCH_STATE_ORDER.filter((status) => counts.has(status)).map((status) => ({
+    status,
+    count: counts.get(status) ?? 0
+  }))
+}
+
 /** A repo has rows to show when its default branch or any PR/MR passes the filter. */
 export function hasVisibleRows(view: RepoView, allowed: ReadonlySet<PipelineStatus>): boolean {
   return defaultVisible(view, allowed) || visibleChanges(view, allowed).length > 0

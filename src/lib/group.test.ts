@@ -5,6 +5,7 @@ import {
   defaultVisible,
   hasVisibleRows,
   failingCount,
+  statusCounts,
   filterGroups,
   ALL_BRANCH_STATES,
   countDefaultBranchFailures
@@ -136,6 +137,23 @@ test('failingCount: counts failed across the default branch + open PRs', () => {
   }
   const view = groupByOwner([repo('o/r', 'o/r')], snapshots)[0].repos[0]
   expect(failingCount(view)).toBe(2)
+})
+
+test('statusCounts tallies default + changes, severity order, non-zero only', () => {
+  const snapshots: Snapshots = {
+    'o/r': snapshot(mainPipe('failed'), [
+      change(1, 'failed'),
+      change(2, 'success'),
+      change(3, 'success'),
+      change(4, 'running')
+    ])
+  }
+  const view = groupByOwner([repo('o/r', 'o/r')], snapshots)[0].repos[0]
+  expect(statusCounts(view)).toEqual([
+    { status: 'failed', count: 2 },
+    { status: 'running', count: 1 },
+    { status: 'success', count: 2 }
+  ])
 })
 
 test('filterGroups: drops filtered-out repos and then empties owner groups', () => {
