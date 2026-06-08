@@ -15,15 +15,19 @@ export function relativeTime(iso: string, now: number): string {
   return `${Math.floor(hours / 24)}d ago`
 }
 
-/** Compact elapsed duration since an ISO start: "45s", "14m", "1h 5m". `now` for testability. */
+/**
+ * Compact elapsed duration since an ISO start: "45s", "14m 32s", "1h 5m". `now` for testability.
+ * Seconds stay visible through the minute range so a live timer keeps ticking; only past an hour
+ * do they drop, where per-second precision is just noise.
+ */
 export function elapsedTime(iso: string, now: number): string {
-  const seconds = Math.max(0, Math.floor((now - new Date(iso).getTime()) / 1000))
-  if (seconds < 60) {
-    return `${seconds}s`
+  const totalSeconds = Math.max(0, Math.floor((now - new Date(iso).getTime()) / 1000))
+  if (totalSeconds < 60) {
+    return `${totalSeconds}s`
   }
-  const minutes = Math.floor(seconds / 60)
+  const minutes = Math.floor(totalSeconds / 60)
   if (minutes < 60) {
-    return `${minutes}m`
+    return `${minutes}m ${totalSeconds % 60}s`
   }
   const hours = Math.floor(minutes / 60)
   return `${hours}h ${minutes % 60}m`
