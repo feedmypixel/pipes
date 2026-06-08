@@ -1,6 +1,7 @@
 <script lang="ts">
   import type { Change, Pipeline, PipelineStatus } from '../providers/types'
   import StatusIcon from '../lib/components/StatusIcon.svelte'
+  import ProgressBar from '../lib/components/ProgressBar.svelte'
   import RefChip from '../lib/components/RefChip.svelte'
   import RelativeTime from '../lib/components/RelativeTime.svelte'
   import RepoCard from '../lib/components/RepoCard.svelte'
@@ -122,6 +123,25 @@
   ]
   let repoCollapsed = $state<Record<string, boolean>>({})
 
+  // Animate the progress sketch so the fill visibly climbs, like a running pipeline.
+  let demoProgress = $state(0.05)
+  let demoSeconds = $state(12)
+  $effect(() => {
+    const id = setInterval(() => {
+      if (demoProgress >= 1) {
+        demoProgress = 0.05
+        demoSeconds = 0
+      } else {
+        demoProgress = Math.min(1, demoProgress + 0.05)
+        demoSeconds += 9
+      }
+    }, 700)
+    return () => clearInterval(id)
+  })
+  const demoTime = $derived(
+    demoSeconds < 60 ? `${demoSeconds}s` : `${Math.floor(demoSeconds / 60)}m ${demoSeconds % 60}s`
+  )
+
   let provider = $state('github')
   let goodHost = $state('gitlab.example.com')
   let goodToken = $state('ghp_xxxxxxxxxxxx')
@@ -202,6 +222,35 @@
           <code>{status}</code>
         </div>
       {/each}
+    </div>
+  </section>
+
+  <section>
+    <p class="eyebrow">ProgressBar — in the row bottom-border position, running rows only</p>
+    <div class="sketch-frame">
+      <div class="sketch-head">status-api</div>
+      <div class="sketch-row rel">
+        <StatusIcon status="running" size={16} />
+        <span class="sk-ref">main</span>
+        <span class="sk-time">{demoTime}</span>
+        <ProgressBar progress={demoProgress} />
+      </div>
+      <div class="sketch-row rel">
+        <StatusIcon status="running" size={16} />
+        <span class="sk-ref">#210 retry flaky test</span>
+        <span class="sk-time">2m</span>
+        <ProgressBar progress={0.3} />
+      </div>
+      <div class="sketch-row">
+        <StatusIcon status="success" size={16} />
+        <span class="sk-ref">#208 caching layer</span>
+        <span class="sk-time">1h</span>
+      </div>
+      <div class="sketch-row">
+        <StatusIcon status="failed" size={16} />
+        <span class="sk-ref">#205 fix timeout</span>
+        <span class="sk-time">3h</span>
+      </div>
     </div>
   </section>
 
@@ -495,6 +544,39 @@
   }
   .icon-cell code {
     font: var(--weight-medium) var(--font-size-2xs) / var(--leading-none) var(--font-mono);
+    color: var(--text-3);
+  }
+  .sketch-frame {
+    max-width: 420px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    background: var(--surface);
+  }
+  .sketch-head {
+    padding: var(--space-md) var(--space-lg) var(--space-xs);
+    font: var(--weight-bold) var(--font-size-lg) / 1 var(--font-sans);
+    color: var(--text);
+  }
+  .sketch-row {
+    display: flex;
+    align-items: center;
+    gap: var(--space-md);
+    padding: var(--space-sm) var(--space-lg) var(--space-md) var(--space-3xl);
+    border-bottom: 1px solid var(--border);
+  }
+  .sketch-row.rel {
+    position: relative;
+  }
+  .sk-ref {
+    flex: 1;
+    min-width: 0;
+    font: var(--weight-medium) var(--font-size-base) / 1 var(--font-mono);
+    color: var(--text);
+  }
+  .sk-time {
+    flex: none;
+    font: var(--weight-regular) var(--font-size-xs) / 1 var(--font-mono);
     color: var(--text-3);
   }
   .rows,

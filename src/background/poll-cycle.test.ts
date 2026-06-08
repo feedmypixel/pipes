@@ -9,7 +9,8 @@ const h = vi.hoisted(() => ({
     validateToken: vi.fn(),
     listRepos: vi.fn(),
     listPipelines: vi.fn(),
-    listOpenChanges: vi.fn()
+    listOpenChanges: vi.fn(),
+    pipelineProgress: vi.fn()
   },
   notify: {
     notifyMainFailed: vi.fn(),
@@ -118,6 +119,15 @@ beforeEach(() => {
   h.provider.validateToken.mockResolvedValue({ ok: true, user: 'u' })
   h.provider.listPipelines.mockResolvedValue(runs())
   h.provider.listOpenChanges.mockResolvedValue(openChanges([]))
+  h.provider.pipelineProgress.mockResolvedValue(undefined)
+})
+
+test('a running default branch gets its job progress', async () => {
+  seed()
+  h.provider.listPipelines.mockResolvedValue(runs('running'))
+  h.provider.pipelineProgress.mockResolvedValue(0.5)
+  await poll()
+  expect((snap().default as { progress?: number }).progress).toBe(0.5)
 })
 
 test('first sight seeds the default branch silently', async () => {

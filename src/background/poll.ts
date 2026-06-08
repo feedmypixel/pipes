@@ -104,6 +104,39 @@ interface RepoPollResult {
 const EMPTY_SNAPSHOT: RepoSnapshot = { default: null, changes: [] }
 
 /**
+ * Fetch job-completion progress (0–1) for whatever's running — the default branch + open PRs/MRs —
+ * in parallel, and write it onto each pipeline. Only running pipelines (terminal ones need none),
+ * and it runs every cycle independent of the runs-list ETag, so a long pipeline's bar keeps moving
+ * even when the list itself 304s. Best-effort: a failed fetch just leaves progress undefined.
+ */
+async function fillRunningProgress(
+  account: Account,
+  repo: Repo,
+  nextDefault: Pipeline | null,
+  nextChanges: Change[]
+): Promise<void> {
+  const provider = getProvider(account.provider)
+  const tasks: Promise<void>[] = []
+  if (nextDefault?.status === 'running') {
+    tasks.push(
+      provider.pipelineProgress(account, repo, nextDefault.id).then((progress) => {
+        nextDefault.progress = progress
+      })
+    )
+  }
+  for (const change of nextChanges) {
+    if (change.status === 'running' && change.pipelineId) {
+      tasks.push(
+        provider.pipelineProgress(account, repo, change.pipelineId).then((progress) => {
+          change.progress = progress
+        })
+      )
+    }
+  }
+  await Promise.all(tasks)
+}
+
+/**
  * Fetch + diff one repo with two parallel calls and no per-PR fan-out: the runs list gives every
  * ref's status + time (default branch + PR head branches); the open-PR list is joined to those by
  * head ref. Both calls are ETag-conditional (GitHub caches /actions/runs ~60s, so an open panel is
@@ -164,9 +197,14 @@ async function pollRepo(
         isDraft: meta.isDraft,
         isBot: meta.isBot,
         status: pipeline?.status ?? previous?.status ?? 'unknown',
-        updatedAt: pipeline?.updatedAt ?? previous?.updatedAt
+        updatedAt: pipeline?.updatedAt ?? previous?.updatedAt,
+        // Keep the joined run/pipeline id (or the previous one on a 304) so progress can be
+        // refetched while running, even when the runs list itself didn't change.
+        pipelineId: pipeline?.id ?? previous?.pipelineId
       }
     })
+
+    await fillRunningProgress(account, repo, nextDefault, nextChanges)
 
     if (nextDefault) {
       await diffDefault(repo, prev.default, nextDefault, notifyOnSuccess)

@@ -41,6 +41,27 @@ async function request<T>(account: Account, path: string): Promise<T> {
   return data as T
 }
 
+/** Fraction of a run's jobs that have finished (0–1), or undefined if it can't be read. */
+async function runProgress(
+  account: Account,
+  repo: Repo,
+  runId: string
+): Promise<number | undefined> {
+  try {
+    const data = await request<{ jobs: { status: string }[] }>(
+      account,
+      `/repos/${repo.id}/actions/runs/${runId}/jobs?per_page=100`
+    )
+    const total = data.jobs.length
+    if (total === 0) {
+      return undefined
+    }
+    return data.jobs.filter((job) => job.status === 'completed').length / total
+  } catch {
+    return undefined
+  }
+}
+
 interface GhRepo {
   full_name: string
   default_branch: string
@@ -166,7 +187,12 @@ export const github: Provider = {
           updatedAt: run.updated_at
         }
       })
+
     return { pipelines, etag: newEtag, notModified: false, rateLimit }
+  },
+
+  pipelineProgress(account: Account, repo: Repo, pipelineId: string): Promise<number | undefined> {
+    return runProgress(account, repo, pipelineId)
   },
 
   async listOpenChanges(

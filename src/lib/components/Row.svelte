@@ -4,6 +4,7 @@
   import Star from '@lucide/svelte/icons/star'
   import StatusIcon from './StatusIcon.svelte'
   import RelativeTime from './RelativeTime.svelte'
+  import ProgressBar from './ProgressBar.svelte'
   import { statusVisual } from './status-icon'
   import { tooltip } from '../tooltip'
 
@@ -34,10 +35,14 @@
     <span class="name" use:tooltip={pipeline.title}>{pipeline.ref}</span>
   </span>
   <RelativeTime iso={pipeline.updatedAt} />
+  {#if pipeline.status === 'running'}
+    <ProgressBar progress={pipeline.progress ?? 0} />
+  {/if}
 </a>
 
 <style>
   .row {
+    position: relative;
     display: grid;
     grid-template-columns: auto 1fr auto;
     align-items: center;

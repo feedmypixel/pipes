@@ -59,6 +59,29 @@ async function commitTitle(
   }
 }
 
+// Job statuses that count as finished, for the running-pipeline progress fraction.
+const FINISHED_JOB = new Set(['success', 'failed', 'canceled', 'skipped', 'manual'])
+
+/** Fraction of a pipeline's jobs that have finished (0–1), or undefined if it can't be read. */
+async function jobsProgress(
+  account: Account,
+  projectId: string,
+  pipelineId: string
+): Promise<number | undefined> {
+  try {
+    const jobs = await request<{ status: string }[]>(
+      account,
+      `/projects/${projectId}/pipelines/${pipelineId}/jobs?per_page=100`
+    )
+    if (jobs.length === 0) {
+      return undefined
+    }
+    return jobs.filter((job) => FINISHED_JOB.has(job.status)).length / jobs.length
+  } catch {
+    return undefined
+  }
+}
+
 interface GlProject {
   id: number
   path_with_namespace: string
@@ -224,5 +247,9 @@ export const gitlab: Provider = {
       isBot: mr.author?.bot ?? false
     }))
     return { changes, etag: newEtag, notModified: false, rateLimit }
+  },
+
+  pipelineProgress(account: Account, repo: Repo, pipelineId: string): Promise<number | undefined> {
+    return jobsProgress(account, repo.id, pipelineId)
   }
 }

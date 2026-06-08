@@ -4,6 +4,7 @@
   import GitBranch from '@lucide/svelte/icons/git-branch'
   import StatusIcon from './StatusIcon.svelte'
   import RelativeTime from './RelativeTime.svelte'
+  import ProgressBar from './ProgressBar.svelte'
   import { statusVisual } from './status-icon'
   import { tooltip } from '../tooltip'
 
@@ -36,10 +37,14 @@
   {#if change.updatedAt}
     <RelativeTime iso={change.updatedAt} />
   {/if}
+  {#if change.status === 'running'}
+    <ProgressBar progress={change.progress ?? 0} />
+  {/if}
 </a>
 
 <style>
   .row {
+    position: relative;
     display: grid;
     grid-template-columns: auto 1fr auto auto;
     align-items: center;
