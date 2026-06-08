@@ -88,7 +88,7 @@
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-    font: var(--weight-medium) var(--font-size-base) / var(--leading-none) var(--font-mono);
+    font: var(--weight-medium) var(--font-size-base) / var(--leading-tight) var(--font-mono);
     color: var(--text);
   }
   .row:hover .name {
