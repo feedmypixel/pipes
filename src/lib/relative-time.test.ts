@@ -13,9 +13,10 @@ test('clamps future timestamps to just now', () => {
   expect(relativeTime('2026-06-05T12:05:00Z', now)).toBe('just now')
 })
 
-test('elapsedTime counts up by the largest fitting unit', () => {
+test('elapsedTime keeps seconds through the minute range, drops them past an hour', () => {
   expect(elapsedTime('2026-06-05T11:59:20Z', now)).toBe('40s')
-  expect(elapsedTime('2026-06-05T11:46:00Z', now)).toBe('14m')
+  expect(elapsedTime('2026-06-05T11:45:28Z', now)).toBe('14m 32s')
+  expect(elapsedTime('2026-06-05T11:46:00Z', now)).toBe('14m 0s')
   expect(elapsedTime('2026-06-05T10:47:00Z', now)).toBe('1h 13m')
 })
 
