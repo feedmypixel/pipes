@@ -24,8 +24,8 @@ test('elapsedTime clamps future starts to 0s', () => {
   expect(elapsedTime('2026-06-05T12:05:00Z', now)).toBe('0s')
 })
 
-test('absoluteTime gives a full timestamp (year + 24h time), locale/tz aside', () => {
-  const out = absoluteTime('2026-06-07T17:34:00Z')
+test('absoluteTime gives a full timestamp (year + 24h time with seconds), locale/tz aside', () => {
+  const out = absoluteTime('2026-06-07T17:34:09Z')
   expect(out).toMatch(/2026/)
-  expect(out).toMatch(/\d{1,2}:\d{2}/)
+  expect(out).toMatch(/\d{1,2}:\d{2}:\d{2}/)
 })

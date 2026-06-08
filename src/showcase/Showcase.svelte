@@ -273,7 +273,7 @@
   </section>
 
   <section>
-    <p class="eyebrow">ElapsedTime — a running pipeline's live "running Xm" (ticks every second)</p>
+    <p class="eyebrow">ElapsedTime — a running pipeline's live "14m 32s" (ticks every second)</p>
     <div class="inline">
       <ElapsedTime startedAt={new Date(Date.now() - 14 * 60_000).toISOString()} />
       <ElapsedTime startedAt={new Date(Date.now() - 40_000).toISOString()} />

@@ -33,7 +33,7 @@ export function elapsedTime(iso: string, now: number): string {
   return `${hours}h ${minutes % 60}m`
 }
 
-/** Full timestamp for a hover tooltip: "7 Jun 2026, 17:34" (24-hour). */
+/** Full timestamp for a hover tooltip: "7 Jun 2026, 17:34:09" (24-hour). */
 export function absoluteTime(iso: string): string {
   return new Date(iso).toLocaleString(undefined, {
     day: 'numeric',
@@ -41,6 +41,7 @@ export function absoluteTime(iso: string): string {
     year: 'numeric',
     hour: '2-digit',
     minute: '2-digit',
+    second: '2-digit',
     hour12: false
   })
 }

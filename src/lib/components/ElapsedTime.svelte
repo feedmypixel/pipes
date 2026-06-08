@@ -1,8 +1,9 @@
 <script lang="ts">
   import { elapsedTime } from '../relative-time'
 
-  // Live "running 14m" for an in-progress pipeline — ticks locally off a fixed start time, so it's
-  // smooth + accurate with no dependence on the polling cadence or the provider's cache.
+  // Live "14m 32s" for an in-progress pipeline — ticks locally off a fixed start time, so it's
+  // smooth + accurate with no dependence on the polling cadence or the provider's cache. The
+  // running status is already shown by the row's icon + border, so the time stands bare.
   let { startedAt }: { startedAt: string } = $props()
 
   let now = $state(Date.now())
@@ -17,7 +18,7 @@
   const label = $derived(elapsedTime(startedAt, now))
 </script>
 
-<time class="elapsed" datetime={startedAt}>running {label}</time>
+<time class="elapsed" datetime={startedAt}>{label}</time>
 
 <style>
   .elapsed {
