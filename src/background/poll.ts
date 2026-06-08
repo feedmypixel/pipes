@@ -137,10 +137,23 @@ async function pollRepo(
     const pipelineByRef = new Map(
       runs.notModified ? [] : runs.pipelines.map((pipeline) => [pipeline.ref, pipeline])
     )
+    // GitLab runs merge-request pipelines whose ref is `refs/merge-requests/<iid>/head|merge`, not
+    // the source branch, so join those by MR number too. The pattern never matches a GitHub branch
+    // ref, so this is a no-op there. Pipelines are newest-first; keep the first (newest) per MR.
+    const pipelineByNumber = new Map<number, Pipeline>()
+    if (!runs.notModified) {
+      for (const pipeline of runs.pipelines) {
+        const match = /^refs\/merge-requests\/(\d+)\/(?:head|merge)$/.exec(pipeline.ref)
+        const number = match ? Number(match[1]) : null
+        if (number !== null && !pipelineByNumber.has(number)) {
+          pipelineByNumber.set(number, pipeline)
+        }
+      }
+    }
     const prevByNumber = new Map(prev.changes.map((change) => [change.number, change]))
     const metas = open.notModified ? prev.changes : open.changes
     const nextChanges: Change[] = metas.map((meta) => {
-      const pipeline = pipelineByRef.get(meta.headRef)
+      const pipeline = pipelineByRef.get(meta.headRef) ?? pipelineByNumber.get(meta.number)
       const previous = prevByNumber.get(meta.number)
       return {
         number: meta.number,
