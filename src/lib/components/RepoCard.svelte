@@ -41,9 +41,6 @@
     {#if canToggle}<ChevronRight size={16} />{/if}
   </span>
   <span class="repo-name">{view.displayName}</span>
-  {#if failing > 0}
-    <span class="fail-badge" use:tooltip={`${failing} failing`}>{failing}</span>
-  {/if}
   {#if view.changes.length > 0}
     <span class="pr-count" use:tooltip={changeTooltip}>
       <GitPullRequest size={12} />
@@ -65,6 +62,9 @@
       </button>
     {:else}
       <div class="repo-toggle">{@render head()}</div>
+    {/if}
+    {#if failing > 0}
+      <span class="fail-badge" use:tooltip={`${failing} failing`}>{failing}</span>
     {/if}
     <a
       class="repo-link"
