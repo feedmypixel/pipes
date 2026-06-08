@@ -153,6 +153,18 @@ test('a PR check going failed notifies (status joined from runs by head ref)', a
   expect(h.notify.notifyChangeFailed).toHaveBeenCalledTimes(1)
 })
 
+test('a GitLab MR joins its pipeline by merge-request ref when the branch ref does not match', async () => {
+  seed()
+  // MR #9's source branch is f9, but GitLab ran a merge-request pipeline keyed by the MR iid ref.
+  h.provider.listPipelines.mockResolvedValue(
+    runs(undefined, [prPipe('refs/merge-requests/9/head', 'failed')])
+  )
+  h.provider.listOpenChanges.mockResolvedValue(openChanges([change(9, 'success')]))
+  await poll()
+  const mr = (snap().changes as { number: number; status: string }[]).find((c) => c.number === 9)
+  expect(mr?.status).toBe('failed')
+})
+
 test('open PRs are stored in the snapshot', async () => {
   seed()
   h.provider.listOpenChanges.mockResolvedValue(openChanges([change(3, 'running')]))
