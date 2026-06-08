@@ -4,6 +4,7 @@
   import GitBranch from '@lucide/svelte/icons/git-branch'
   import StatusIcon from './StatusIcon.svelte'
   import RelativeTime from './RelativeTime.svelte'
+  import ElapsedTime from './ElapsedTime.svelte'
   import { statusVisual } from './status-icon'
   import { tooltip } from '../tooltip'
 
@@ -33,7 +34,9 @@
     <GitBranch size={11} aria-hidden="true" />
     <span class="branch-name">{change.headRef}</span>
   </span>
-  {#if change.updatedAt}
+  {#if change.status === 'running' && change.startedAt}
+    <ElapsedTime startedAt={change.startedAt} />
+  {:else if change.updatedAt}
     <RelativeTime iso={change.updatedAt} />
   {/if}
 </a>

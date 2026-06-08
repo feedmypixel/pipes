@@ -60,6 +60,8 @@ export interface Pipeline {
   title: string
   /** ISO timestamp of last update. */
   updatedAt: string
+  /** ISO start time, for a live "running Xm" while in progress. */
+  startedAt?: string
 }
 
 export interface ValidationResult {
@@ -94,6 +96,8 @@ export interface Change {
   status: PipelineStatus
   /** ISO time of the head pipeline run, joined from the runs list. Undefined when none matched. */
   updatedAt?: string
+  /** ISO start time of the head pipeline, for a live "running Xm". Undefined when none matched. */
+  startedAt?: string
   /** Deep link to the PR/MR (its checks). */
   webUrl: string
   /** Draft / work-in-progress — shown dimmed. */
@@ -106,7 +110,7 @@ export interface Change {
  * Open-PR/MR metadata. Providers return just the list; poll joins each one's status + time from
  * the repo's pipelines (by head ref) — one shared runs fetch, no per-PR fan-out.
  */
-export type ChangeMeta = Omit<Change, 'status' | 'updatedAt'>
+export type ChangeMeta = Omit<Change, 'status' | 'updatedAt' | 'startedAt'>
 
 /** Result of a conditional open-PR/MR fetch (metadata only — status is joined in poll). */
 export interface OpenChangesResult {

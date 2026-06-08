@@ -54,6 +54,7 @@ interface GhRun {
   html_url: string
   head_sha: string
   updated_at: string
+  run_started_at: string
   display_title: string
   id: number
 }
@@ -163,7 +164,8 @@ export const github: Provider = {
           webUrl: httpUrl(run.html_url),
           sha: run.head_sha,
           title: run.display_title,
-          updatedAt: run.updated_at
+          updatedAt: run.updated_at,
+          startedAt: run.run_started_at
         }
       })
     return { pipelines, etag: newEtag, notModified: false, rateLimit }

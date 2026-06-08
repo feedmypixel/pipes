@@ -73,6 +73,7 @@ interface GlPipeline {
   sha: string
   web_url: string
   updated_at: string
+  created_at: string
 }
 
 interface GlMergeRequest {
@@ -177,7 +178,8 @@ export const gitlab: Provider = {
         webUrl: httpUrl(pipeline.web_url),
         sha: pipeline.sha,
         title: `#${pipeline.id}`,
-        updatedAt: pipeline.updated_at
+        updatedAt: pipeline.updated_at,
+        startedAt: pipeline.created_at
       })
     }
 
