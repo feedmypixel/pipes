@@ -10,6 +10,7 @@ MV3 package + publish. To dogfood first, see [Testers](#testers).
 - [Testers](#testers)
 - [Updates](#updates)
 - [CI (intended)](#ci-intended)
+- [Feedback + licensing](#feedback--licensing)
 - [Checklist](#checklist)
 
 ## Setup (one-time)
@@ -83,6 +84,32 @@ GitHub Action builds `dist/`, zips it, and pushes to the store via
 [`chrome-webstore-upload-cli`](https://github.com/fregante/chrome-webstore-upload-cli) (the CWS
 API; needs an OAuth client + refresh token in repo secrets). Review still gates publication, so
 this automates the upload, not the going-live.
+
+## Feedback + licensing
+
+How users report bugs, and what going public does (or doesn't) protect.
+
+**Bug/feedback channel.** Chrome doesn't require an in-app contact; the Web Store listing's
+**Support** tab takes an email _or_ a URL (a URL is enough — no inbox spam). To keep bugs
+structured without exposing the code, the plan is a **separate public `pipes-feedback` repo**
+(README + issue templates, no source); the in-app bug icon and the CWS Support tab both point
+there. `pipes` stays private. Alternatives if ever wanted: a hosted board (Canny/Tally) or a
+filtered email alias.
+
+**Licensing if the code goes public.** Note first: an extension's JS already ships readable
+(anyone can unpack the `.crx`), and a licence governs legal _reuse_, not access. So publishing
+source reveals little more than shipping does — the moat is the listing, polish, and upkeep, not
+the code. Pick deliberately:
+
+- **MIT** (current) — maximal permissive: anyone may copy, modify, **and sell**. Great for
+  adoption, zero protection against being lifted.
+- **AGPL-3.0 / GPL-3.0** — copyleft: forks/redistribution must stay open-source. Deters closed
+  commercial copies.
+- **Source-available (e.g. BSL)** — viewable, but no redistribution/commercial use. Protective,
+  but not OSI "open source" (some won't contribute).
+
+Current stance: keep `pipes` **private**, use the separate public feedback repo for Issues, and
+revisit the licence only if/when the code is made public. (Not legal advice.)
 
 ## Checklist
 
