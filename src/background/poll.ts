@@ -164,7 +164,8 @@ async function pollRepo(
         isDraft: meta.isDraft,
         isBot: meta.isBot,
         status: pipeline?.status ?? previous?.status ?? 'unknown',
-        updatedAt: pipeline?.updatedAt ?? previous?.updatedAt
+        updatedAt: pipeline?.updatedAt ?? previous?.updatedAt,
+        startedAt: pipeline?.startedAt ?? previous?.startedAt
       }
     })
 

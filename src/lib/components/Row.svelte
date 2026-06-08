@@ -4,6 +4,7 @@
   import Star from '@lucide/svelte/icons/star'
   import StatusIcon from './StatusIcon.svelte'
   import RelativeTime from './RelativeTime.svelte'
+  import ElapsedTime from './ElapsedTime.svelte'
   import { statusVisual } from './status-icon'
   import { tooltip } from '../tooltip'
 
@@ -33,7 +34,11 @@
     {/if}
     <span class="name" use:tooltip={pipeline.title}>{pipeline.ref}</span>
   </span>
-  <RelativeTime iso={pipeline.updatedAt} />
+  {#if pipeline.status === 'running' && pipeline.startedAt}
+    <ElapsedTime startedAt={pipeline.startedAt} />
+  {:else}
+    <RelativeTime iso={pipeline.updatedAt} />
+  {/if}
 </a>
 
 <style>

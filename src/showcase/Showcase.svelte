@@ -3,6 +3,7 @@
   import StatusIcon from '../lib/components/StatusIcon.svelte'
   import RefChip from '../lib/components/RefChip.svelte'
   import RelativeTime from '../lib/components/RelativeTime.svelte'
+  import ElapsedTime from '../lib/components/ElapsedTime.svelte'
   import RepoCard from '../lib/components/RepoCard.svelte'
   import TopAlerts from '../lib/components/TopAlerts.svelte'
   import { ALL_BRANCH_STATES, type RepoView } from '../lib/group'
@@ -268,6 +269,15 @@
       <RefChip ref="feature/a-very-long-branch-name-that-truncates" />
       <RelativeTime iso={new Date(Date.now() - 5 * 60_000).toISOString()} />
       <RelativeTime iso={new Date(Date.now() - 5 * 3_600_000).toISOString()} />
+    </div>
+  </section>
+
+  <section>
+    <p class="eyebrow">ElapsedTime — a running pipeline's live "running Xm" (ticks every second)</p>
+    <div class="inline">
+      <ElapsedTime startedAt={new Date(Date.now() - 14 * 60_000).toISOString()} />
+      <ElapsedTime startedAt={new Date(Date.now() - 40_000).toISOString()} />
+      <ElapsedTime startedAt={new Date(Date.now() - 73 * 60_000).toISOString()} />
     </div>
   </section>
 
