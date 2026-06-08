@@ -45,7 +45,7 @@
     align-items: center;
     gap: var(--space-md);
     /* indented: these rows always sit under a repo-name header */
-    padding: var(--space-sm) var(--space-xl) var(--space-sm) var(--space-3xl);
+    padding: var(--space-md) var(--space-xl) var(--space-md) var(--space-3xl);
     border-bottom: 1px solid var(--border);
     color: inherit;
     text-decoration: none;
