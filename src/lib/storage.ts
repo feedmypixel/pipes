@@ -106,13 +106,17 @@ export async function setMany(values: Partial<StorageShape>): Promise<void> {
   await chrome.storage.local.set(values)
 }
 
-const SCHEMA_VERSION = 2
+// Bump when a release changes the shape OR the derivation of a cached value, so the old cache
+// (snapshots + the ETags that gate refetching them) is dropped and rebuilt fresh. v3: the GitLab
+// MR-pipeline join changed, but stale snapshots sat behind 304s and never recomputed.
+const SCHEMA_VERSION = 3
 
 /**
- * Drop derived caches whose shape changed across a release (e.g. snapshots went from a per-ref
- * list to `{ default, changes }`). Without this, the next read would hand stale-shaped data to
- * code expecting the new shape. Accounts/settings/watched repos are untouched. The next poll
- * reseeds, and first-sight seeds silently so there's no notification storm.
+ * Drop derived caches whose shape or derivation changed across a release (e.g. snapshots went from
+ * a per-ref list to `{ default, changes }`, or the MR-status join changed). Without this, the next
+ * read hands back stale data — and because ETags gate refetching, a 304 would keep serving it.
+ * Accounts/settings/watched repos are untouched. The next poll reseeds, and first-sight seeds
+ * silently so there's no notification storm.
  */
 export async function migrate(): Promise<void> {
   const stored = await chrome.storage.local.get('schemaVersion')
