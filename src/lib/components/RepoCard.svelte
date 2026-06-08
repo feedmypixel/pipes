@@ -44,6 +44,12 @@
   {#if failing > 0}
     <span class="fail-badge" use:tooltip={`${failing} failing`}>{failing}</span>
   {/if}
+  {#if view.changes.length > 0}
+    <span class="pr-count" use:tooltip={changeTooltip}>
+      <GitPullRequest size={12} />
+      {view.changes.length}
+    </span>
+  {/if}
 {/snippet}
 
 <div class="repo">
@@ -59,12 +65,6 @@
       </button>
     {:else}
       <div class="repo-toggle">{@render head()}</div>
-    {/if}
-    {#if view.changes.length > 0}
-      <span class="pr-count" use:tooltip={changeTooltip}>
-        <GitPullRequest size={12} />
-        {view.changes.length}
-      </span>
     {/if}
     <a
       class="repo-link"
@@ -122,7 +122,7 @@
     transform: rotate(90deg);
   }
   .repo-name {
-    flex: 1;
+    flex: 0 1 auto;
     min-width: 0;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -148,6 +148,7 @@
     display: inline-flex;
     align-items: center;
     gap: var(--space-3xs);
+    margin-left: var(--space-xs);
     color: var(--text-3);
     font: var(--weight-medium) var(--font-size-xs) / 1 var(--font-mono);
   }
