@@ -108,8 +108,8 @@ export async function setMany(values: Partial<StorageShape>): Promise<void> {
 
 // Bump when a release changes the shape OR the derivation of a cached value, so the old cache
 // (snapshots + the ETags that gate refetching them) is dropped and rebuilt fresh. v3: the GitLab
-// MR-pipeline join changed, but stale snapshots sat behind 304s and never recomputed.
-const SCHEMA_VERSION = 3
+// MR-pipeline join changed. v4: GitLab default-branch pipeline title now carries the commit message.
+const SCHEMA_VERSION = 4
 
 /**
  * Drop derived caches whose shape or derivation changed across a release (e.g. snapshots went from
