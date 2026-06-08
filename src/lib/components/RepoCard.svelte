@@ -100,7 +100,7 @@
     display: flex;
     align-items: center;
     gap: var(--space-xs);
-    padding: var(--space-sm) var(--space-xs) var(--space-sm) var(--space-sm);
+    padding: var(--space-sm) var(--space-xs) var(--space-2xs) var(--space-sm);
     border: 0;
     background: transparent;
     cursor: pointer;
