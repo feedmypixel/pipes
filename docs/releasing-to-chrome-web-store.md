@@ -82,6 +82,18 @@ commits `chore(release): X.Y.Z`, and tags `vX.Y.Z`. The manifest tracks `package
 bumped version flows into the build with no second edit. Inspect the diff before pushing; preview
 with `pnpm release --dry-run`.
 
+> **Versioning note.** Below `1.0.0`, semver (and this tool) is deliberately conservative — a
+> `feat:` bumps **patch**, breaking changes bump **minor**. The first store submission went out as
+> `0.1.0` (tagged `v0.1.0` as the baseline). Cut the **next** release as `1.0.0` to switch to
+> normal semver:
+>
+> ```sh
+> pnpm release --release-as 1.0.0
+> ```
+>
+> From `1.0.0` on, the `fix:` → patch / `feat:` → minor / `feat!:` → major rules above apply
+> automatically — no more `--release-as`.
+
 ### Stage 2 — upload (automated, draft)
 
 Pushing the `vX.Y.Z` tag triggers [`.github/workflows/release.yml`](../.github/workflows/release.yml):
@@ -93,14 +105,26 @@ The workflow is **gated**: until the API secrets are set it logs a skip and the 
 succeeds, so it's harmless before the first submission. After that submission, add four repo
 secrets (Settings → Secrets and variables → Actions):
 
-| Secret              | Where it comes from                                      |
-| ------------------- | -------------------------------------------------------- |
-| `CWS_EXTENSION_ID`  | the item's id in the dashboard URL once created          |
-| `CWS_CLIENT_ID`     | Google Cloud OAuth client (Chrome Web Store API enabled) |
-| `CWS_CLIENT_SECRET` | same OAuth client                                        |
-| `CWS_REFRESH_TOKEN` | one-time OAuth consent for that client                   |
+| Secret              | What it is                                  |
+| ------------------- | ------------------------------------------- |
+| `CWS_EXTENSION_ID`  | the published item's extension id           |
+| `CWS_CLIENT_ID`     | Google OAuth client id                      |
+| `CWS_CLIENT_SECRET` | Google OAuth client secret                  |
+| `CWS_REFRESH_TOKEN` | refresh token from a one-time OAuth consent |
 
-`chrome-webstore-upload-cli`'s README documents the one-time OAuth setup for the last three. To
+**Getting the four values** (one-time, after the first submission):
+
+1. **`CWS_EXTENSION_ID`** — open the item in the [dashboard](https://chrome.google.com/webstore/devconsole)
+   and copy the 32-character id from the URL (`.../detail/<ID>`).
+2. **`CWS_CLIENT_ID` + `CWS_CLIENT_SECRET`** — in the [Google Cloud Console](https://console.cloud.google.com):
+   create or pick a project, **enable the "Chrome Web Store API"**, then Credentials →
+   **Create OAuth client ID → Desktop app**.
+3. **`CWS_REFRESH_TOKEN`** — a one-time OAuth consent with that client. Easiest:
+   `npx @plasmohq/chrome-webstore-upload-keys` walks you through it; or follow the
+   [`chrome-webstore-upload`](https://github.com/fregante/chrome-webstore-upload#using-the-cli) README's
+   key-generation steps.
+
+Add all four under **Settings → Secrets and variables → Actions** (names must match exactly). To
 go fully hands-off later, add a `publish` step after the upload — kept out on purpose so a human
 eyeballs each release.
 
