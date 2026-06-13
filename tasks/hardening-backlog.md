@@ -177,6 +177,14 @@ product). Captured so nothing is lost.
   Actions** (external CI / commit-status checks Pipes doesn't read) — the Actions-only limitation
   is worth surfacing in-app and/or documenting so a blank repo isn't mistaken for "all green".
 
+- **Surface a persistently failing repo fetch** — `pollRepo` (poll.ts) catches any non-rate-limit
+  error to `log.warn` + keep the last snapshot. Right for a transient network blip, but a
+  _permanent_ failure (repo deleted, renamed, access revoked → steady 404/403-not-rate-limit)
+  is then invisible: Pipes serves the last good snapshot forever with no signal that the data is
+  stale. Add a per-repo error state (e.g. after N consecutive failures, mark the repo
+  unreachable in the snapshot and show it dimmed with a reason) so silent-stale-forever can't
+  happen. Distinguish from rate-limit (already handled) and from no-CI (the empty-state item above).
+
 ## Features (post-build, nice-to-have)
 
 - **Token-expiry warning banner** — a third inline-banner variant (amber, neither error nor
