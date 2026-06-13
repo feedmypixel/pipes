@@ -1,4 +1,5 @@
 import { github, mapGithubStatus, pipelinesFromRuns } from './github'
+import { RateLimitError } from './http'
 import type { Account, Repo } from './types'
 
 function run(overrides: Partial<Parameters<typeof pipelinesFromRuns>[0][number]> = {}) {
@@ -205,5 +206,111 @@ test('listOpenChanges 304 flags notModified', async () => {
     expect(result.changes).toEqual([])
   } finally {
     restore()
+  }
+})
+
+// Records the request URLs so the Enterprise base-path can be asserted.
+function captureFetch(response: Response) {
+  const calls: string[] = []
+  const original = globalThis.fetch
+  globalThis.fetch = (async (input: RequestInfo | URL) => {
+    calls.push(String(input))
+    return response.clone()
+  }) as typeof fetch
+  return {
+    calls,
+    restore: () => {
+      globalThis.fetch = original
+    }
+  }
+}
+
+test('validateToken returns the user on success', async () => {
+  const restore = stubFetch(new Response(JSON.stringify({ login: 'octocat' }), { status: 200 }))
+  try {
+    expect(await github.validateToken(account)).toEqual({ ok: true, user: 'octocat' })
+  } finally {
+    restore()
+  }
+})
+
+test('validateToken reports an invalid token (401) as not ok', async () => {
+  const restore = stubFetch(new Response('no', { status: 401 }))
+  try {
+    expect((await github.validateToken(account)).ok).toBe(false)
+  } finally {
+    restore()
+  }
+})
+
+test('validateToken throws (not "invalid") when rate-limited, so the poll loop pauses the account', async () => {
+  const restore = stubFetch(
+    new Response('limited', {
+      status: 403,
+      headers: { 'x-ratelimit-remaining': '0', 'x-ratelimit-reset': '9999999999' }
+    })
+  )
+  try {
+    await expect(github.validateToken(account)).rejects.toBeInstanceOf(RateLimitError)
+  } finally {
+    restore()
+  }
+})
+
+test('listPipelines maps a 200 runs payload through the roll-up', async () => {
+  const restore = stubFetch(
+    new Response(
+      JSON.stringify({
+        workflow_runs: [
+          {
+            head_branch: 'main',
+            status: 'completed',
+            conclusion: 'success',
+            html_url: 'https://x/run',
+            head_sha: 'sha',
+            updated_at: '2026-06-13T10:00:00Z',
+            run_started_at: '2026-06-13T09:59:00Z',
+            display_title: 'CI',
+            id: 1,
+            workflow_id: 1
+          }
+        ]
+      }),
+      { status: 200, headers: { etag: 'W/"r"' } }
+    )
+  )
+  try {
+    const result = await github.listPipelines(account, repo)
+    expect(result.notModified).toBe(false)
+    expect(result.etag).toBe('W/"r"')
+    expect(result.pipelines).toHaveLength(1)
+    expect(result.pipelines[0]).toMatchObject({
+      ref: 'main',
+      status: 'success',
+      isDefaultBranch: true
+    })
+  } finally {
+    restore()
+  }
+})
+
+test('listPipelines flags a 304 as notModified', async () => {
+  const restore = stubFetch(new Response(null, { status: 304 }))
+  try {
+    const result = await github.listPipelines(account, repo, 'W/"prev"')
+    expect(result.notModified).toBe(true)
+    expect(result.pipelines).toEqual([])
+  } finally {
+    restore()
+  }
+})
+
+test('apiBase targets the Enterprise /api/v3 path for a non-github.com host', async () => {
+  const capture = captureFetch(new Response(JSON.stringify({ login: 'e' }), { status: 200 }))
+  try {
+    await github.validateToken({ ...account, host: 'https://ghe.example.com' })
+    expect(capture.calls[0]).toBe('https://ghe.example.com/api/v3/user')
+  } finally {
+    capture.restore()
   }
 })
