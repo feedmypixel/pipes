@@ -6,7 +6,7 @@ export default defineManifest({
   name: 'Pipes: watch your CI/CD pipelines',
   version,
   description:
-    'Watch GitHub Actions and GitLab CI/CD pipeline status across the repos you care about. Loud when main breaks.',
+    'Watch GitHub Actions and GitLab CI/CD pipeline status across the repos you care about.',
 
   permissions: ['storage', 'alarms', 'notifications', 'sidePanel'],
 
