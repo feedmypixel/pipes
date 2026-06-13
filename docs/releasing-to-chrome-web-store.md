@@ -8,8 +8,7 @@ MV3 package + publish. To dogfood first, see [Testers](#testers).
 - [Permissions + data](#permissions--data-the-review-sensitive-bit)
 - [Submit](#submit)
 - [Testers](#testers)
-- [Updates](#updates)
-- [CI (intended)](#ci-intended)
+- [Releasing an update](#releasing-an-update)
 - [Feedback + licensing](#feedback--licensing)
 - [Checklist](#checklist)
 
@@ -63,27 +62,47 @@ Dogfood before a public launch:
 - **Private + trusted testers** — add tester Google accounts under the item's Privacy tab.
 - Or keep loading `dist/` unpacked (no store round-trip) — how we've tested so far.
 
-## Updates
+## Releasing an update
 
-Bump version → rebuild → re-zip → upload → resubmit.
+Once the first manual submission exists (see [Submit](#submit)), updates are a two-step,
+mostly-automated flow.
 
-## CI (intended)
+### Stage 1 — cut a version (local)
 
-Not built yet — the release is hand-driven today. Two stages, added in order of risk.
+```sh
+nvm use
+pnpm release            # add --first-release on the very first run only
+git push --follow-tags origin main
+```
 
-**Stage 1 — versioning (local, low-risk).** On merge to `main`:
+`pnpm release` runs [`commit-and-tag-version`](https://github.com/absolute-version/commit-and-tag-version):
+it reads the conventional commits since the last tag, picks the next semver (`fix:` → patch,
+`feat:` → minor, `feat!:`/`BREAKING CHANGE` → major), bumps `package.json`, writes `CHANGELOG.md`,
+commits `chore(release): X.Y.Z`, and tags `vX.Y.Z`. The manifest tracks `package.json`, so the
+bumped version flows into the build with no second edit. Inspect the diff before pushing; preview
+with `pnpm release --dry-run`.
 
-1. **Bump version** — [`commit-and-tag-version`](https://github.com/absolute-version/commit-and-tag-version)
-   reads the conventional commits and picks the next semver (`fix:` → patch, `feat:` →
-   minor, `feat!:` → major). The manifest tracks `package.json`, so this is the release version.
-2. **Changelog + tag** — the same step writes `CHANGELOG.md` and tags `vX.Y.Z` (handy as the
-   CWS "what's new" text).
+### Stage 2 — upload (automated, draft)
 
-**Stage 2 — package + upload (holds credentials, add deliberately).** Once Stage 1 is proven, a
-GitHub Action builds `dist/`, zips it, and pushes to the store via
-[`chrome-webstore-upload-cli`](https://github.com/fregante/chrome-webstore-upload-cli) (the CWS
-API; needs an OAuth client + refresh token in repo secrets). Review still gates publication, so
-this automates the upload, not the going-live.
+Pushing the `vX.Y.Z` tag triggers [`.github/workflows/release.yml`](../.github/workflows/release.yml):
+it builds `dist/`, zips it, and uploads the new version to the Chrome Web Store **as a draft** via
+[`chrome-webstore-upload-cli`](https://github.com/fregante/chrome-webstore-upload-cli). You then
+review and **Publish** from the dashboard — CI automates the upload, not the going-live.
+
+The workflow is **gated**: until the API secrets are set it logs a skip and the tag still
+succeeds, so it's harmless before the first submission. After that submission, add four repo
+secrets (Settings → Secrets and variables → Actions):
+
+| Secret              | Where it comes from                                      |
+| ------------------- | -------------------------------------------------------- |
+| `CWS_EXTENSION_ID`  | the item's id in the dashboard URL once created          |
+| `CWS_CLIENT_ID`     | Google Cloud OAuth client (Chrome Web Store API enabled) |
+| `CWS_CLIENT_SECRET` | same OAuth client                                        |
+| `CWS_REFRESH_TOKEN` | one-time OAuth consent for that client                   |
+
+`chrome-webstore-upload-cli`'s README documents the one-time OAuth setup for the last three. To
+go fully hands-off later, add a `publish` step after the upload — kept out on purpose so a human
+eyeballs each release.
 
 ## Feedback + licensing
 
@@ -91,10 +110,12 @@ How users report bugs, and what going public does (or doesn't) protect.
 
 **Bug/feedback channel.** Chrome doesn't require an in-app contact; the Web Store listing's
 **Support** tab takes an email _or_ a URL (a URL is enough — no inbox spam). To keep bugs
-structured without exposing the code, the plan is a **separate public `pipes-feedback` repo**
-(README + issue templates, no source); the in-app bug icon and the CWS Support tab both point
-there. `pipes` stays private. Alternatives if ever wanted: a hosted board (Canny/Tally) or a
-filtered email alias.
+structured without exposing the code, there's a **separate public
+[`pipes-feedback`](https://github.com/feedmypixel/pipes-feedback) repo** (README + issue
+templates, no source); the CWS Support tab points there, and it also hosts the
+[privacy policy](https://feedmypixel.com/pipes-feedback/privacy/) via GitHub Pages. `pipes` stays
+private. (A future in-app bug icon can deep-link to the same repo.) Alternatives if ever wanted: a
+hosted board (Canny/Tally) or a filtered email alias.
 
 **Licensing if the code goes public.** Note first: an extension's JS already ships readable
 (anyone can unpack the `.crx`), and a licence governs legal _reuse_, not access. So publishing
