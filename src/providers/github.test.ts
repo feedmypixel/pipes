@@ -1,5 +1,21 @@
-import { github, mapGithubStatus } from './github'
+import { github, mapGithubStatus, pipelinesFromRuns } from './github'
 import type { Account, Repo } from './types'
+
+function run(overrides: Partial<Parameters<typeof pipelinesFromRuns>[0][number]> = {}) {
+  return {
+    head_branch: 'main',
+    status: 'completed',
+    conclusion: 'success',
+    html_url: 'https://x/run',
+    head_sha: 'sha1',
+    updated_at: '2026-06-13T10:00:00Z',
+    run_started_at: '2026-06-13T10:00:00Z',
+    display_title: 'Title',
+    id: 1,
+    workflow_id: 1,
+    ...overrides
+  }
+}
 
 const account: Account = {
   id: 'a',
@@ -45,6 +61,80 @@ test('treats a completed run with no conclusion yet as still settling', () => {
 
 test('maps unrecognised conclusion to unknown', () => {
   expect(mapGithubStatus('completed', 'neutral')).toBe('unknown')
+})
+
+test('rolls a ref up to its worst workflow — a later green run cannot mask an earlier red one', () => {
+  // The live bug: two workflows on one commit, the failure finishing before the pass.
+  const [pipeline] = pipelinesFromRuns(
+    [
+      run({
+        workflow_id: 1,
+        conclusion: 'failure',
+        updated_at: '2026-06-13T10:20:16Z',
+        html_url: 'https://x/fail',
+        id: 11
+      }),
+      run({ workflow_id: 2, conclusion: 'success', updated_at: '2026-06-13T10:22:20Z', id: 22 })
+    ],
+    'main'
+  )
+  expect(pipeline.status).toBe('failed')
+  expect(pipeline.webUrl).toBe('https://x/fail') // deep-links to the run that failed
+})
+
+test('rolls up by worst status, not just failure (a run still in flight beats a green sibling)', () => {
+  const [pipeline] = pipelinesFromRuns(
+    [
+      run({ workflow_id: 1, status: 'in_progress', conclusion: null }),
+      run({ workflow_id: 2, conclusion: 'success' })
+    ],
+    'main'
+  )
+  expect(pipeline.status).toBe('running')
+})
+
+test('ignores stale runs from a previous commit on the same ref', () => {
+  const [pipeline] = pipelinesFromRuns(
+    [
+      run({ head_sha: 'old', conclusion: 'failure', updated_at: '2026-06-13T09:00:00Z' }),
+      run({ head_sha: 'new', conclusion: 'success', updated_at: '2026-06-13T10:00:00Z' })
+    ],
+    'main'
+  )
+  expect(pipeline.status).toBe('success')
+  expect(pipeline.sha).toBe('new')
+})
+
+test('a workflow re-run supersedes its earlier attempt', () => {
+  const [pipeline] = pipelinesFromRuns(
+    [
+      run({
+        workflow_id: 1,
+        conclusion: 'failure',
+        run_started_at: '2026-06-13T10:00:00Z',
+        updated_at: '2026-06-13T10:05:00Z'
+      }),
+      run({
+        workflow_id: 1,
+        conclusion: 'success',
+        run_started_at: '2026-06-13T10:10:00Z',
+        updated_at: '2026-06-13T10:15:00Z'
+      })
+    ],
+    'main'
+  )
+  expect(pipeline.status).toBe('success')
+})
+
+test('one pipeline per ref, newest ref first', () => {
+  const pipelines = pipelinesFromRuns(
+    [
+      run({ head_branch: 'main', updated_at: '2026-06-13T10:00:00Z' }),
+      run({ head_branch: 'feat', updated_at: '2026-06-13T11:00:00Z' })
+    ],
+    'main'
+  )
+  expect(pipelines.map((pipeline) => pipeline.ref)).toEqual(['feat', 'main'])
 })
 
 test('listOpenChanges maps open PRs to metadata (status is joined in poll)', async () => {
