@@ -1,0 +1,60 @@
+name: Release
+
+# Fires only on a version tag (created by `pnpm release`), so normal pushes never run it.
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: read
+
+jobs:
+  # The Web Store API secrets only exist after the first manual submission (which assigns the
+  # extension id). Until they're set, this gate skips the upload so a tag still succeeds.
+  gate:
+    runs-on: ubuntu-latest
+    outputs:
+      ready: ${{ steps.check.outputs.ready }}
+    steps:
+      - id: check
+        env:
+          CLIENT_ID: ${{ secrets.CWS_CLIENT_ID }}
+        run: |
+          if [ -z "$CLIENT_ID" ]; then
+            echo "Web Store API secrets not set yet — skipping upload."
+            echo "Add CWS_EXTENSION_ID / CWS_CLIENT_ID / CWS_CLIENT_SECRET / CWS_REFRESH_TOKEN"
+            echo "(repo Settings -> Secrets) after the first manual submission."
+            echo "ready=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "ready=true" >> "$GITHUB_OUTPUT"
+          fi
+
+  upload:
+    needs: gate
+    if: needs.gate.outputs.ready == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm build
+      - run: pnpm zip
+      # Uploads the new version as a draft — review and publish from the dashboard. (Add `publish`
+      # via the CLI here only if you later want hands-off submission.)
+      - name: Upload to the Chrome Web Store (draft)
+        env:
+          EXTENSION_ID: ${{ secrets.CWS_EXTENSION_ID }}
+          CLIENT_ID: ${{ secrets.CWS_CLIENT_ID }}
+          CLIENT_SECRET: ${{ secrets.CWS_CLIENT_SECRET }}
+          REFRESH_TOKEN: ${{ secrets.CWS_REFRESH_TOKEN }}
+        run: |
+          pnpm dlx chrome-webstore-upload-cli@3 upload \
+            --source pipes.zip \
+            --extension-id "$EXTENSION_ID" \
+            --client-id "$CLIENT_ID" \
+            --client-secret "$CLIENT_SECRET" \
+            --refresh-token "$REFRESH_TOKEN"
