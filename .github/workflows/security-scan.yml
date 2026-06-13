@@ -1,10 +1,13 @@
 name: Security scan
 
 on:
-  # Every PR, whatever its base (stacked PRs included); push checks stay on main.
+  # PRs only: the merge commit shares the PR's tree, so a re-scan on push to main is redundant.
   pull_request:
-  push:
     branches: [main]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 permissions:
   contents: read
