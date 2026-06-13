@@ -9,7 +9,7 @@ import type {
   Repo,
   ValidationResult
 } from './types'
-import { fetchJson, httpUrl, type RateLimitHeaders } from './http'
+import { fetchJson, httpUrl, RateLimitError, type RateLimitHeaders } from './http'
 import { SAAS_HOST } from '../lib/config'
 
 const SAAS_API = 'https://api.github.com'
@@ -37,7 +37,11 @@ function headers(account: Account): Record<string, string> {
 }
 
 async function request<T>(account: Account, path: string): Promise<T> {
-  const { data } = await fetchJson<T>(`${apiBase(account)}${path}`, headers(account))
+  // Pass the rate-limit headers so a primary-rate-limit 403 (remaining 0) is recognised as a
+  // RateLimitError, not a generic failure that would mark the connection as a bad token.
+  const { data } = await fetchJson<T>(`${apiBase(account)}${path}`, headers(account), {
+    rateLimitHeaders: RATE_LIMIT_HEADERS
+  })
   return data as T
 }
 
@@ -180,6 +184,11 @@ export const github: Provider = {
       const user = await request<{ login: string }>(account, '/user')
       return { ok: true, user: user.login }
     } catch (error) {
+      // A rate-limit is not a bad token: let it propagate so the poll loop pauses the account
+      // and keeps it healthy, rather than flashing a "connection invalid" banner.
+      if (error instanceof RateLimitError) {
+        throw error
+      }
       return { ok: false, error: (error as Error).message }
     }
   },

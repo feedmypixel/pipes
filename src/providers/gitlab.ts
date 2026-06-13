@@ -9,7 +9,7 @@ import type {
   Repo,
   ValidationResult
 } from './types'
-import { fetchJson, httpUrl, type RateLimitHeaders } from './http'
+import { fetchJson, httpUrl, RateLimitError, type RateLimitHeaders } from './http'
 
 const REPO_PAGES = 3 // up to 300 projects
 // Enough recent pipelines to cover every active ref (default + open MR source branches) in one fetch.
@@ -24,9 +24,13 @@ function apiBase(account: Account): string {
 }
 
 async function request<T>(account: Account, path: string): Promise<T> {
-  const { data } = await fetchJson<T>(`${apiBase(account)}${path}`, {
-    'PRIVATE-TOKEN': account.token
-  })
+  // Pass the rate-limit headers so a throttled response surfaces as a RateLimitError (accurate
+  // reset time) rather than a generic failure that would mark the connection as a bad token.
+  const { data } = await fetchJson<T>(
+    `${apiBase(account)}${path}`,
+    { 'PRIVATE-TOKEN': account.token },
+    { rateLimitHeaders: RATE_LIMIT_HEADERS }
+  )
   return data as T
 }
 
@@ -116,6 +120,11 @@ export const gitlab: Provider = {
       const user = await request<{ username: string }>(account, '/user')
       return { ok: true, user: user.username }
     } catch (error) {
+      // A rate-limit is not a bad token: let it propagate so the poll loop pauses the account
+      // and keeps it healthy, rather than flashing a "connection invalid" banner.
+      if (error instanceof RateLimitError) {
+        throw error
+      }
       return { ok: false, error: (error as Error).message }
     }
   },

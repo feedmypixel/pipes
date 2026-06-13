@@ -1,4 +1,5 @@
 import { gitlab, mapGitlabStatus } from './gitlab'
+import { RateLimitError } from './http'
 import type { Account, Repo } from './types'
 
 const account: Account = {
@@ -155,6 +156,35 @@ test('listPipelines sets the default-branch title to its commit message', async 
     expect(pipelines.find((pipeline) => pipeline.isDefaultBranch)?.title).toBe(
       'fix: broke the build'
     )
+  } finally {
+    restore()
+  }
+})
+
+test('validateToken returns the username on success', async () => {
+  const restore = stubFetch(new Response(JSON.stringify({ username: 'dev' }), { status: 200 }))
+  try {
+    expect(await gitlab.validateToken(account)).toEqual({ ok: true, user: 'dev' })
+  } finally {
+    restore()
+  }
+})
+
+test('validateToken reports an invalid token (401) as not ok', async () => {
+  const restore = stubFetch(new Response('no', { status: 401 }))
+  try {
+    expect((await gitlab.validateToken(account)).ok).toBe(false)
+  } finally {
+    restore()
+  }
+})
+
+test('validateToken throws (not "invalid") when rate-limited, so the poll loop pauses the account', async () => {
+  const restore = stubFetch(
+    new Response('slow down', { status: 429, headers: { 'retry-after': '30' } })
+  )
+  try {
+    await expect(gitlab.validateToken(account)).rejects.toBeInstanceOf(RateLimitError)
   } finally {
     restore()
   }
