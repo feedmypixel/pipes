@@ -119,6 +119,17 @@ All other categories: not collected.
 **Support URL**: https://github.com/feedmypixel/pipes-feedback/issues
 **Homepage URL**: https://github.com/feedmypixel/pipes-feedback
 
+## Additional fields (dashboard)
+
+These appear on the listing form, not the sections above. All optional except where noted.
+
+- **Official URL**: None — only selectable if `feedmypixel.com` is verified in Google Search
+  Console; leave None otherwise.
+- **Homepage URL**: https://github.com/feedmypixel/pipes-feedback
+- **Support URL**: https://github.com/feedmypixel/pipes-feedback/issues
+- **Mature content**: Off (no mature content).
+- **Item support visibility**: On — so the Support URL shows on the store listing.
+
 ## Version History
 
 | Version | Date       | Changes           | Status |
