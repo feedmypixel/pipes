@@ -113,7 +113,7 @@ All other categories: not collected.
 ## Developer Info
 
 **Publisher Name**: Ben Chidgey (feedmypixel)
-**Contact Email**: ben@feedmypixel.com
+**Contact Email**: pipes@feedmypixel.com
 **Support URL**: https://github.com/feedmypixel/pipes-feedback/issues
 **Homepage URL**: https://github.com/feedmypixel/pipes-feedback
 
