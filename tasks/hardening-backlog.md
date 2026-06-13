@@ -167,6 +167,16 @@ product). Captured so nothing is lost.
   narrow popup (portal or anchored), keyboard + `prefers-reduced-motion` aware. Drives off a
   `tooltip` prop/snippet so it's reusable.
 
+## Behaviour / clarity
+
+- **Empty-state for a watched repo with no detectable CI** — a repo with no GitHub Actions runs
+  (or no GitLab pipelines) yields `default: null`, and `filterGroups` (group.ts) then drops it
+  entirely, so a watched repo silently vanishes from the view. Show an explicit marker instead
+  (an `unknown` / "no pipelines yet" row) so the user knows it's watched but quiet. Two distinct
+  causes overlap here: a genuinely new repo with no runs, and a repo whose CI is **not GitHub
+  Actions** (external CI / commit-status checks Pipes doesn't read) — the Actions-only limitation
+  is worth surfacing in-app and/or documenting so a blank repo isn't mistaken for "all green".
+
 ## Features (post-build, nice-to-have)
 
 - **Token-expiry warning banner** — a third inline-banner variant (amber, neither error nor
