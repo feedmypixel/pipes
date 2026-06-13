@@ -16,7 +16,8 @@ const h = vi.hoisted(() => ({
     notifyChangeFailed: vi.fn(),
     notifyRecovered: vi.fn(),
     setBadge: vi.fn()
-  }
+  },
+  setManySpy: vi.fn()
 }))
 
 vi.mock('../lib/storage', () => ({
@@ -38,7 +39,10 @@ vi.mock('../lib/storage', () => ({
   set: async (key: string, value: unknown) => {
     h.store[key] = value
   },
-  setMany: async (values: Record<string, unknown>) => Object.assign(h.store, values)
+  setMany: async (values: Record<string, unknown>) => {
+    h.setManySpy(values)
+    Object.assign(h.store, values)
+  }
 }))
 vi.mock('../lib/notify', () => h.notify)
 vi.mock('../providers', () => ({ getProvider: () => h.provider }))
@@ -212,4 +216,51 @@ test('a PR row carries the joined pipeline updatedAt', async () => {
     (c) => c.number === 5
   )
   expect(pr?.updatedAt).toBe('2026-06-07T00:00:00Z')
+})
+
+test('an unhealthy account is skipped, keeps its snapshot, and records the health', async () => {
+  h.provider.validateToken.mockResolvedValue({ ok: false, error: 'bad token' })
+  seed({ snapshots: { 'o/r': { default: defaultPipe('success'), changes: [] } } })
+  await poll()
+  expect(h.provider.listPipelines).not.toHaveBeenCalled()
+  expect((h.store.accountHealth as Record<string, { ok: boolean }>).a1.ok).toBe(false)
+  expect((snap().default as { status: string }).status).toBe('success')
+})
+
+test('a repo whose account is missing is skipped and keeps its snapshot', async () => {
+  seed({
+    watchedRepos: [{ ...repo, accountId: 'gone' }],
+    snapshots: { 'o/r': { default: defaultPipe('success'), changes: [] } }
+  })
+  await poll()
+  expect(h.provider.listPipelines).not.toHaveBeenCalled()
+  expect((snap().default as { status: string }).status).toBe('success')
+})
+
+test('a low rate-limit reading pauses the account until its reset', async () => {
+  seed()
+  h.provider.listPipelines.mockResolvedValue({
+    pipelines: [defaultPipe('success')],
+    etag: 'e',
+    notModified: false,
+    rateLimit: { remaining: 10, reset: 1_900_000_000 }
+  })
+  await poll()
+  expect((h.store.rateLimitPausedUntil as Record<string, number>).a1).toBe(1_900_000_000)
+})
+
+test('a quiet cycle does not re-write the snapshots key (the steady-state optimisation)', async () => {
+  seed({ snapshots: { 'o/r': { default: defaultPipe('success'), changes: [] } } })
+  h.provider.listPipelines.mockResolvedValue(runs('success'))
+  await poll()
+  const lastWrite = h.setManySpy.mock.calls.at(-1)?.[0] as Record<string, unknown>
+  expect('snapshots' in lastWrite).toBe(false)
+})
+
+test('a changed cycle writes the snapshots key', async () => {
+  seed({ snapshots: { 'o/r': { default: defaultPipe('success'), changes: [] } } })
+  h.provider.listPipelines.mockResolvedValue(runs('failed'))
+  await poll()
+  const lastWrite = h.setManySpy.mock.calls.at(-1)?.[0] as Record<string, unknown>
+  expect('snapshots' in lastWrite).toBe(true)
 })
