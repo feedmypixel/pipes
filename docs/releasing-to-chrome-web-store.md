@@ -117,12 +117,19 @@ secrets (Settings → Secrets and variables → Actions):
 1. **`CWS_EXTENSION_ID`** — open the item in the [dashboard](https://chrome.google.com/webstore/devconsole)
    and copy the 32-character id from the URL (`.../detail/<ID>`).
 2. **`CWS_CLIENT_ID` + `CWS_CLIENT_SECRET`** — in the [Google Cloud Console](https://console.cloud.google.com):
-   create or pick a project, **enable the "Chrome Web Store API"**, then Credentials →
-   **Create OAuth client ID → Desktop app**.
-3. **`CWS_REFRESH_TOKEN`** — a one-time OAuth consent with that client. Easiest:
-   `npx @plasmohq/chrome-webstore-upload-keys` walks you through it; or follow the
-   [`chrome-webstore-upload`](https://github.com/fregante/chrome-webstore-upload#using-the-cli) README's
-   key-generation steps.
+   create or pick a project, **enable the "Chrome Web Store API"**, set up the OAuth consent screen
+   (External), then Credentials → **Create OAuth client ID → Web application**. Under **Authorized
+   redirect URIs** add `https://developers.google.com/oauthplayground`. Copy the client id + secret.
+   - **Web application**, not Desktop: the refresh token below is generated through the OAuth
+     Playground, whose redirect URI only a Web-app client can register.
+   - On the consent screen, **set publishing status to "In production"** (Audience → Publish app).
+     Refresh tokens issued while the app is in "Testing" **expire after 7 days**; production ones
+     don't. The `chromewebstore` scope doesn't force verification for your own use.
+3. **`CWS_REFRESH_TOKEN`** — generate it via the [OAuth 2.0 Playground](https://developers.google.com/oauthplayground):
+   gear (top-right) → tick **"Use your own OAuth credentials"** → paste the client id + secret. In
+   the left "Input your own scopes" box enter `https://www.googleapis.com/auth/chromewebstore` →
+   **Authorize APIs** → consent → step 2 **Exchange authorization code for tokens** → copy the
+   **Refresh token**.
 
 Add all four under **Settings → Secrets and variables → Actions** (names must match exactly). To
 go fully hands-off later, add a `publish` step after the upload — kept out on purpose so a human
