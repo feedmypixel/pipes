@@ -1,7 +1,7 @@
 {
   "name": "pipes",
   "version": "0.1.0",
-  "description": "Watch GitHub Actions and GitLab CI/CD pipeline status across the repos you care about. Loud when main breaks.",
+  "description": "Watch GitHub Actions and GitLab CI/CD pipeline status across the repos you care about.",
   "keywords": [
     "chrome-extension",
     "manifest-v3",

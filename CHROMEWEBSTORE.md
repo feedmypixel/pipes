@@ -12,7 +12,7 @@ the shipped zip (it's internal). See also [`docs/releasing-to-chrome-web-store.m
 Pipes: watch your CI/CD pipelines
 
 **Short Description** (≤132 chars)
-Watch GitHub Actions and GitLab CI/CD pipeline status across the repos you care about. Loud when main breaks.
+Watch GitHub Actions and GitLab CI/CD pipeline status across the repos you care about.
 
 **Detailed Description**
 Pipes watches your GitHub Actions and GitLab CI/CD pipelines and goes loud the moment a default branch breaks, so you find out from your browser, not from a teammate.
