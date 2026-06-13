@@ -110,7 +110,8 @@ export async function setMany(values: Partial<StorageShape>): Promise<void> {
 // (snapshots + the ETags that gate refetching them) is dropped and rebuilt fresh. v3: the GitLab
 // MR-pipeline join changed. v4: GitLab default-branch pipeline title now carries the commit message.
 // v5: snapshots carry startedAt, for a live "running Xm" on in-progress rows.
-const SCHEMA_VERSION = 5
+// v6: GitHub status rolls up across all workflows on a ref (a green run no longer masks a red one).
+const SCHEMA_VERSION = 6
 
 /**
  * Drop derived caches whose shape or derivation changed across a release (e.g. snapshots went from

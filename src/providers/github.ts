@@ -57,6 +57,7 @@ interface GhRun {
   run_started_at: string
   display_title: string
   id: number
+  workflow_id: number
 }
 
 interface GhPull {
@@ -89,6 +90,88 @@ export function mapGithubStatus(status: string | null, conclusion: string | null
     default:
       return 'unknown'
   }
+}
+
+// Worst-wins order for rolling several workflow runs up to one ref status: a failure outranks
+// anything still in flight, which outranks a pass. Keeps Pipes loud — a green run never masks a red.
+const STATUS_RANK: PipelineStatus[] = [
+  'failed',
+  'running',
+  'pending',
+  'success',
+  'canceled',
+  'skipped',
+  'unknown'
+]
+
+function worse(a: PipelineStatus, b: PipelineStatus): PipelineStatus {
+  return STATUS_RANK.indexOf(a) <= STATUS_RANK.indexOf(b) ? a : b
+}
+
+/**
+ * One Pipeline per ref, its status rolled up across every workflow on the ref's current commit.
+ * GitHub runs a separate workflow run per workflow file (CI, security scan, …), so a ref has many
+ * runs at once; the ref is failing if ANY of them failed, regardless of which finished last. We
+ * also drop runs from older commits (stale) and keep only the latest attempt per workflow (so a
+ * re-run supersedes its earlier failure). The status icon deep-links to the run that set the status.
+ */
+export function pipelinesFromRuns(runs: GhRun[], defaultBranch: string): Pipeline[] {
+  const byRef = new Map<string, GhRun[]>()
+  for (const run of runs) {
+    const ref = run.head_branch ?? '(detached)'
+    const list = byRef.get(ref)
+    if (list) {
+      list.push(run)
+    } else {
+      byRef.set(ref, [run])
+    }
+  }
+
+  const pipelines: Pipeline[] = []
+  for (const [ref, refRuns] of byRef) {
+    // Current commit = the head_sha of this ref's most-recently-updated run; older commits are stale.
+    const newest = refRuns.reduce((a, b) => (b.updated_at > a.updated_at ? b : a))
+    const current = refRuns.filter((run) => run.head_sha === newest.head_sha)
+
+    // Latest attempt per workflow, so a re-run replaces its earlier result.
+    const latestPerWorkflow = new Map<number, GhRun>()
+    for (const run of current) {
+      const existing = latestPerWorkflow.get(run.workflow_id)
+      if (!existing || run.run_started_at > existing.run_started_at) {
+        latestPerWorkflow.set(run.workflow_id, run)
+      }
+    }
+    const workflowRuns = [...latestPerWorkflow.values()]
+
+    let status = mapGithubStatus(workflowRuns[0].status, workflowRuns[0].conclusion)
+    for (const run of workflowRuns.slice(1)) {
+      status = worse(status, mapGithubStatus(run.status, run.conclusion))
+    }
+    // The run that set the status (a failure if there is one) — deep-link there.
+    const lead =
+      workflowRuns.find((run) => mapGithubStatus(run.status, run.conclusion) === status) ?? newest
+    const updatedAt = current.reduce((latest, run) =>
+      run.updated_at > latest.updated_at ? run : latest
+    ).updated_at
+    // Earliest start among the current workflows, so a live "running Xm" reflects the whole commit.
+    const startedAt = workflowRuns.reduce((earliest, run) =>
+      run.run_started_at < earliest.run_started_at ? run : earliest
+    ).run_started_at
+
+    pipelines.push({
+      id: String(lead.id),
+      ref,
+      isDefaultBranch: ref === defaultBranch,
+      status,
+      webUrl: httpUrl(lead.html_url),
+      sha: newest.head_sha,
+      title: lead.display_title,
+      updatedAt,
+      startedAt
+    })
+  }
+
+  return pipelines.sort((a, b) => b.updatedAt.localeCompare(a.updatedAt))
 }
 
 export const github: Provider = {
@@ -143,31 +226,7 @@ export const github: Provider = {
       return { pipelines: [], etag: etag ?? null, notModified: true, rateLimit }
     }
 
-    // Newest run per ref by updated_at (don't trust list order across workflows), newest first.
-    const newestByRef = new Map<string, GhRun>()
-    for (const run of data.workflow_runs) {
-      const ref = run.head_branch ?? '(detached)'
-      const existing = newestByRef.get(ref)
-      if (!existing || run.updated_at > existing.updated_at) {
-        newestByRef.set(ref, run)
-      }
-    }
-    const pipelines: Pipeline[] = [...newestByRef.values()]
-      .sort((a, b) => b.updated_at.localeCompare(a.updated_at))
-      .map((run) => {
-        const ref = run.head_branch ?? '(detached)'
-        return {
-          id: String(run.id),
-          ref,
-          isDefaultBranch: ref === repo.defaultBranch,
-          status: mapGithubStatus(run.status, run.conclusion),
-          webUrl: httpUrl(run.html_url),
-          sha: run.head_sha,
-          title: run.display_title,
-          updatedAt: run.updated_at,
-          startedAt: run.run_started_at
-        }
-      })
+    const pipelines = pipelinesFromRuns(data.workflow_runs, repo.defaultBranch)
     return { pipelines, etag: newEtag, notModified: false, rateLimit }
   },
 
