@@ -51,15 +51,15 @@ English
 
 ## Graphics & Assets
 
-| Asset                          | Dimensions  | Status         | Filename                                            |
-| ------------------------------ | ----------- | -------------- | --------------------------------------------------- |
-| Store Icon [REQUIRED]          | 128×128 PNG | ✅ Ready       | `icons/icon-128.png`                                |
-| Screenshot 1 [REQUIRED]        | 1280×800    | ✅ Ready       | `store-screenshots/framed/1-sidepanel-failures.png` |
-| Screenshot 2 [RECOMMENDED]     | 1280×800    | ✅ Ready       | `store-screenshots/framed/3-popup.png`              |
-| Screenshot 3 [RECOMMENDED]     | 1280×800    | ✅ Ready       | `store-screenshots/framed/4-notification.png`       |
-| Screenshot 4                   | 1280×800    | ✅ Ready       | `store-screenshots/framed/5-options.png`            |
-| Screenshot 5                   | 1280×800    | ✅ Ready       | `store-screenshots/framed/2-sidepanel-running.png`  |
-| Small Promo Tile [RECOMMENDED] | 440×280     | ⬜ Not created |                                                     |
+| Asset                          | Dimensions  | Status   | Filename                                            |
+| ------------------------------ | ----------- | -------- | --------------------------------------------------- |
+| Store Icon [REQUIRED]          | 128×128 PNG | ✅ Ready | `icons/icon-128.png`                                |
+| Screenshot 1 [REQUIRED]        | 1280×800    | ✅ Ready | `store-screenshots/framed/1-sidepanel-failures.png` |
+| Screenshot 2 [RECOMMENDED]     | 1280×800    | ✅ Ready | `store-screenshots/framed/3-popup.png`              |
+| Screenshot 3 [RECOMMENDED]     | 1280×800    | ✅ Ready | `store-screenshots/framed/4-notification.png`       |
+| Screenshot 4                   | 1280×800    | ✅ Ready | `store-screenshots/framed/5-options.png`            |
+| Screenshot 5                   | 1280×800    | ✅ Ready | `store-screenshots/framed/2-sidepanel-running.png`  |
+| Small Promo Tile [RECOMMENDED] | 440×280     | ✅ Ready | `store-screenshots/framed/6-promo-tile.png`         |
 
 ### Screenshot Notes
 
