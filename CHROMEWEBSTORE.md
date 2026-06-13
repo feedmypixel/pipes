@@ -15,7 +15,7 @@ Pipes: watch your CI/CD pipelines
 Watch GitHub Actions and GitLab CI/CD pipeline status across the repos you care about.
 
 **Detailed Description**
-Pipes watches your GitHub Actions and GitLab CI/CD pipelines and goes loud the moment a default branch breaks, so you find out from your browser, not from a teammate.
+Pipes watches your GitHub Actions and GitLab CI/CD pipelines and shows you the moment a default branch breaks, so you find out from your browser, not from a teammate.
 
 Pick the repositories you care about and Pipes shows, at a glance, the status of each default branch plus its open pull requests and merge requests. When a branch you watch starts failing, you get a desktop notification and a count on the toolbar; when it goes green again, Pipes tells you that too.
 
@@ -60,6 +60,7 @@ English
 | Screenshot 4                   | 1280×800    | ✅ Ready | `store-screenshots/framed/5-options.png`            |
 | Screenshot 5                   | 1280×800    | ✅ Ready | `store-screenshots/framed/2-sidepanel-running.png`  |
 | Small Promo Tile [RECOMMENDED] | 440×280     | ✅ Ready | `store-screenshots/framed/6-promo-tile.png`         |
+| Marquee Promo Tile             | 1400×560    | ✅ Ready | `store-screenshots/framed/7-marquee-tile.png`       |
 
 ### Screenshot Notes
 
