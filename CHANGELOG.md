@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [1.0.0](https://github.com/feedmypixel/pipes/compare/v0.1.0...v1.0.0) (2026-06-16)
+
+### Bug Fixes
+
+- pick GitLab pipeline status by id, not update time ([4743030](https://github.com/feedmypixel/pipes/commit/4743030a63e478532f833aa8d1ead1d66f58b50b))
+
 ## 0.1.0 (2026-06-13)
 
 ### Features
