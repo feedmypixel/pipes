@@ -169,6 +169,19 @@ test('a GitLab MR joins its pipeline by merge-request ref when the branch ref do
   expect(mr?.status).toBe('failed')
 })
 
+test('a GitLab MR with head + merge pipelines joins the newest by id, not list order', async () => {
+  seed()
+  // Both refs belong to MR #9. The just-canceled run sorts first (freshest updated_at) but is the
+  // older run (lower id); the newer run is still running. Join must pick the newer run by id.
+  const canceled = { ...prPipe('refs/merge-requests/9/merge', 'canceled'), id: '200' }
+  const running = { ...prPipe('refs/merge-requests/9/head', 'running'), id: '201' }
+  h.provider.listPipelines.mockResolvedValue(runs(undefined, [canceled, running]))
+  h.provider.listOpenChanges.mockResolvedValue(openChanges([change(9, 'pending')]))
+  await poll()
+  const mr = (snap().changes as { number: number; status: string }[]).find((c) => c.number === 9)
+  expect(mr?.status).toBe('running')
+})
+
 test('open PRs are stored in the snapshot', async () => {
   seed()
   h.provider.listOpenChanges.mockResolvedValue(openChanges([change(3, 'running')]))
