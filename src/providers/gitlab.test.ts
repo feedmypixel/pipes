@@ -161,6 +161,46 @@ test('listPipelines sets the default-branch title to its commit message', async 
   }
 })
 
+test('listPipelines keeps the newest pipeline per ref by id, not by update time', async () => {
+  // GitLab cancels a superseded run when a new commit lands, which bumps the canceled run's
+  // updated_at above the newer run that is still pending/running. Ordered by updated_at the
+  // canceled run sorts first, so a first-seen-wins dedup would mask the live run. Pick by id.
+  const restore = stubFetch(
+    new Response(
+      JSON.stringify([
+        {
+          id: 200,
+          status: 'canceled',
+          ref: 'feature',
+          sha: 'old',
+          web_url: 'https://x/p/200',
+          updated_at: '2026-06-16T10:05:00Z',
+          created_at: '2026-06-16T10:00:00Z'
+        },
+        {
+          id: 201,
+          status: 'running',
+          ref: 'feature',
+          sha: 'new',
+          web_url: 'https://x/p/201',
+          updated_at: '2026-06-16T10:04:00Z',
+          created_at: '2026-06-16T10:04:00Z'
+        }
+      ]),
+      { status: 200 }
+    )
+  )
+  try {
+    const { pipelines } = await gitlab.listPipelines(account, repo)
+    const feature = pipelines.filter((pipeline) => pipeline.ref === 'feature')
+    expect(feature).toHaveLength(1)
+    expect(feature[0].id).toBe('201')
+    expect(feature[0].status).toBe('running')
+  } finally {
+    restore()
+  }
+})
+
 test('validateToken returns the username on success', async () => {
   const restore = stubFetch(new Response(JSON.stringify({ username: 'dev' }), { status: 200 }))
   try {

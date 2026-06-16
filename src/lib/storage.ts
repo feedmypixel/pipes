@@ -111,7 +111,8 @@ export async function setMany(values: Partial<StorageShape>): Promise<void> {
 // MR-pipeline join changed. v4: GitLab default-branch pipeline title now carries the commit message.
 // v5: snapshots carry startedAt, for a live "running Xm" on in-progress rows.
 // v6: GitHub status rolls up across all workflows on a ref (a green run no longer masks a red one).
-const SCHEMA_VERSION = 6
+// v7: GitLab pipelines dedupe per ref/MR by id, so a canceled superseded run no longer masks the live one.
+const SCHEMA_VERSION = 7
 
 /**
  * Drop derived caches whose shape or derivation changed across a release (e.g. snapshots went from

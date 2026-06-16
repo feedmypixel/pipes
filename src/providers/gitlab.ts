@@ -171,26 +171,27 @@ export const gitlab: Provider = {
       return { pipelines: [], etag: etag ?? null, notModified: true, rateLimit }
     }
 
-    // Newest pipeline per ref. The API already returns newest first.
-    const seen = new Set<string>()
-    const pipelines: Pipeline[] = []
+    // Newest pipeline per ref, picked by id (monotonic). Not by list order: when a commit
+    // supersedes a run GitLab cancels it, bumping its updated_at above the newer pending/running
+    // run, so an updated_at-first dedup would keep the stale canceled one.
+    const newestByRef = new Map<string, GlPipeline>()
     for (const pipeline of data) {
-      if (seen.has(pipeline.ref)) {
-        continue
+      const existing = newestByRef.get(pipeline.ref)
+      if (!existing || pipeline.id > existing.id) {
+        newestByRef.set(pipeline.ref, pipeline)
       }
-      seen.add(pipeline.ref)
-      pipelines.push({
-        id: String(pipeline.id),
-        ref: pipeline.ref,
-        isDefaultBranch: pipeline.ref === repo.defaultBranch,
-        status: mapGitlabStatus(pipeline.status),
-        webUrl: httpUrl(pipeline.web_url),
-        sha: pipeline.sha,
-        title: `#${pipeline.id}`,
-        updatedAt: pipeline.updated_at,
-        startedAt: pipeline.created_at
-      })
     }
+    const pipelines: Pipeline[] = [...newestByRef.values()].map((pipeline) => ({
+      id: String(pipeline.id),
+      ref: pipeline.ref,
+      isDefaultBranch: pipeline.ref === repo.defaultBranch,
+      status: mapGitlabStatus(pipeline.status),
+      webUrl: httpUrl(pipeline.web_url),
+      sha: pipeline.sha,
+      title: `#${pipeline.id}`,
+      updatedAt: pipeline.updated_at,
+      startedAt: pipeline.created_at
+    }))
 
     // Give the default-branch row a useful tooltip: the commit message, so a hover on a failing
     // main shows which commit broke it (GitHub already carries this; GitLab needs the lookup).

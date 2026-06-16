@@ -139,13 +139,18 @@ async function pollRepo(
     )
     // GitLab runs merge-request pipelines whose ref is `refs/merge-requests/<iid>/head|merge`, not
     // the source branch, so join those by MR number too. The pattern never matches a GitHub branch
-    // ref, so this is a no-op there. Pipelines are newest-first; keep the first (newest) per MR.
+    // ref, so this is a no-op there. An MR's head and merge refs are distinct pipelines; keep the
+    // newest by id (monotonic), so a just-canceled superseded run can't mask the live one.
     const pipelineByNumber = new Map<number, Pipeline>()
     if (!runs.notModified) {
       for (const pipeline of runs.pipelines) {
         const match = /^refs\/merge-requests\/(\d+)\/(?:head|merge)$/.exec(pipeline.ref)
         const number = match ? Number(match[1]) : null
-        if (number !== null && !pipelineByNumber.has(number)) {
+        if (number === null) {
+          continue
+        }
+        const existing = pipelineByNumber.get(number)
+        if (!existing || Number(pipeline.id) > Number(existing.id)) {
           pipelineByNumber.set(number, pipeline)
         }
       }
