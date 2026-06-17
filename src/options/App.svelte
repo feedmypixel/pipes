@@ -18,6 +18,8 @@
   import Select from '../lib/components/forms/Select.svelte'
   import PasswordInput from '../lib/components/forms/PasswordInput.svelte'
   import FormSummary from '../lib/components/forms/FormSummary.svelte'
+  import Stepper from '../lib/components/forms/Stepper.svelte'
+  import Toggle from '../lib/components/forms/Toggle.svelte'
   import ChevronRight from '@lucide/svelte/icons/chevron-right'
   import Banner from '../lib/components/Banner.svelte'
   import Button from '../lib/components/Button.svelte'
@@ -272,8 +274,8 @@
     toastSuccess('Settings saved')
   }
 
-  async function toggleNotify() {
-    settings = { ...settings, notifyOnSuccess: !settings.notifyOnSuccess }
+  async function setNotify(next: boolean) {
+    settings = { ...settings, notifyOnSuccess: next }
     await storage.set('settings', settings)
     toastSuccess('Settings saved')
   }
@@ -482,30 +484,26 @@
             <span class="description">How often Pipes checks (minimum {MIN_POLL_MINUTES} min).</span
             >
           </span>
-          <span class="stepper">
-            <button
-              onclick={() => setPoll(settings.pollMinutes - MIN_POLL_MINUTES)}
-              aria-label="Less often">−</button
-            >
-            <span class="val">{settings.pollMinutes}<small>min</small></span>
-            <button
-              onclick={() => setPoll(settings.pollMinutes + MIN_POLL_MINUTES)}
-              aria-label="More often">+</button
-            >
-          </span>
+          <Stepper
+            value={settings.pollMinutes}
+            min={MIN_POLL_MINUTES}
+            step={MIN_POLL_MINUTES}
+            unit="min"
+            decLabel="Less often"
+            incLabel="More often"
+            onchange={setPoll}
+          />
         </div>
         <div class="set-row">
           <span class="setting-item">
             <span class="title">Notify when a pipeline recovers</span>
             <span class="description">A toast when a broken pipeline goes green again.</span>
           </span>
-          <button
-            class="toggle"
-            role="switch"
-            aria-checked={settings.notifyOnSuccess}
-            aria-label="Notify on recovery"
-            onclick={toggleNotify}
-          ></button>
+          <Toggle
+            checked={settings.notifyOnSuccess}
+            label="Notify on recovery"
+            onchange={setNotify}
+          />
         </div>
       </div>
     </section>
@@ -882,6 +880,10 @@
   .set-row:last-child {
     border-bottom: 0;
   }
+  .setting-item {
+    /* Grow so the Stepper / Toggle sits hard against the right edge of the row. */
+    flex: 1;
+  }
   .setting-item .title {
     display: block;
     font-weight: var(--weight-semibold);
@@ -890,65 +892,6 @@
   .setting-item .description {
     font-size: var(--font-size-sm);
     color: var(--text-3);
-  }
-  .stepper {
-    display: inline-flex;
-    margin-left: auto;
-    border: 1px solid var(--border-2);
-    border-radius: var(--radius);
-    overflow: hidden;
-  }
-  .stepper button {
-    width: 32px;
-    height: 34px;
-    border: 0;
-    background: var(--bg);
-    color: var(--text-2);
-    font-size: var(--font-size-xl);
-    cursor: pointer;
-  }
-  .stepper button:hover {
-    background: var(--hover);
-  }
-  .stepper .val {
-    min-width: 64px;
-    text-align: center;
-    font: var(--weight-semibold) var(--font-size-base) / 34px var(--font-mono);
-    border-left: 1px solid var(--border);
-    border-right: 1px solid var(--border);
-  }
-  .stepper .val small {
-    font-size: var(--font-size-2xs);
-    color: var(--text-3);
-  }
-  .toggle {
-    position: relative;
-    width: 42px;
-    height: 24px;
-    margin-left: auto;
-    flex: none;
-    border: 0;
-    border-radius: var(--radius-pill);
-    background: var(--border-2);
-    cursor: pointer;
-    transition: background 0.15s;
-  }
-  .toggle::after {
-    content: '';
-    position: absolute;
-    top: 3px;
-    left: 3px;
-    width: 18px;
-    height: 18px;
-    border-radius: 50%;
-    background: var(--status-ink);
-    transition: transform 0.15s;
-  }
-  .toggle[aria-checked='true'] {
-    background: var(--brand);
-  }
-  .toggle[aria-checked='true']::after {
-    transform: translateX(18px);
   }
 
   .security {
