@@ -13,6 +13,7 @@ function change(overrides: Partial<Change> = {}): Change {
     webUrl: 'https://example.test/pull/42',
     isDraft: false,
     isBot: false,
+    author: 'me',
     ...overrides
   }
 }

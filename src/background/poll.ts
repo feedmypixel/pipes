@@ -168,6 +168,7 @@ async function pollRepo(
         webUrl: meta.webUrl,
         isDraft: meta.isDraft,
         isBot: meta.isBot,
+        author: meta.author,
         status: pipeline?.status ?? previous?.status ?? 'unknown',
         updatedAt: pipeline?.updatedAt ?? previous?.updatedAt,
         startedAt: pipeline?.startedAt ?? previous?.startedAt
@@ -277,11 +278,14 @@ async function runPollCycle(force: boolean): Promise<void> {
       accounts.map(async (account) => {
         try {
           const result = await getProvider(account.provider).validateToken(account)
-          health[account.id] = result.ok ? { ok: true } : { ok: false, error: result.error }
+          health[account.id] = result.ok
+            ? { ok: true, user: result.user }
+            : { ok: false, error: result.error }
         } catch (err) {
           if (err instanceof RateLimitError) {
             healthPaused[account.id] = err.resetAt
-            health[account.id] = { ok: true }
+            // Rate-limited, not a token problem — stay healthy and keep the known identity.
+            health[account.id] = { ok: true, user: prevHealth[account.id]?.user }
           } else {
             health[account.id] = { ok: false, error: (err as Error).message }
           }

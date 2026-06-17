@@ -17,6 +17,9 @@ export interface RepoView {
   default: Pipeline | null
   /** Open PRs/MRs, newest number first. */
   changes: Change[]
+  /** Authenticated login for this repo's account, for the "mine" scope filter. Undefined until
+   * the first health check resolves it. */
+  viewerLogin?: string
 }
 
 export interface OwnerGroup {
@@ -36,7 +39,8 @@ function splitName(name: string): { owner: string; displayName: string } {
 export function groupByOwner(
   repos: Repo[],
   snapshots: Snapshots,
-  accounts: Account[] = []
+  accounts: Account[] = [],
+  viewerLogins: Record<string, string> = {}
 ): OwnerGroup[] {
   const byOwner = new Map<string, RepoView[]>()
   const providerByAccount = new Map(accounts.map((account) => [account.id, account.provider]))
@@ -49,7 +53,8 @@ export function groupByOwner(
       displayName,
       providerId: providerByAccount.get(repo.accountId),
       default: snapshot.default,
-      changes: [...snapshot.changes].sort((a, b) => b.number - a.number)
+      changes: [...snapshot.changes].sort((a, b) => b.number - a.number),
+      viewerLogin: viewerLogins[repo.accountId]
     }
     const list = byOwner.get(owner) ?? []
     list.push(view)
@@ -100,9 +105,23 @@ export const BRANCH_STATE_ORDER: PipelineStatus[] = [
 /** Every branch state — the side panel's default (show all). */
 export const ALL_BRANCH_STATES: ReadonlySet<PipelineStatus> = new Set(BRANCH_STATE_ORDER)
 
-/** Open PRs/MRs for a repo whose status is in `allowed`. The default branch is never filtered. */
-export function visibleChanges(view: RepoView, allowed: ReadonlySet<PipelineStatus>): Change[] {
-  return view.changes.filter((change) => allowed.has(change.status))
+/** True when a change was opened by the account's authenticated user. */
+function isMine(change: Change, view: RepoView): boolean {
+  return change.author !== '' && change.author === view.viewerLogin
+}
+
+/**
+ * Open PRs/MRs for a repo whose status is in `allowed`. The default branch is never filtered.
+ * `mineOnly` further narrows to changes the viewer authored — the "mine" scope.
+ */
+export function visibleChanges(
+  view: RepoView,
+  allowed: ReadonlySet<PipelineStatus>,
+  mineOnly = false
+): Change[] {
+  return view.changes.filter(
+    (change) => allowed.has(change.status) && (!mineOnly || isMine(change, view))
+  )
 }
 
 /** Does the default branch pass the status filter? */
@@ -117,19 +136,24 @@ export function failingCount(view: RepoView): number {
 }
 
 /** A repo has rows to show when its default branch or any PR/MR passes the filter. */
-export function hasVisibleRows(view: RepoView, allowed: ReadonlySet<PipelineStatus>): boolean {
-  return defaultVisible(view, allowed) || visibleChanges(view, allowed).length > 0
+export function hasVisibleRows(
+  view: RepoView,
+  allowed: ReadonlySet<PipelineStatus>,
+  mineOnly = false
+): boolean {
+  return defaultVisible(view, allowed) || visibleChanges(view, allowed, mineOnly).length > 0
 }
 
 /** Drop repos with no rows under the current filter, then drop emptied owner groups. */
 export function filterGroups(
   groups: OwnerGroup[],
-  allowed: ReadonlySet<PipelineStatus>
+  allowed: ReadonlySet<PipelineStatus>,
+  mineOnly = false
 ): OwnerGroup[] {
   return groups
     .map((group) => ({
       owner: group.owner,
-      repos: group.repos.filter((view) => hasVisibleRows(view, allowed))
+      repos: group.repos.filter((view) => hasVisibleRows(view, allowed, mineOnly))
     }))
     .filter((group) => group.repos.length > 0)
 }

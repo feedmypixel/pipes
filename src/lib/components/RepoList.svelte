@@ -11,11 +11,13 @@
     groups,
     allowed,
     storageKey,
+    mineOnly = false,
     defaultCollapsed = false
   }: {
     groups: OwnerGroup[]
     allowed: ReadonlySet<PipelineStatus>
     storageKey: string
+    mineOnly?: boolean
     defaultCollapsed?: boolean
   } = $props()
 
@@ -100,6 +102,7 @@
         <RepoCard
           {view}
           {allowed}
+          {mineOnly}
           collapsed={repoCollapsed[view.repo.id] ?? defaultCollapsed}
           onToggle={() =>
             (repoCollapsed[view.repo.id] = !(repoCollapsed[view.repo.id] ?? defaultCollapsed))}

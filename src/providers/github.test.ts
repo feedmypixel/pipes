@@ -147,7 +147,7 @@ test('listOpenChanges maps open PRs to metadata (status is joined in poll)', asy
           title: 'Add x',
           draft: false,
           html_url: 'https://x/pull/7',
-          user: { type: 'User' },
+          user: { login: 'octocat', type: 'User' },
           head: { ref: 'feat', sha: 'sha7' }
         }
       ]),
@@ -164,7 +164,8 @@ test('listOpenChanges maps open PRs to metadata (status is joined in poll)', asy
         headSha: 'sha7',
         webUrl: 'https://x/pull/7',
         isDraft: false,
-        isBot: false
+        isBot: false,
+        author: 'octocat'
       }
     ])
     expect(result.etag).toBe('W/"p"')
@@ -182,7 +183,7 @@ test('listOpenChanges flags bots and drafts', async () => {
           title: 'Bump dep',
           draft: true,
           html_url: 'https://x/pull/9',
-          user: { type: 'Bot' },
+          user: { login: 'dependabot[bot]', type: 'Bot' },
           head: { ref: 'dependabot/x', sha: 's9' }
         }
       ]),

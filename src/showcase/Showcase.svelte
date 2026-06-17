@@ -92,7 +92,8 @@
       status,
       webUrl: 'https://example.test/pull',
       isDraft,
-      isBot: false
+      isBot: false,
+      author: ''
     }
   }
   function view(

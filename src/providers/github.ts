@@ -69,7 +69,7 @@ interface GhPull {
   title: string
   draft: boolean
   html_url: string
-  user: { type: string } | null
+  user: { login: string; type: string } | null
   head: { ref: string; sha: string }
 }
 
@@ -266,7 +266,8 @@ export const github: Provider = {
       headSha: pull.head.sha,
       webUrl: httpUrl(pull.html_url),
       isDraft: pull.draft,
-      isBot: pull.user?.type === 'Bot'
+      isBot: pull.user?.type === 'Bot',
+      author: pull.user?.login ?? ''
     }))
     return { changes, etag: newEtag, notModified: false, rateLimit }
   }

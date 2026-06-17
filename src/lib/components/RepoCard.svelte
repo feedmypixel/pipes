@@ -12,17 +12,19 @@
   let {
     view,
     allowed,
+    mineOnly = false,
     collapsed = false,
     onToggle
   }: {
     view: RepoView
     allowed: ReadonlySet<PipelineStatus>
+    mineOnly?: boolean
     collapsed?: boolean
     onToggle?: () => void
   } = $props()
 
   // Open PRs/MRs collapse into the drawer; the default branch is always shown.
-  const changes = $derived(visibleChanges(view, allowed))
+  const changes = $derived(visibleChanges(view, allowed, mineOnly))
   const showDefault = $derived(defaultVisible(view, allowed))
   const hasChanges = $derived(changes.length > 0)
   const failing = $derived(failingCount(view))

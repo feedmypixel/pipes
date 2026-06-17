@@ -57,7 +57,7 @@ test('listOpenChanges maps open MRs to metadata (status is joined in poll)', asy
           web_url: 'https://x/mr/3',
           source_branch: 'fix',
           sha: 's3',
-          author: { bot: false }
+          author: { username: 'dev', bot: false }
         }
       ]),
       { status: 200, headers: { etag: 'W/"m"' } }
@@ -73,7 +73,8 @@ test('listOpenChanges maps open MRs to metadata (status is joined in poll)', asy
         headSha: 's3',
         webUrl: 'https://x/mr/3',
         isDraft: false,
-        isBot: false
+        isBot: false,
+        author: 'dev'
       }
     ])
     expect(result.etag).toBe('W/"m"')
