@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [1.1.1](https://github.com/feedmypixel/pipes/compare/v1.1.0...v1.1.1) (2026-06-17)
+
+### Bug Fixes
+
+- scope the failing badge + PR count to the All/Mine view ([4e66d0e](https://github.com/feedmypixel/pipes/commit/4e66d0e9d18e12475f370fe4c205b034583755be))
+
 ## [1.1.0](https://github.com/feedmypixel/pipes/compare/v1.0.0...v1.1.0) (2026-06-17)
 
 ### Features
