@@ -59,16 +59,18 @@ test('setMany writes several keys in one go', async () => {
 test('migrate clears shape-changed caches and stamps the schema version', async () => {
   store.snapshots = { 'o/r': [{ ref: 'main' }] } // old per-ref shape
   store.branchCache = { 'o/r': { names: ['main'], etag: 'x' } }
+  store.lastHealthAt = 123 // throttle timestamp — cleared so the next poll re-validates identity
   store.accounts = [{ id: 'a' }]
   await storage.migrate()
   expect(store.snapshots).toBeUndefined()
   expect(store.branchCache).toBeUndefined()
+  expect(store.lastHealthAt).toBeUndefined()
   expect(store.accounts).toEqual([{ id: 'a' }]) // accounts/settings untouched
-  expect(store.schemaVersion).toBe(8)
+  expect(store.schemaVersion).toBe(9)
 })
 
 test('migrate is a no-op once the schema version matches', async () => {
-  store.schemaVersion = 8
+  store.schemaVersion = 9
   store.snapshots = { keep: { default: null, changes: [] } }
   await storage.migrate()
   expect(store.snapshots).toEqual({ keep: { default: null, changes: [] } })
