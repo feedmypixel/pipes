@@ -185,11 +185,6 @@ extension requests host permission at runtime (`optional_host_permissions` +
 
 - MV3 service workers are ephemeral: polling is `chrome.alarms`-driven and all
   state (snapshots, seen-status) lives in `chrome.storage`, never memory.
-- `pnpm audit` flags a high-severity issue in `rollup@2.79.2`, a **dev-only**
-  transitive dep of `@crxjs/vite-plugin`, not shipped in the extension. The patch
-  jumps rollup to a major crxjs can't take, so the advisory (`GHSA-mw96-cpmx-2vgc`)
-  is explicitly ignored via `pnpm.auditConfig.ignoreGhsas` in `package.json`.
-  Revisit when crxjs updates its rollup dependency.
 
 ## Licence
 
