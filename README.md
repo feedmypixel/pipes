@@ -14,6 +14,7 @@ tab open on the pipelines page. **Loud when the default branch breaks.**
 - [Architecture](#architecture)
 - [Docs](#docs)
 - [Develop](#develop)
+- [Release](#release)
 - [Tokens](#tokens)
 - [Notes](#notes)
 - [Licence](#licence)
@@ -132,6 +133,29 @@ full surface. (Loaded, the same pages live at `chrome-extension://<id>/src/...`.
 
 **Themes**, follows OS light/dark automatically; dev-only console override
 `pipesTheme('dark' | 'light' | 'auto')` (never shipped).
+
+---
+
+## Release
+
+Two steps: cut a version locally, then a pushed tag auto-uploads a **draft** to the Chrome Web
+Store. You still click **Publish** in the dashboard — CI automates the upload, not the going-live.
+
+```sh
+nvm use
+pnpm release                       # commit-and-tag-version: picks the next semver from the
+                                   # conventional commits, bumps package.json, writes CHANGELOG.md,
+                                   # commits chore(release): X.Y.Z, tags vX.Y.Z
+git push --follow-tags origin main # pushing the tag triggers .github/workflows/release.yml
+```
+
+`fix:` → patch, `feat:` → minor, `feat!:` / `BREAKING CHANGE` → major. Preview with
+`pnpm release --dry-run`. The manifest tracks `package.json`, so the bump flows into the build with
+no second edit. The tag fires the [release workflow](.github/workflows/release.yml), which builds,
+zips, and draft-uploads via `chrome-webstore-upload-cli` (gated on the `CWS_*` secrets, already set).
+
+Full detail — the one-time CWS/OAuth setup, the secrets, and the dashboard steps — is in
+[`docs/releasing-to-chrome-web-store.md`](docs/releasing-to-chrome-web-store.md).
 
 ---
 
