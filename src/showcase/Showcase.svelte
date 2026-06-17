@@ -12,6 +12,8 @@
   import Select from '../lib/components/forms/Select.svelte'
   import PasswordInput from '../lib/components/forms/PasswordInput.svelte'
   import FormSummary from '../lib/components/forms/FormSummary.svelte'
+  import Stepper from '../lib/components/forms/Stepper.svelte'
+  import Toggle from '../lib/components/forms/Toggle.svelte'
   import Banner from '../lib/components/Banner.svelte'
   import ToastHost from '../lib/components/ToastHost.svelte'
   import Toast from '../lib/components/Toast.svelte'
@@ -123,6 +125,9 @@
     view('cli', pipeline('running', 'main', true, 1))
   ]
   let repoCollapsed = $state<Record<string, boolean>>({})
+
+  let pollMinutes = $state(2)
+  let notifyOnSuccess = $state(true)
 
   let provider = $state('github')
   let goodHost = $state('gitlab.example.com')
@@ -314,6 +319,32 @@
     >
       <Input bind:value={goodHost} type="text" placeholder="gitlab.example.com" />
     </Field>
+  </section>
+
+  <section>
+    <p class="eyebrow">Settings controls · stepper + toggle</p>
+    <div class="set-rows">
+      <div class="set-row">
+        <span class="set-label">Poll interval</span>
+        <Stepper
+          value={pollMinutes}
+          min={0.5}
+          step={0.5}
+          unit="min"
+          decLabel="Less often"
+          incLabel="More often"
+          onchange={(next) => (pollMinutes = next)}
+        />
+      </div>
+      <div class="set-row">
+        <span class="set-label">Notify when a pipeline recovers</span>
+        <Toggle
+          checked={notifyOnSuccess}
+          label="Notify on recovery"
+          onchange={(next) => (notifyOnSuccess = next)}
+        />
+      </div>
+    </div>
   </section>
 
   <section>
@@ -524,6 +555,25 @@
     display: flex;
     flex-direction: column;
     gap: var(--space-lg);
+  }
+  .set-rows {
+    display: flex;
+    flex-direction: column;
+    max-width: 420px;
+  }
+  .set-row {
+    display: flex;
+    align-items: center;
+    gap: var(--space-lg);
+    padding: var(--space-lg) 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .set-row:last-child {
+    border-bottom: 0;
+  }
+  .set-label {
+    flex: 1;
+    font-size: var(--font-size-base);
   }
   .button-group {
     display: flex;
