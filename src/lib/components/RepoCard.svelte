@@ -27,9 +27,10 @@
   const changes = $derived(visibleChanges(view, allowed, mineOnly))
   const showDefault = $derived(defaultVisible(view, allowed))
   const hasChanges = $derived(changes.length > 0)
-  const failing = $derived(failingCount(view))
+  const failing = $derived(failingCount(view, allowed, mineOnly))
 
-  const count = $derived(view.changes.length)
+  // Count the PRs/MRs actually shown, so the chip + its tooltip track the filter and All/Mine scope.
+  const count = $derived(changes.length)
   const changeNoun = $derived(view.providerId === 'gitlab' ? 'merge request' : 'pull request')
   const changeTooltip = $derived(`${count} open ${changeNoun}${count === 1 ? '' : 's'}`)
 
@@ -43,10 +44,10 @@
     {#if canToggle}<ChevronRight size={16} />{/if}
   </span>
   <span class="repo-name">{view.displayName}</span>
-  {#if view.changes.length > 0}
+  {#if count > 0}
     <span class="pr-count" use:tooltip={changeTooltip}>
       <GitPullRequest size={12} />
-      {view.changes.length}
+      {count}
     </span>
   {/if}
 {/snippet}
