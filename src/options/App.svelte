@@ -75,13 +75,16 @@
   const watchedIds = $derived(new Set(watchedRepos.map((r) => r.id)))
   const summaryErrors = $derived(toSummaryErrors(errors))
 
-  // The select picks the SaaS origin for us; only self-hosted needs the URL field.
-  function syncHost() {
+  // The provider choice drives the host (self-hosted keeps whatever the user types). Reset the
+  // host-validation feedback when the choice changes. This runs in the effect phase — NOT inside
+  // the select's change event — so mutating this state can't re-enter and fight native keyboard
+  // selection (which made the dropdown deselect / jump while arrowing through options).
+  $effect(() => {
     host = hostForChoice(hostChoice)
     errors.host = undefined
     availability = null
     detected = null
-  }
+  })
   function checkHost() {
     errors.host = host.trim() ? undefined : 'Enter a host'
   }
@@ -325,7 +328,7 @@
             <Input placeholder="work" autocomplete="off" bind:value={label} />
           </Field>
           <Field name="provider" label="Provider">
-            <Select bind:value={hostChoice} onchange={syncHost}>
+            <Select bind:value={hostChoice}>
               <option value="github">GitHub (github.com)</option>
               <option value="gitlab">GitLab (gitlab.com)</option>
               <option value="self">Self-hosted…</option>
