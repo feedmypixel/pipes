@@ -129,10 +129,21 @@ export function defaultVisible(view: RepoView, allowed: ReadonlySet<PipelineStat
   return Boolean(view.default && allowed.has(view.default.status))
 }
 
-/** Failing rows in a repo (default branch + open PRs/MRs), for the row badge. */
-export function failingCount(view: RepoView): number {
-  const fromDefault = view.default?.status === 'failed' ? 1 : 0
-  return fromDefault + view.changes.filter((change) => change.status === 'failed').length
+/**
+ * Failing rows currently visible in a repo — the default branch plus the PRs/MRs shown under the
+ * active status filter and All/Mine scope. The badge tracks what you can see, so switching to Mine
+ * counts your failing PRs (and a failing main, which always shows), not everyone's.
+ */
+export function failingCount(
+  view: RepoView,
+  allowed: ReadonlySet<PipelineStatus>,
+  mineOnly = false
+): number {
+  const fromDefault = defaultVisible(view, allowed) && view.default?.status === 'failed' ? 1 : 0
+  return (
+    fromDefault +
+    visibleChanges(view, allowed, mineOnly).filter((change) => change.status === 'failed').length
+  )
 }
 
 /** A repo has rows to show when its default branch or any PR/MR passes the filter. */

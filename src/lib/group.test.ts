@@ -171,7 +171,28 @@ test('failingCount: counts failed across the default branch + open PRs', () => {
     'o/r': snapshot(mainPipe('failed'), [change(1, 'failed'), change(2, 'success')])
   }
   const view = groupByOwner([repo('o/r', 'o/r')], snapshots)[0].repos[0]
-  expect(failingCount(view)).toBe(2)
+  expect(failingCount(view, ALL_BRANCH_STATES)).toBe(2)
+})
+
+test('failingCount: mineOnly counts a failing main + only my failing PRs', () => {
+  const snapshots: Snapshots = {
+    'o/r': snapshot(mainPipe('failed'), [
+      change(1, 'failed', false, 'me'),
+      change(2, 'failed', false, 'someone-else')
+    ])
+  }
+  const view = groupByOwner([repo('o/r', 'o/r')], snapshots, [], { a: 'me' })[0].repos[0]
+  // All: main + both PRs failing = 3. Mine: main + my one failing PR = 2.
+  expect(failingCount(view, ALL_BRANCH_STATES)).toBe(3)
+  expect(failingCount(view, ALL_BRANCH_STATES, true)).toBe(2)
+})
+
+test('failingCount: a failing PR filtered out by status is not counted', () => {
+  const snapshots: Snapshots = {
+    'o/r': snapshot(mainPipe('success'), [change(1, 'failed', false, 'me')])
+  }
+  const view = groupByOwner([repo('o/r', 'o/r')], snapshots)[0].repos[0]
+  expect(failingCount(view, new Set(['success']))).toBe(0)
 })
 
 test('filterGroups: drops filtered-out repos and then empties owner groups', () => {
