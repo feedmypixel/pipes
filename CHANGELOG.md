@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [1.1.0](https://github.com/feedmypixel/pipes/compare/v1.0.0...v1.1.0) (2026-06-17)
+
+### Features
+
+- add a "Mine" scope filter to the side panel ([9d16a27](https://github.com/feedmypixel/pipes/commit/9d16a2766ee176c7fbb022db33530925a7479352))
+
+### Bug Fixes
+
+- repopulate identity on upgrade so "Mine" works immediately ([f1d8dbc](https://github.com/feedmypixel/pipes/commit/f1d8dbce3b13451a7ffd14d07905e3884a21e406))
+
 ## [1.0.0](https://github.com/feedmypixel/pipes/compare/v0.1.0...v1.0.0) (2026-06-16)
 
 ### Bug Fixes
