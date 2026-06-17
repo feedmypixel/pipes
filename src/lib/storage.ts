@@ -115,7 +115,9 @@ export async function setMany(values: Partial<StorageShape>): Promise<void> {
 // v6: GitHub status rolls up across all workflows on a ref (a green run no longer masks a red one).
 // v7: GitLab pipelines dedupe per ref/MR by id, so a canceled superseded run no longer masks the live one.
 // v8: changes carry `author` (snapshots) for the "mine" scope filter.
-const SCHEMA_VERSION = 8
+// v9: accountHealth carries the authenticated `user` (for "mine"); drop the health throttle so the
+//     next poll re-validates and populates it, instead of waiting out HEALTH_REFRESH_MS.
+const SCHEMA_VERSION = 9
 
 /**
  * Drop derived caches whose shape or derivation changed across a release (e.g. snapshots went from
@@ -123,13 +125,23 @@ const SCHEMA_VERSION = 8
  * read hands back stale data — and because ETags gate refetching, a 304 would keep serving it.
  * Accounts/settings/watched repos are untouched. The next poll reseeds, and first-sight seeds
  * silently so there's no notification storm.
+ *
+ * `lastHealthAt` is cleared too: connection health is throttled to HEALTH_REFRESH_MS, so when its
+ * derivation grows a field (e.g. the authenticated `user` for the "mine" filter) the next poll
+ * must re-validate immediately rather than serve a stale entry that lacks it for minutes.
  */
 export async function migrate(): Promise<void> {
   const stored = await chrome.storage.local.get('schemaVersion')
   if (stored.schemaVersion === SCHEMA_VERSION) {
     return
   }
-  await chrome.storage.local.remove(['snapshots', 'repoEtags', 'changeEtags', 'branchCache'])
+  await chrome.storage.local.remove([
+    'snapshots',
+    'repoEtags',
+    'changeEtags',
+    'branchCache',
+    'lastHealthAt'
+  ])
   await chrome.storage.local.set({ schemaVersion: SCHEMA_VERSION })
 }
 
