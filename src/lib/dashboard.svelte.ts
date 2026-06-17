@@ -44,6 +44,15 @@ export function useDashboard() {
 
   const mainFailing = $derived(countDefaultBranchFailures(watchedRepos, snapshots))
   const configured = $derived(accounts.length > 0)
+  // accountId → authenticated login, for the "mine" scope filter.
+  const viewerLogins = $derived(
+    Object.fromEntries(
+      accounts.flatMap((account) => {
+        const user = accountHealth[account.id]?.user
+        return user ? [[account.id, user]] : []
+      })
+    )
+  )
   const connectionIssues = $derived(
     accounts
       .filter((account) => accountHealth[account.id] && !accountHealth[account.id].ok)
@@ -81,6 +90,9 @@ export function useDashboard() {
     },
     get snapshots() {
       return snapshots
+    },
+    get viewerLogins() {
+      return viewerLogins
     },
     get lastPolledAt() {
       return lastPolledAt

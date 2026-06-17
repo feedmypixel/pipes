@@ -97,7 +97,8 @@ function change(number: number, status: PipelineStatus, isDraft = false) {
     status,
     webUrl: `https://x/pull/${number}`,
     isDraft,
-    isBot: false
+    isBot: false,
+    author: 'me'
   }
 }
 function openChanges(list: ReturnType<typeof change>[]) {
@@ -187,6 +188,20 @@ test('open PRs are stored in the snapshot', async () => {
   h.provider.listOpenChanges.mockResolvedValue(openChanges([change(3, 'running')]))
   await poll()
   expect(snap().changes.map((c) => c.number)).toEqual([3])
+})
+
+test('persists the authenticated identity into account health (for the mine filter)', async () => {
+  seed()
+  await poll()
+  expect((h.store.accountHealth as Record<string, { user?: string }>).a1.user).toBe('u')
+})
+
+test('a PR row carries the joined author from the open-changes metadata', async () => {
+  seed()
+  h.provider.listOpenChanges.mockResolvedValue(openChanges([change(5, 'success')]))
+  await poll()
+  const pr = (snap().changes as { number: number; author: string }[]).find((c) => c.number === 5)
+  expect(pr?.author).toBe('me')
 })
 
 test('a rate limit pauses the account', async () => {

@@ -69,7 +69,8 @@ const change: Change = {
   status: 'failed',
   webUrl: 'https://x/pull/9',
   isDraft: false,
-  isBot: false
+  isBot: false,
+  author: 'me'
 }
 
 test('setBadge shows the count, then clears at 0', async () => {

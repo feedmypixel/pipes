@@ -42,7 +42,8 @@ function change(
   headRef: string,
   status: PipelineStatus,
   agoMinutes: number,
-  isDraft = false
+  isDraft = false,
+  author = 'octo-org' // the dev viewer (see the mocked /user), so the "mine" toggle demos
 ): Change {
   return {
     number,
@@ -53,7 +54,8 @@ function change(
     updatedAt: new Date(Date.now() - agoMinutes * 60_000).toISOString(),
     webUrl: `https://example.test/pull/${number}`,
     isDraft,
-    isBot: false
+    isBot: false,
+    author
   }
 }
 
@@ -81,14 +83,23 @@ function seedData() {
       default: pipe('3', 'main', 'failed', true, 4),
       changes: [
         change(210, 'Retry flaky integration test', 'pr/210-retry', 'failed', 9),
-        change(208, 'Bump request timeout', 'fix/timeout', 'success', 120),
-        change(205, 'WIP: caching layer', 'feat/cache', 'pending', 200, true)
+        change(208, 'Bump request timeout', 'fix/timeout', 'success', 120, false, 'alex'),
+        change(205, 'WIP: caching layer', 'feat/cache', 'pending', 200, true, 'sam')
       ]
     },
     'globex/api': { default: pipe('6', 'main', 'success', true, 40), changes: [] },
     'globex/database': { default: pipe('7', 'main', 'failed', true, 30), changes: [] }
   }
-  return { accounts, watchedRepos, snapshots, settings: { pollMinutes: 1, notifyOnSuccess: true } }
+  // No poll loop runs in the tab preview, so seed the identity the "mine" filter matches against
+  // (octo-org owns PR #210 above; alex/sam own the others).
+  const accountHealth = { gh: { ok: true, user: 'octo-org' } }
+  return {
+    accounts,
+    watchedRepos,
+    snapshots,
+    accountHealth,
+    settings: { pollMinutes: 1, notifyOnSuccess: true }
+  }
 }
 
 type Listener = (

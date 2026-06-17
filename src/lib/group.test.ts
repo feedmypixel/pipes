@@ -31,7 +31,7 @@ function mainPipe(status: PipelineStatus): Pipeline {
   }
 }
 
-function change(number: number, status: PipelineStatus, isDraft = false): Change {
+function change(number: number, status: PipelineStatus, isDraft = false, author = 'me'): Change {
   return {
     number,
     title: `PR ${number}`,
@@ -40,7 +40,8 @@ function change(number: number, status: PipelineStatus, isDraft = false): Change
     status,
     webUrl: `https://x/pull/${number}`,
     isDraft,
-    isBot: false
+    isBot: false,
+    author
   }
 }
 
@@ -108,6 +109,41 @@ test('visibleChanges: filters PRs by state; the default branch is never filtered
   const view = groupByOwner([repo('o/r', 'o/r')], snapshots)[0].repos[0]
   expect(visibleChanges(view, PROBLEM_STATES).map((c) => c.number)).toEqual([2])
   expect(visibleChanges(view, ALL_BRANCH_STATES).map((c) => c.number)).toEqual([3, 2, 1])
+})
+
+test('visibleChanges: mineOnly keeps only changes the viewer authored', () => {
+  const snapshots: Snapshots = {
+    'o/r': snapshot(mainPipe('failed'), [
+      change(1, 'failed', false, 'me'),
+      change(2, 'failed', false, 'someone-else'),
+      change(3, 'failed', false, 'me')
+    ])
+  }
+  const logins = { a: 'me' } // a = the repo's accountId
+  const view = groupByOwner([repo('o/r', 'o/r')], snapshots, [], logins)[0].repos[0]
+  expect(view.viewerLogin).toBe('me')
+  expect(visibleChanges(view, ALL_BRANCH_STATES, true).map((c) => c.number)).toEqual([3, 1])
+  expect(visibleChanges(view, ALL_BRANCH_STATES, false).map((c) => c.number)).toEqual([3, 2, 1])
+})
+
+test('visibleChanges: mineOnly shows nothing while the viewer identity is still unknown', () => {
+  const snapshots: Snapshots = { 'o/r': snapshot(null, [change(1, 'failed', false, 'me')]) }
+  const view = groupByOwner([repo('o/r', 'o/r')], snapshots)[0].repos[0] // no logins passed
+  expect(view.viewerLogin).toBeUndefined()
+  expect(visibleChanges(view, ALL_BRANCH_STATES, true)).toEqual([])
+})
+
+test('filterGroups: mineOnly keeps a repo for its default branch even when I own no PRs', () => {
+  const snapshots: Snapshots = {
+    'o/r': snapshot(mainPipe('failed'), [change(1, 'failed', false, 'someone-else')])
+  }
+  const logins = { a: 'me' }
+  const groups = groupByOwner([repo('o/r', 'o/r')], snapshots, [], logins)
+  const filtered = filterGroups(groups, ALL_BRANCH_STATES, true)
+  expect(filtered).toHaveLength(1)
+  const view = filtered[0].repos[0]
+  expect(view.default?.status).toBe('failed')
+  expect(visibleChanges(view, ALL_BRANCH_STATES, true)).toEqual([])
 })
 
 test('defaultVisible: the status filter applies to the default branch', () => {

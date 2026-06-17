@@ -104,6 +104,9 @@ export interface Change {
   isDraft: boolean
   /** Opened by a bot (Dependabot, Renovate, …). */
   isBot: boolean
+  /** Login of who opened it (GitHub `user.login` / GitLab `author.username`), for the "mine"
+   * scope filter. Empty string when the provider gave no author. */
+  author: string
 }
 
 /**

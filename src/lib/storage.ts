@@ -26,6 +26,8 @@ export interface AccountHealth {
   ok: boolean
   /** Why it failed, when not ok (e.g. token invalid or host unreachable). */
   error?: string
+  /** Authenticated login (GitHub `user.login` / GitLab `username`), for the "mine" scope filter. */
+  user?: string
 }
 
 export interface StorageShape {
@@ -112,7 +114,8 @@ export async function setMany(values: Partial<StorageShape>): Promise<void> {
 // v5: snapshots carry startedAt, for a live "running Xm" on in-progress rows.
 // v6: GitHub status rolls up across all workflows on a ref (a green run no longer masks a red one).
 // v7: GitLab pipelines dedupe per ref/MR by id, so a canceled superseded run no longer masks the live one.
-const SCHEMA_VERSION = 7
+// v8: changes carry `author` (snapshots) for the "mine" scope filter.
+const SCHEMA_VERSION = 8
 
 /**
  * Drop derived caches whose shape or derivation changed across a release (e.g. snapshots went from

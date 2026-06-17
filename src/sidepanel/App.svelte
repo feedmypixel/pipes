@@ -2,6 +2,7 @@
   import RefreshCw from '@lucide/svelte/icons/refresh-cw'
   import Settings from '@lucide/svelte/icons/settings'
   import Search from '@lucide/svelte/icons/search'
+  import UserRound from '@lucide/svelte/icons/user-round'
   import X from '@lucide/svelte/icons/x'
   import { groupByOwner, filterGroups, ALL_BRANCH_STATES, BRANCH_STATE_ORDER } from '../lib/group'
   import type { PipelineStatus } from '../providers/types'
@@ -14,6 +15,12 @@
   const dash = useDashboard()
   let search = $state('')
   const allowed = new SvelteSet<PipelineStatus>(readAllowed())
+
+  // Scope: show everyone's PRs/MRs, or just the ones I opened. Panel-local, like the status pills.
+  type Scope = 'all' | 'mine'
+  let scope = $state<Scope>(localStorage.getItem('pipes-scope') === 'mine' ? 'mine' : 'all')
+  $effect(() => localStorage.setItem('pipes-scope', scope))
+  const mineOnly = $derived(scope === 'mine')
 
   // View prefs are panel-local, so they live in localStorage, not chrome.storage.
   function readAllowed(): PipelineStatus[] {
@@ -54,7 +61,11 @@
     )
   )
   const groups = $derived(
-    filterGroups(groupByOwner(matched, dash.snapshots, dash.accounts), allowed)
+    filterGroups(
+      groupByOwner(matched, dash.snapshots, dash.accounts, dash.viewerLogins),
+      allowed,
+      mineOnly
+    )
   )
   const allStatesOn = $derived(BRANCH_STATE_ORDER.every((state) => allowed.has(state)))
 
@@ -114,6 +125,17 @@
       </span>
     </div>
     <div class="filters">
+      <div class="scope-wrap">
+        <div class="scope" role="group" aria-label="Show whose pull requests and merge requests">
+          <button class="seg" aria-pressed={scope === 'all'} onclick={() => (scope = 'all')}>
+            All
+          </button>
+          <button class="seg" aria-pressed={scope === 'mine'} onclick={() => (scope = 'mine')}>
+            <UserRound size={13} />
+            <span>Mine</span>
+          </button>
+        </div>
+      </div>
       <div class="pills" role="group" aria-label="Show branch states">
         {#each BRANCH_STATE_ORDER as state (state)}
           <button
@@ -132,7 +154,7 @@
     </div>
 
     <main class="list">
-      <RepoList {groups} {allowed} storageKey="pipes" />
+      <RepoList {groups} {allowed} {mineOnly} storageKey="pipes" />
       {#if groups.length === 0}
         <p class="empty-filter">
           {#if allowed.size === 0}
@@ -285,10 +307,57 @@
 
   .filters {
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     gap: var(--space-sm);
     padding: var(--space-xs) var(--space-md) var(--space-md);
     border-bottom: 1px solid var(--border);
+  }
+  /* Scope axis (All | Mine) — divided from the status pills like toggle-all, on the other side. */
+  .scope-wrap {
+    display: inline-flex;
+    align-items: center;
+    flex: none;
+    padding-right: var(--space-sm);
+    border-right: 1px solid var(--border);
+  }
+  .scope {
+    display: inline-flex;
+    align-items: center;
+    flex: none;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    background: var(--bg);
+  }
+  .seg {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2xs);
+    padding: var(--space-3xs) var(--space-sm);
+    border: 0;
+    background: transparent;
+    color: var(--text-3);
+    font: var(--weight-regular) var(--font-size-sm) / var(--leading-none) var(--font-sans);
+    cursor: pointer;
+  }
+  .seg + .seg {
+    border-left: 1px solid var(--border);
+  }
+  .seg :global(svg) {
+    flex: none;
+  }
+  .seg:hover {
+    color: var(--text-2);
+  }
+  .seg[aria-pressed='true'] {
+    background: var(--control-on);
+    color: var(--control-on-ink);
+    font-weight: var(--weight-medium);
+  }
+  .seg:focus-visible {
+    outline: 2px solid var(--brand);
+    outline-offset: -2px;
+    border-radius: 2px;
   }
   .pills {
     display: flex;

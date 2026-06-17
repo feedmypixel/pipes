@@ -87,7 +87,7 @@ interface GlMergeRequest {
   web_url: string
   source_branch: string
   sha: string
-  author: { bot?: boolean } | null
+  author: { username: string; bot?: boolean } | null
 }
 
 export function mapGitlabStatus(status: string): PipelineStatus {
@@ -233,7 +233,8 @@ export const gitlab: Provider = {
       headSha: mr.sha,
       webUrl: httpUrl(mr.web_url),
       isDraft: mr.draft,
-      isBot: mr.author?.bot ?? false
+      isBot: mr.author?.bot ?? false,
+      author: mr.author?.username ?? ''
     }))
     return { changes, etag: newEtag, notModified: false, rateLimit }
   }
