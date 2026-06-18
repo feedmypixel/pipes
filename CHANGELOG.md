@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [1.2.0](https://github.com/feedmypixel/pipes/compare/v1.1.1...v1.2.0) (2026-06-18)
+
+### Features
+
+- show the connection label as the panel group header ([ee61879](https://github.com/feedmypixel/pipes/commit/ee61879c40b6e24ced2d2b719db6471e0383f0d3))
+
 ## [1.1.1](https://github.com/feedmypixel/pipes/compare/v1.1.0...v1.1.1) (2026-06-17)
 
 ### Bug Fixes
