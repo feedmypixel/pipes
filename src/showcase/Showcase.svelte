@@ -6,6 +6,8 @@
   import ElapsedTime from '../lib/components/ElapsedTime.svelte'
   import RepoCard from '../lib/components/RepoCard.svelte'
   import TopAlerts from '../lib/components/TopAlerts.svelte'
+  import FilterBar from '../lib/components/FilterBar.svelte'
+  import { SvelteSet } from 'svelte/reactivity'
   import { ALL_BRANCH_STATES, type RepoView } from '../lib/group'
   import Field from '../lib/components/forms/Field.svelte'
   import Input from '../lib/components/forms/Input.svelte'
@@ -129,6 +131,10 @@
   let pollMinutes = $state(2)
   let notifyOnSuccess = $state(true)
 
+  let filterSearch = $state('')
+  let filterScope = $state<'all' | 'mine'>('all')
+  const filterAllowed = new SvelteSet<PipelineStatus>([...ALL_BRANCH_STATES])
+
   let provider = $state('github')
   let goodHost = $state('gitlab.example.com')
   let goodToken = $state('ghp_xxxxxxxxxxxx')
@@ -223,6 +229,16 @@
           onToggle={() => (repoCollapsed[repoView.repo.id] = !repoCollapsed[repoView.repo.id])}
         />
       {/each}
+    </div>
+  </section>
+
+  <section>
+    <p class="eyebrow">FilterBar (side panel: search · All|Mine scope · status pills)</p>
+    <p class="note">
+      Shown at the side panel's ~360px width — the row wraps to two lines when the pills don't fit.
+    </p>
+    <div class="surface-frame filter-demo">
+      <FilterBar bind:search={filterSearch} bind:scope={filterScope} allowed={filterAllowed} />
     </div>
   </section>
 
@@ -544,6 +560,15 @@
     border: 1px solid var(--border);
     border-radius: var(--radius);
     overflow: hidden;
+  }
+  .filter-demo {
+    max-width: 360px;
+    background: var(--bg);
+  }
+  .note {
+    margin: calc(-1 * var(--space-md)) 0 var(--space-lg);
+    font-size: var(--font-size-sm);
+    color: var(--text-3);
   }
   .inline {
     display: flex;
