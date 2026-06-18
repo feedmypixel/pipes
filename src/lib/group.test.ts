@@ -64,6 +64,51 @@ test('resolves each repo provider from its account, for PR vs MR wording', () =>
   expect(unknown.providerId).toBeUndefined()
 })
 
+const account = (id: string, label: string) => ({
+  id,
+  provider: 'github' as const,
+  label,
+  host: '',
+  token: ''
+})
+const ownedRepo = (name: string, accountId: string): Repo => ({
+  id: name,
+  accountId,
+  name,
+  defaultBranch: 'main',
+  webUrl: 'https://x'
+})
+
+test('owner header shows the connection label when one account owns the group', () => {
+  const groups = groupByOwner([repo('feedmypixel/pipes')], {}, [account('a', 'feedMyPixel')])
+  expect(groups[0].owner).toBe('feedmypixel') // slug kept for the provider link
+  expect(groups[0].label).toBe('feedMyPixel') // header shows the label
+})
+
+test('owner header falls back to the owner slug with no account or an empty label', () => {
+  expect(groupByOwner([repo('feedmypixel/pipes')], {})[0].label).toBe('feedmypixel')
+  expect(groupByOwner([repo('feedmypixel/pipes')], {}, [account('a', '')])[0].label).toBe(
+    'feedmypixel'
+  )
+})
+
+test('owner header falls back to the slug when one owner is shared by two labelled accounts', () => {
+  const groups = groupByOwner([ownedRepo('shared/one', 'a'), ownedRepo('shared/two', 'b')], {}, [
+    account('a', 'Personal'),
+    account('b', 'Work')
+  ])
+  expect(groups[0].label).toBe('shared')
+})
+
+test('groups sort by the displayed label', () => {
+  const accounts = [
+    account('gh', 'feedMyPixel'),
+    { ...account('gl', 'Work'), provider: 'gitlab' as const }
+  ]
+  const repos = [ownedRepo('whiskyinvestdirect/api', 'gl'), ownedRepo('feedmypixel/pipes', 'gh')]
+  expect(groupByOwner(repos, {}, accounts).map((g) => g.label)).toEqual(['feedMyPixel', 'Work'])
+})
+
 test('groupReposByOwner: owners + repos A-Z, across owners', () => {
   const groups = groupReposByOwner([repo('zeta/web'), repo('alpha/cli'), repo('alpha/api')])
   expect(groups.map((g) => g.owner)).toEqual(['alpha', 'zeta'])

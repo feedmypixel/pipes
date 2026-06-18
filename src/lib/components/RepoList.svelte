@@ -79,7 +79,7 @@
         onclick={() => toggleOwner(group)}
       >
         <ChevronRight class="owner-caret" size={13} />
-        <span class="owner-name">{group.owner}</span>
+        <span class="owner-name">{group.label}</span>
         <span class="count" use:tooltip={`${group.repos.length} repositories`}>
           <FolderGit2 size={12} />
           {group.repos.length}

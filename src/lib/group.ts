@@ -23,7 +23,11 @@ export interface RepoView {
 }
 
 export interface OwnerGroup {
+  /** The org/owner slug — keyed on, and used for the provider owner-page link. */
   owner: string
+  /** Header display name: the connection label when the owner's repos all come from one labelled
+   * account, else the owner slug. So a user's "Work" / "feedMyPixel" labels show in the panel. */
+  label: string
   repos: RepoView[]
 }
 
@@ -44,6 +48,9 @@ export function groupByOwner(
 ): OwnerGroup[] {
   const byOwner = new Map<string, RepoView[]>()
   const providerByAccount = new Map(accounts.map((account) => [account.id, account.provider]))
+  const labelByAccount = new Map(accounts.map((account) => [account.id, account.label]))
+  // Distinct connection labels seen per owner — a single one means we can show it as the header.
+  const labelsByOwner = new Map<string, Set<string>>()
 
   for (const repo of repos) {
     const snapshot = snapshots[repo.id] ?? { default: null, changes: [] }
@@ -59,14 +66,26 @@ export function groupByOwner(
     const list = byOwner.get(owner) ?? []
     list.push(view)
     byOwner.set(owner, list)
+
+    const label = labelByAccount.get(repo.accountId)
+    if (label) {
+      const labels = labelsByOwner.get(owner) ?? new Set<string>()
+      labels.add(label)
+      labelsByOwner.set(owner, labels)
+    }
   }
 
   return [...byOwner.entries()]
-    .map(([owner, views]) => ({
-      owner,
-      repos: views.sort((a, b) => a.displayName.localeCompare(b.displayName))
-    }))
-    .sort((a, b) => a.owner.localeCompare(b.owner))
+    .map(([owner, views]) => {
+      const labels = labelsByOwner.get(owner)
+      const label = labels?.size === 1 ? [...labels][0] : owner
+      return {
+        owner,
+        label,
+        repos: views.sort((a, b) => a.displayName.localeCompare(b.displayName))
+      }
+    })
+    .sort((a, b) => a.label.localeCompare(b.label))
 }
 
 export interface RepoOwnerGroup {
@@ -164,6 +183,7 @@ export function filterGroups(
   return groups
     .map((group) => ({
       owner: group.owner,
+      label: group.label,
       repos: group.repos.filter((view) => hasVisibleRows(view, allowed, mineOnly))
     }))
     .filter((group) => group.repos.length > 0)
