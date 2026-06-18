@@ -220,11 +220,10 @@
     font-weight: var(--weight-medium);
   }
   .toggle-all {
-    align-self: stretch;
+    /* No divider: Clear all belongs with the status pills to its left, not as a separate axis. */
     margin-left: var(--space-2xs);
-    padding: 0 0 0 var(--space-sm);
+    padding-left: var(--space-2xs);
     border: 0;
-    border-left: 1px solid var(--border);
     background: transparent;
     color: var(--link);
     font: var(--weight-medium) var(--font-size-sm) / var(--leading-none) var(--font-sans);
