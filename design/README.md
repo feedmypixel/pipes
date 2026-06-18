@@ -20,10 +20,10 @@ HTML + CSS + JS prototypes intended as the visual brief for re-implementation as
 
 ## Status
 
-**`v2/` is the current locked direction** (handoff 2026-06-06). It is `v1` plus the
-forms + in-app notifications spec: read `v2/FORMS.md` (the implementation contract) and
-`v2/assets/forms.css` (exact values) for forms, toasts, banners, and the undo pattern.
-`v1` remains the surface handoff (popup / side panel / options / notifications).
+**`v4/` is the current locked direction** (handoff 2026-06-18). It consolidates the full surface
+handoff (popup / side panel / options / notifications) with the forms + in-app notifications spec
+(`v4/FORMS.md`) and the **"Mine" authorship scope filter** (`v4/MINE-FILTER.md`). `v1`/`v2` are
+earlier iterations kept for reference.
 
 ## What you'll find in a bundle
 
@@ -58,4 +58,6 @@ forms + in-app notifications spec: read `v2/FORMS.md` (the implementation contra
 
 | Date       | Version | Notes                                                                 |
 | ---------- | ------- | --------------------------------------------------------------------- |
+| 2026-06-18 | v4      | Current. Consolidated handoff: all four surfaces + forms/in-app notifications (`FORMS.md`) + the "Mine" authorship scope filter (`MINE-FILTER.md`). Supersedes v2. |
+| 2026-06-06 | v2      | v1 plus the forms + in-app notifications spec (`FORMS.md`, `assets/forms.css`): fields, error states, toasts, banners, the undo pattern. |
 | 2026-06-05 | v1      | Initial handoff: tokens (Pixel Blue `#3194FC`, cool-slate neutrals, OKLCH status palette), green-tick logo, universal status-icon set (no provider marks), 4 surfaces (popup, side panel, options, notifications + toolbar), Lucide icons, system font. |

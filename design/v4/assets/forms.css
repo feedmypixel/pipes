@@ -1,0 +1,192 @@
+/* ============================================================
+   Pipes — forms & in-app notifications (v2)
+   Reuses tokens from pipes.css ([data-theme] --p-* vars).
+   App token names (no --p- prefix) are noted in the handoff doc.
+   ============================================================ */
+
+/* themed stage that hosts a form/notification mock */
+.fstage {
+  background: var(--p-canvas); color: var(--p-text);
+  border: 1px solid var(--p-border); border-radius: 4px;
+  padding: 22px; font-family: var(--d-sans); font-size: 14px;
+}
+.fstage * { box-sizing: border-box; }
+.fcard {
+  background: var(--p-surface); border: 1px solid var(--p-border);
+  border-radius: 4px; box-shadow: var(--p-shadow); overflow: hidden;
+}
+.fcard-pad { padding: 18px 20px; }
+.fcard > h3 {
+  margin: 0; padding: 14px 20px; font-size: 13px; font-weight: 650;
+  border-bottom: 1px solid var(--p-border); display: flex; align-items: center; gap: 9px;
+}
+.fcard > h3 svg { width: 16px; height: 16px; flex: none; color: var(--p-text-2); }
+
+/* ---------- Field (label → hint → error → input → below) ---------- */
+.field { display: grid; gap: 6px; }
+.field + .field { margin-top: 16px; }
+.field label { font-size: 13px; font-weight: 650; color: var(--p-text); }
+.field label .opt { font-weight: 500; color: var(--p-text-3); }
+.field .hint { font-size: 11.5px; line-height: 1.4; color: var(--p-text-3); }
+/* error sits ABOVE the input so a screen reader hits it first */
+.field .ferror { font-size: 12px; line-height: 1.4; color: var(--p-failed); }
+.field input[type="text"], .field input[type="url"], .field input[type="password"] {
+  width: 100%; font: 500 13px/1.2 var(--d-sans); color: var(--p-text);
+  padding: 10px 12px; border-radius: 4px; border: 1px solid var(--p-border-2);
+  background: var(--p-bg); transition: border-color .12s, box-shadow .12s;
+}
+.field input::placeholder { color: var(--p-text-3); }
+.field input:focus-visible {
+  outline: 0; border-color: var(--p-brand);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--p-brand) 28%, transparent);
+}
+.field.has-error input { border-color: var(--p-failed); }
+/* error + focus: keep the red border, add the brand ring on top */
+.field.has-error input:focus-visible {
+  border-color: var(--p-failed);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--p-brand) 30%, transparent);
+}
+.field-mono input { font-family: var(--d-mono); font-size: 12px; }
+
+/* below: async-availability line (aria-live, text-only, no icons) */
+.field .below { font-size: 11.5px; line-height: 1.4; }
+.field .below.busy { color: var(--p-text-3); }
+.field .below.ok   { color: var(--p-text-2); }
+.field .below.bad  { color: var(--p-failed); }
+.field .below .who { font-family: var(--d-mono); }
+
+/* password show/hide */
+.pw-wrap { position: relative; display: flex; }
+.pw-wrap input { flex: 1; padding-right: 60px; }
+.pw-toggle {
+  position: absolute; right: 6px; top: 50%; transform: translateY(-50%);
+  border: 0; background: transparent; color: var(--p-link);
+  font: 600 12px/1 var(--d-sans); cursor: pointer; padding: 6px 8px;
+}
+.pw-toggle:hover { text-decoration: underline; }
+
+/* ---------- FormSummary (top-of-form, role=alert) ---------- */
+.form-summary {
+  border: 1px solid var(--p-failed-line); background: var(--p-failed-bg);
+  border-radius: 4px; padding: 14px 16px; margin-bottom: 18px;
+}
+.form-summary h4 { margin: 0 0 8px; font-size: 13px; font-weight: 680; color: var(--p-failed); }
+.form-summary ul { margin: 0; padding-left: 0; list-style: none; display: grid; gap: 5px; }
+.form-summary a { color: var(--p-failed); font-size: 12.5px; text-decoration: underline; }
+.form-summary a:hover { text-decoration: none; }
+
+/* ---------- Inline banner (form-message) — in document flow ---------- */
+.form-message {
+  display: flex; align-items: flex-start; gap: 9px;
+  border-radius: 4px; padding: 11px 14px; font-size: 12.5px; line-height: 1.45;
+  border: 1px solid; margin-bottom: 16px;
+}
+.form-message svg { width: 15px; height: 15px; flex: none; margin-top: 1px; }
+.form-message.ok  { background: var(--p-success-bg); border-color: var(--p-success-line); color: var(--p-success); }
+.form-message.err { background: var(--p-failed-bg);  border-color: var(--p-failed-line);  color: var(--p-failed); }
+.form-message b { font-weight: 650; }
+
+/* permission note (reused from options) */
+.permnote {
+  display: flex; gap: 9px; align-items: flex-start;
+  padding: 10px 12px; border-radius: 4px; background: var(--p-surface-2);
+  border: 1px solid var(--p-border); font-size: 11.5px; color: var(--p-text-2); line-height: 1.5;
+}
+.permnote svg { width: 15px; height: 15px; flex: none; color: var(--p-pending); margin-top: 1px; }
+
+/* buttons / button-group */
+.button-group { display: flex; gap: 10px; align-items: center; margin-top: 4px; }
+.btn {
+  display: inline-flex; align-items: center; gap: 7px; cursor: pointer;
+  font: 650 12.5px/1 var(--d-sans); padding: 10px 15px; border-radius: 4px;
+  border: 1px solid transparent; text-decoration: none;
+}
+.btn svg { width: 14px; height: 14px; }
+.btn-primary { background: var(--p-brand); color: var(--p-brand-ink); }
+.btn-primary:hover { filter: brightness(1.06); }
+.btn-secondary { background: var(--p-surface); color: var(--p-text); border-color: var(--p-border-2); }
+.btn-secondary:hover { background: var(--p-hover); }
+.btn.submitting { color: transparent; position: relative; pointer-events: none; }
+.btn[disabled] { cursor: default; opacity: .6; }
+.btn-secondary[disabled] { opacity: .5; }
+.btn.submitting::after {
+  content: ""; position: absolute; inset: 0; margin: auto; width: 14px; height: 14px;
+  border: 2px solid color-mix(in srgb, var(--p-brand-ink) 70%, transparent);
+  border-right-color: transparent; border-radius: 50%; animation: fspin .8s linear infinite;
+}
+@keyframes fspin { to { transform: rotate(360deg); } }
+
+/* ============================================================
+   In-app notifications
+   ============================================================ */
+/* anchor demo: a mock surface corner */
+.toast-anchor {
+  position: relative; height: 280px; border-radius: 4px; overflow: hidden;
+  background: var(--p-canvas); border: 1px solid var(--p-border);
+  background-image: radial-gradient(circle at 1px 1px, var(--p-border) 1px, transparent 0);
+  background-size: 22px 22px;
+}
+.toast-stack {
+  position: absolute; right: 16px; bottom: 16px;
+  display: flex; flex-direction: column-reverse; gap: 10px; width: 320px;
+}
+.toast {
+  display: flex; align-items: flex-start; gap: 11px; width: 320px;
+  padding: 12px 13px; border-radius: 4px;
+  background: var(--p-surface); border: 1px solid var(--p-border);
+  box-shadow: var(--p-shadow-lg);
+}
+.toast.enter { animation: toast-in .22s cubic-bezier(.2,.7,.3,1) both; }
+@keyframes toast-in { from { opacity: 0; transform: translateY(8px) scale(.98); } }
+.toast-ic { flex: none; }
+.toast-ic .pill.icononly { width: 22px; height: 22px; }
+.toast-ic .pill.icononly .gli { width: 12px; height: 12px; }
+.toast-ic.info {
+  width: 22px; height: 22px; border-radius: 50%; display: grid; place-items: center;
+  background: var(--p-brand); color: var(--p-brand-ink);
+}
+.toast-ic.info svg { width: 13px; height: 13px; }
+.toast-main { min-width: 0; flex: 1; }
+.toast-title { font-size: 13px; font-weight: 650; color: var(--p-text); line-height: 1.35; }
+.toast-msg { font-size: 12px; color: var(--p-text-2); margin-top: 2px; line-height: 1.4; }
+.toast-action {
+  margin-top: 8px; display: inline-block; border: 0; background: transparent;
+  color: var(--p-link); font: 650 12px/1 var(--d-sans); cursor: pointer; padding: 0;
+}
+.toast-action:hover { text-decoration: underline; }
+.toast-close {
+  flex: none; border: 0; background: transparent; color: var(--p-text-3);
+  cursor: pointer; padding: 2px; border-radius: 4px; line-height: 0;
+}
+.toast-close:hover { background: var(--p-hover); color: var(--p-text); }
+.toast-close svg { width: 14px; height: 14px; }
+.toast.success, .toast.error, .toast.info {
+  border-top-left-radius: 0; border-bottom-left-radius: 0;
+  border-left-width: 3px; box-shadow: var(--p-shadow-lg);
+}
+.toast.success { border-left-color: var(--p-success); }
+.toast.error   { border-left-color: var(--p-failed); }
+.toast.info    { border-left-color: var(--p-brand); }
+
+/* undo toast — single line, subtle fade (no timer) */
+.toast.undo { align-items: center; }
+.toast.undo .toast-main { display: flex; align-items: center; gap: 8px; }
+.toast.undo .toast-title { font-weight: 600; }
+.toast.undo .toast-action { margin-top: 0; }
+.toast.fading { animation: toast-out .4s ease forwards; }
+@keyframes toast-out { to { opacity: 0; transform: translateY(4px); } }
+
+@media (prefers-reduced-motion: reduce) {
+  .toast.enter, .toast.fading { animation: none; }
+}
+
+/* live · 10s indicator (side panel, active poll) */
+.live10 { display: inline-flex; align-items: center; gap: 7px; font: 500 11px/1 var(--d-mono); color: var(--p-text-2); }
+.live10 .lz { width: 8px; height: 8px; border-radius: 50%; background: var(--p-success); position: relative; }
+.live10 .lz::after { content: ""; position: absolute; inset: 0; border-radius: 50%; background: var(--p-success); animation: live-ping 1.6s ease-out infinite; }
+@keyframes live-ping { 0% { transform: scale(1); opacity: .6; } 80%,100% { transform: scale(2.6); opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .live10 .lz::after { animation: none; } }
+
+/* state caption under a mock */
+.fcap { margin-top: 9px; font: 500 11.5px/1.4 var(--d-mono); color: var(--d-ink-3); }
+.fcap b { color: var(--d-ink-2); font-weight: 600; }

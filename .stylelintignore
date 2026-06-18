@@ -1,0 +1,6 @@
+# Generated
+dist
+coverage
+
+# Design reference (claude.ai prototypes, not production code)
+design
