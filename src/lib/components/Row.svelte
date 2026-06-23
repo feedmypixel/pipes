@@ -37,12 +37,12 @@
     <span class="name">{pipeline.ref}</span>
   </span>
   <span class="meta-end">
-    <Author author={pipeline.attribution} />
     {#if pipeline.status === 'running' && pipeline.startedAt}
       <ElapsedTime startedAt={pipeline.startedAt} />
     {:else}
       <RelativeTime iso={pipeline.updatedAt} />
     {/if}
+    <Author author={pipeline.attribution} />
   </span>
 </div>
 
