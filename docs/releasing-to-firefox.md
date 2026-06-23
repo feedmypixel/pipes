@@ -40,33 +40,35 @@ Known Firefox differences (by design):
 
 - Notifications are **leaner** — no sticky/`requireInteraction`, no action buttons. The toast + the
   red badge count still fire; the badge is the durable failure signal.
-- The persistent dashboard is the **sidebar**, opened from Firefox's sidebar button (and the popup's
-  open-dashboard button once the platform helper lands).
+- The persistent dashboard is the **sidebar**, opened from the popup's **Open dashboard** button or
+  Firefox's own sidebar button.
 
 ## Release
 
 Cutting a version is the same single step as today (`pnpm release` → tag → push); the tag's CI
-draft-uploads to **both** stores.
+submits to **both** stores.
 
 ```sh
 pnpm release                       # bumps version, writes CHANGELOG, tags vX.Y.Z
 git push --follow-tags origin main # the tag fires .github/workflows/release.yml
 ```
 
-The Firefox job builds `dist-firefox/`, zips it (`pipes-firefox.zip`), and **draft-uploads to AMO**
-via `web-ext sign` (gated on the `AMO_*` secrets, like the Chrome step is on `CWS_*`). You publish
-from the AMO dashboard — CI automates the upload, not the going-live.
+The `submit-firefox` job builds `dist-firefox/` and runs `web-ext sign --channel=listed` to submit
+the new version to AMO (gated on the `AMO_*` secrets, like the Chrome step is on `CWS_*`). The first
+run creates the add-on from `gecko.id`; later runs add a version. AMO's human review gates going live.
 
-> The automated AMO upload job is **task 4.0** of the Firefox port — wired once the `AMO_*` secrets
-> exist. Until then, build + `web-ext sign` (or upload `pipes-firefox.zip`) by hand.
+### First listing (one-time, in the dashboard)
+
+Like the CWS listing, the **listing details + screenshots** are set once in the AMO Developer Hub,
+not by CI:
+
+- Reuse the framed **store screenshots** in `store-screenshots/framed/` and the 128px icon. No
+  Firefox-specific capture (the framing pipeline is browser-agnostic). See [`screenshots.md`](screenshots.md).
+- Copy (name, summary, description, permission justifications) mirrors the Chrome listing in
+  [`chromewebstore.md`](chromewebstore.md).
 
 ### AMO review notes
 
-- **Listed** add-ons get a human review. Because the upload is a built bundle, the submission must
-  include the **source + build instructions** (Node/pnpm versions from `.nvmrc`/`package.json`,
-  `pnpm install` then `pnpm build:firefox`) so a reviewer can reproduce it. Review can take days.
-- The listing **reuses the existing assets** — the framed store screenshots in
-  `store-screenshots/framed/` and the 128px icon; no Firefox-specific capture is needed (the framing
-  pipeline is browser-agnostic). See [`screenshots.md`](screenshots.md).
-- Listing copy (name, summary, description, permission justifications) mirrors the Chrome listing in
-  [`chromewebstore.md`](chromewebstore.md).
+- **Listed** add-ons get a human review (can take days). Because the upload is a built bundle, attach
+  the **source + build instructions** (Node/pnpm versions from `.nvmrc`/`package.json`, `pnpm install`
+  then `pnpm build:firefox`) so a reviewer can reproduce it.

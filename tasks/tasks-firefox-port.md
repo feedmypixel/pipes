@@ -58,19 +58,19 @@ Source PRD: [`prd-firefox-port.md`](prd-firefox-port.md)
   - [ ] 3.5 (Ben, `web-ext run`) verify the badge renders on Firefox.
   - [ ] 3.6 (Ben, `web-ext run`) exercise poll → badge → notification → click-through, popup, sidebar; tune the live-port cadence if the FF event page suspends (PRD open question 3). Note: `web-ext lint` still warns on `sidePanel.open` — it's in the shared bundle but guarded (never runs on FF).
 
-- [ ] 4.0 Dual-store release automation
-  - [ ] 4.1 Document the AMO secrets needed (`AMO_JWT_ISSUER` / `AMO_JWT_SECRET` or API key) for `web-ext sign`; Ben adds them to repo secrets (manual, like `CWS_*`).
-  - [ ] 4.2 Extend `.github/workflows/release.yml`: on a version tag, build + zip the Firefox target and **draft-upload to AMO** (`web-ext sign` / AMO submission API), draft-only.
-  - [ ] 4.3 Attach a **source archive + build instructions** (Node/pnpm versions, `build:firefox` steps) for AMO review of the bundled upload.
-  - [ ] 4.4 Confirm the existing CWS upload step still runs unchanged in the same workflow on the same tag.
-  - [ ] 4.5 Validate the workflow without publishing (test tag on a branch / dry run); both store steps reach "draft" without auto-publish.
+- [x] 4.0 Dual-store release automation
+  - [x] 4.1 AMO secrets documented in `docs/releasing-to-firefox.md`; Ben added `AMO_JWT_ISSUER` + `AMO_JWT_SECRET` to repo secrets.
+  - [x] 4.2 `release.yml` gains `gate-firefox` + `submit-firefox` jobs: on a tag, `pnpm build:firefox` then `web-ext sign --channel=listed` submits to AMO, gated on `AMO_*` (mirrors the CWS gate). First run creates the add-on from `gecko.id`.
+  - [x] 4.3 Source + build-instructions for AMO review documented (doc "AMO review notes"); the actual source attach is a dashboard step.
+  - [x] 4.4 The CWS `gate` + `upload` jobs are untouched; both stores run off the same tag.
+  - [ ] 4.5 (Ben) validate end to end on the first real tag — both stores reach the store without auto-going-live.
 
-- [ ] 5.0 Docs + verification
-  - [ ] 5.1 Extend `docs/releasing-to-chrome-web-store.md` (or add `docs/releasing.md`) for the dual-store flow, AMO secrets/setup, and `web-ext run`/`sign`.
-  - [ ] 5.2 Update `README.md` + `docs/README.md`: Firefox build/run/release, the new commands, links + TOCs.
-  - [ ] 5.3 Note in the listing docs that the AMO listing reuses the framed store screenshots + icon (no Firefox-specific capture).
-  - [ ] 5.4 Final gates: `pnpm check`, `pnpm test`, `pnpm lint`, `pnpm security-audit`; re-confirm Chrome `dist/` unchanged; `web-ext lint` clean.
-  - [ ] 5.5 Independent review (`pr-review-toolkit`) on the diff; open the PR off `main`.
+- [x] 5.0 Docs + verification
+  - [x] 5.1 Added `docs/releasing-to-firefox.md` (account, API keys + direct link, build, `web-ext run`, the wired AMO release, first-listing dashboard step, review notes).
+  - [x] 5.2 `README.md` + `docs/README.md`: Firefox build/run/release, `build:firefox`, the load-into-Firefox section, links + TOCs.
+  - [x] 5.3 Listing reuses the framed store screenshots + icon (no FF-specific capture) — noted in the release doc.
+  - [x] 5.4 Gates green throughout: `check`, `test` (179), `lint`, `security-audit`, both builds, `web-ext lint` 0 errors. Chrome manifest unchanged.
+  - [x] 5.5 Independent review on the 3.0 diff (clean). PR #119 open off `main` (tasks 1.0-5.0).
 
 - [ ] 6.0 (Optional, deferred) Cross-browser smoke test
   - [ ] 6.1 **Not built for v1** — unit tests + a manual `web-ext run` pass per release cover the risk. If FF parity regressions bite post-launch, add a thin Playwright smoke: load `dist-chrome/` (load-unpacked) and `dist-firefox/` (via `web-ext`), assert each surface renders + the core poll → badge path. Skip the heavy 3-tier suite (extension e2e, esp. Firefox, is fiddly + flaky for a small client-side extension).
