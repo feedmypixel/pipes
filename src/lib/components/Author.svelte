@@ -76,9 +76,8 @@
     width: 100%;
     height: 100%;
     object-fit: cover;
-    /* Greyscale at rest so the status icon leads the eye; full colour on hover/focus. */
-    filter: grayscale(1);
-    opacity: 0.82;
+    filter: none;
+    opacity: 1;
     transition:
       filter 0.12s ease,
       opacity 0.12s ease;
@@ -95,8 +94,8 @@
   }
   a.author:hover .avatar img,
   a.author:focus-visible .avatar img {
-    filter: none;
-    opacity: 1;
+    filter: grayscale(1);
+    opacity: 0.82;
   }
   a.author:focus-visible {
     outline: 2px solid var(--brand);
