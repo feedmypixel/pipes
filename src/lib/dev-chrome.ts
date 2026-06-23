@@ -14,31 +14,32 @@ const A = {
   me: {
     login: 'octo-org',
     name: 'Octo Org',
-    avatarUrl: dicebear('thumbs', 'octo-org'),
+    avatarUrl: dicebear('identicon', 'octo-org-7'),
     profileUrl: 'https://example.test/octo-org'
   },
   ada: {
     login: 'ada',
     name: 'Ada Lovelace',
-    avatarUrl: dicebear('thumbs', 'ada'),
+    avatarUrl: dicebear('identicon', 'ada-3'),
     profileUrl: 'https://example.test/ada'
   },
   grace: {
     login: 'grace',
     name: 'Grace Hopper',
-    avatarUrl: dicebear('thumbs', 'grace'),
+    avatarUrl: dicebear('identicon', 'grace-9'),
     profileUrl: 'https://example.test/grace'
   },
   linus: {
     login: 'linus',
-    name: 'Linus T',
-    avatarUrl: dicebear('thumbs', 'linus'),
+    name: 'Linus Torvalds',
+    avatarUrl: dicebear('identicon', 'linus-2'),
     profileUrl: 'https://example.test/linus'
   },
+  pat: { login: 'pat', name: 'Pat Lee', profileUrl: 'https://example.test/pat' },
   bot: {
     login: 'dependabot[bot]',
     name: 'Dependabot',
-    avatarUrl: dicebear('bottts', 'dependabot'),
+    avatarUrl: dicebear('bottts', 'dependabot-5'),
     profileUrl: 'https://example.test/dependabot'
   }
 } satisfies Record<string, Author>
@@ -127,7 +128,7 @@ function seedData() {
     },
     'feedmypixel/stat-api': {
       default: pipe('2', 'main', 'success', true, 70, A.me),
-      changes: [change(88, 'Bump request timeout', 'fix/timeout', 'success', 120, false, A.linus)]
+      changes: [change(88, 'Bump request timeout', 'fix/timeout', 'success', 120, false, A.pat)]
     },
     'feedmypixel/stat-ui': { default: pipe('3', 'main', 'running', true, 1, A.me), changes: [] },
     'whiskyinvestdirect/api': {
