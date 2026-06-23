@@ -12,7 +12,7 @@ which listing slot) lives in [`chromewebstore.md`](chromewebstore.md).
 
 ## 1. The scene
 
-`src/lib/dev-chrome.ts` seeds two connections with friendly labels (`feedMyPixel`, `Work`) across two
+`src/lib/dev-extension.ts` seeds two connections with friendly labels (`feedMyPixel`, `Work`) across two
 owners, and a spread of states in one view: a failing `main` (the loud red headline), running, draft
 and bot PRs, distinct author avatars (pixel-art + the feedMyPixel brand mark, synthetic), and the
 viewer set so the **All / Mine** toggle has rows on both sides. The provider APIs are stubbed, so

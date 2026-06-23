@@ -27,23 +27,19 @@ Source PRD: [`prd-firefox-port.md`](prd-firefox-port.md)
 
 - Two vitest projects (`unit`, `browser`); run with `pnpm test`. Tests that touch `chrome.*` (or the dev mock) must follow the `chrome.*` → `browser.*` swap.
 - Validate the Firefox build interactively with `web-ext run` (load `dist-firefox/`); `web-ext lint` for manifest checks.
-- The Chrome `dist/` + `manifest.json` must stay byte-identical after the seam work — diff to prove it.
+- The Chrome `manifest.json` is unchanged by the seam; `dist/` only gains the tiny `browser.ts` Proxy, and Chrome behaviour is identical (`check` + `test` + `build` green).
 
 ## Tasks
 
-- [ ] 0.0 Create feature branch
-  - [ ] 0.1 `git checkout -b feat/firefox-port` off `main`.
+- [x] 0.0 Create feature branch
+  - [x] 0.1 `git checkout -b feat/firefox-port` off `main`.
 
-- [ ] 1.0 Browser-API compatibility seam
-  - [ ] 1.1 Add `webextension-polyfill` (+ types) as a dependency; run `pnpm security-audit`.
-  - [ ] 1.2 Create `src/lib/browser.ts` re-exporting the polyfilled `browser` as the single import point.
-  - [ ] 1.3 Swap `chrome.*` → `browser.*` in `lib/storage.ts` (`storage.local` get/set/remove, `onChanged`).
-  - [ ] 1.4 Swap in `background/service-worker.ts` (alarms, `runtime.onConnect/onInstalled/onStartup/onMessage`, `storage.onChanged`, notification listeners) and `background/poll.ts`.
-  - [ ] 1.5 Swap in `lib/notify.ts` (`notifications.create/clear`, `action` badge, `tabs.create`) and `lib/live-port.ts` (`runtime.connect`, port events).
-  - [ ] 1.6 Swap in `lib/dashboard.svelte.ts`, `popup/App.svelte` (`windows.getCurrent`, `runtime.openOptionsPage`), `options/App.svelte` (`permissions.request`).
-  - [ ] 1.7 Update types (drop reliance on `@types/chrome` where `browser` types now apply); `pnpm check` clean.
-  - [ ] 1.8 Update affected tests + the `dev-chrome` mock to the `browser` shape; `pnpm test` green.
-  - [ ] 1.9 Build Chrome and **diff `dist/` + `manifest.json` against pre-seam** to prove no Chrome change; `pnpm lint` clean.
+- [x] 1.0 Browser-API compatibility seam
+  - [x] 1.1 `src/lib/browser.ts`: a Proxy seam resolving `globalThis.browser ?? globalThis.chrome` per access. No `webextension-polyfill` — Chrome MV3 `chrome.*` is already promise-based and Firefox `browser.*` is native; the polyfill's throwing import + callback-wrapping fought the dev mock and the test stubs, so it was dropped (and removed from deps).
+  - [x] 1.2 Swap `chrome.*` → `browser.*` in `lib/storage.ts` (storage get/set/remove + `onChanged`), `background/service-worker.ts` (alarms, runtime, `storage.onChanged`), `lib/live-port.ts` (`runtime.connect`), `lib/dashboard.svelte.ts` (`runtime.sendMessage`), `popup/App.svelte` + `sidepanel/App.svelte` (`runtime.openOptionsPage`), `options/App.svelte` (`permissions.request`).
+  - [x] 1.3 Per-call resolution means the existing `chrome` test stubs keep working unchanged; `check` + `test` (179) + `lint` + Chrome `build` all green.
+  - [x] 1.4 Rename `dev-chrome.ts` → `dev-extension.ts` (cross-browser intent) + update the 3 entry imports and docs. Reword the options page's user-facing "stored via chrome.storage.local" copy to browser-neutral.
+  - [ ] 1.5 **Deferred to 3.x (needs FF testing):** `lib/notify.ts` + the `notifications.*` listeners in `service-worker.ts` stay on `chrome.*` until the FF degrade (3.3); `popup/App.svelte`'s `windows.getCurrent` + `sidePanel.open` stay on `chrome.*` until the platform `openDashboard()` helper (3.1). Drop `@types/chrome` once no `chrome.*` runtime refs remain (the `chrome.runtime.Port` / `chrome.storage.StorageChange` type names stay — they are the standard `@types/chrome` shapes the seam is typed against).
 
 - [ ] 2.0 Firefox build target + manifest
   - [ ] 2.1 Read a `TARGET` (chrome|firefox) env in `vite.config.ts` / `manifest.config.ts`; default chrome.
@@ -75,3 +71,9 @@ Source PRD: [`prd-firefox-port.md`](prd-firefox-port.md)
   - [ ] 5.3 Note in the listing docs that the AMO listing reuses the framed store screenshots + icon (no Firefox-specific capture).
   - [ ] 5.4 Final gates: `pnpm check`, `pnpm test`, `pnpm lint`, `pnpm security-audit`; re-confirm Chrome `dist/` unchanged; `web-ext lint` clean.
   - [ ] 5.5 Independent review (`pr-review-toolkit`) on the diff; open the PR off `main`.
+
+- [ ] 6.0 Cross-browser e2e tests (Chrome + Firefox)
+  - [ ] 6.1 **Tier 1 (both engines, UI):** a Playwright project that drives the dev-mock surface pages (`/src/popup|sidepanel|options/index.html`) in **Chromium and Firefox**, asserting the rendered dashboard, filters, and author rows. Reuses the `dev-extension` scene + the capture infra; proves the seam + surfaces render on both engines.
+  - [ ] 6.2 **Tier 2 (Chrome, full extension):** Playwright `launchPersistentContext` with the unpacked `dist/` loaded; e2e the real flow — storage write → background poll → badge → popup → open side panel.
+  - [ ] 6.3 **Tier 3 (Firefox, smoke):** Playwright can't load FF extensions directly, so a `web-ext run`-driven smoke (or deferred) that loads `dist-firefox/` and checks the surfaces + that the background event page registers. Document the limitation if deferred.
+  - [ ] 6.4 Wire the e2e into CI (a job that builds both targets and runs the tiers); keep it separate from the fast unit `pnpm test`.

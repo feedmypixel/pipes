@@ -10,6 +10,7 @@
   import * as storage from '../lib/storage'
   import type { Settings } from '../lib/storage'
   import { getProvider, normaliseHost, saasProvider } from '../providers'
+  import browser from '../lib/browser'
   import type { Account, ProviderId, Repo } from '../providers/types'
   import { MIN_POLL_MINUTES, SAAS_HOST } from '../lib/config'
   import { groupReposByOwner } from '../lib/group'
@@ -109,7 +110,7 @@
     if (saasProvider(origin)) {
       return true
     }
-    return chrome.permissions.request({ origins: [`${origin}/*`] })
+    return browser.permissions.request({ origins: [`${origin}/*`] })
   }
 
   async function validate(): Promise<boolean> {
@@ -511,8 +512,8 @@
     <p class="security">
       <Check size={18} />
       <span
-        >Tokens are stored on this device via <b>chrome.storage.local</b>, used read-only, and never
-        synced or logged.</span
+        >Tokens are stored <b>locally on this device</b>, used read-only, and never synced or
+        logged.</span
       >
     </p>
   </main>

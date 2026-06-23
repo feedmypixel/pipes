@@ -7,6 +7,7 @@
   import TopAlerts from '../lib/components/TopAlerts.svelte'
   import UpdatedFooter from '../lib/components/UpdatedFooter.svelte'
   import { useDashboard } from '../lib/dashboard.svelte'
+  import browser from '../lib/browser'
 
   const dash = useDashboard()
 
@@ -23,7 +24,7 @@
   }
 
   function openOptions() {
-    chrome.runtime.openOptionsPage()
+    browser.runtime.openOptionsPage()
   }
 </script>
 
