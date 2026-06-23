@@ -126,7 +126,6 @@
     align-items: center;
     gap: var(--space-2xs);
     min-width: 0;
-    max-width: 9rem;
     color: var(--text-3);
   }
   .branch :global(svg) {

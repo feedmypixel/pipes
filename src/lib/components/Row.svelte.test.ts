@@ -57,6 +57,5 @@ describe('Row', () => {
     })
     const author = screen.container.querySelector('a.author') as HTMLAnchorElement
     expect(author.getAttribute('href')).toBe('https://github.com/pusher')
-    expect(screen.container.querySelector('.author-name')?.textContent).toBe('pusher')
   })
 })

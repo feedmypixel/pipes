@@ -22,7 +22,6 @@
       <span class="ini">{initials(name)}</span>
     {/if}
   </span>
-  <span class="author-name">{author?.login}</span>
 {/snippet}
 
 {#if author}
@@ -65,6 +64,9 @@
     overflow: hidden;
     background: var(--surface-2);
     box-shadow: 0 0 0 1px var(--border) inset;
+    transition:
+      box-shadow 0.12s ease,
+      transform 0.12s ease;
   }
   .dense .avatar {
     width: 16px;
@@ -74,50 +76,24 @@
     width: 100%;
     height: 100%;
     object-fit: cover;
-    filter: grayscale(1);
-    opacity: 0.82;
-    transition:
-      filter 0.12s ease,
-      opacity 0.12s ease;
   }
   .ini {
     font: var(--weight-semibold) 8px / 1 var(--font-sans);
     color: var(--text-2);
     text-transform: uppercase;
   }
-  .author-name {
-    max-width: 64px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    font: var(--weight-medium) var(--font-size-2xs) / 1 var(--font-sans);
-    color: var(--text-2);
-  }
-  a.author:hover .avatar img,
-  a.author:focus-visible .avatar img {
-    filter: none;
-    opacity: 1;
-  }
-  a.author:hover .avatar {
+  a.author:hover .avatar,
+  a.author:focus-visible .avatar {
     box-shadow: 0 0 0 1px var(--border-2) inset;
-  }
-  a.author:hover .author-name {
-    color: var(--text);
-    text-decoration: underline;
-    text-underline-offset: 2px;
+    transform: scale(1.12);
   }
   a.author:focus-visible {
     outline: 2px solid var(--brand);
     outline-offset: 2px;
     border-radius: 2px;
   }
-  @container (max-width: 336px) {
-    .author-name {
-      display: none;
-    }
-  }
   @media (prefers-reduced-motion: reduce) {
-    .avatar img {
+    .avatar {
       transition: none;
     }
   }
