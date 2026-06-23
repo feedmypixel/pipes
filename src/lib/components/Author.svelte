@@ -76,6 +76,12 @@
     width: 100%;
     height: 100%;
     object-fit: cover;
+    /* Greyscale at rest so the status icon leads the eye; full colour on hover/focus. */
+    filter: grayscale(1);
+    opacity: 0.82;
+    transition:
+      filter 0.12s ease,
+      opacity 0.12s ease;
   }
   .ini {
     font: var(--weight-semibold) 8px / 1 var(--font-sans);
@@ -87,13 +93,19 @@
     box-shadow: 0 0 0 1px var(--border-2) inset;
     transform: scale(1.12);
   }
+  a.author:hover .avatar img,
+  a.author:focus-visible .avatar img {
+    filter: none;
+    opacity: 1;
+  }
   a.author:focus-visible {
     outline: 2px solid var(--brand);
     outline-offset: 2px;
     border-radius: 2px;
   }
   @media (prefers-reduced-motion: reduce) {
-    .avatar {
+    .avatar,
+    .avatar img {
       transition: none;
     }
   }
