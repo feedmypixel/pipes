@@ -76,7 +76,8 @@ Nothing is sent anywhere except your configured GitHub/GitLab hosts.
 ## Docs
 
 - [`docs/faq.md`](docs/faq.md) — freshness (GitHub's ~60s cache), rate limits, token scopes, notifications.
-- [`docs/releasing-to-chrome-web-store.md`](docs/releasing-to-chrome-web-store.md) — listing, submission, and the release flow (`pnpm release` → tag → automated draft upload).
+- [`docs/releasing-to-chrome-web-store.md`](docs/releasing-to-chrome-web-store.md) — Chrome listing, submission, and the release flow (`pnpm release` → tag → automated draft upload).
+- [`docs/releasing-to-firefox.md`](docs/releasing-to-firefox.md) — Firefox / AMO: dev account, API keys, `pnpm build:firefox`, `web-ext run`, and the AMO release.
 - [`docs/chromewebstore.md`](docs/chromewebstore.md) — source of truth for the store listing fields (copy, permission justifications, data disclosure, assets).
 - [`docs/marketing.md`](docs/marketing.md) — distribution + launch notes (channels, messaging, owned-channel plan).
 - [`docs/screenshots.md`](docs/screenshots.md) — refreshing the store screenshots (`pnpm capture` → `pnpm frame` from a curated mock scene).
@@ -92,7 +93,8 @@ Nothing is sent anywhere except your configured GitHub/GitLab hosts.
 ```sh
 pnpm install
 pnpm dev             # crxjs + Vite, HMR for the UI
-pnpm build           # → dist/
+pnpm build           # → dist-chrome/
+pnpm build:firefox   # → dist-firefox/
 pnpm check           # svelte-check / type-check
 pnpm lint            # prettier --check + eslint
 pnpm test            # vitest unit tests
@@ -102,13 +104,19 @@ pnpm icons           # regenerate icons from scripts/generate-icons.mjs
 
 ### Load it into Chrome
 
-1. `pnpm dev` (builds `dist/` and watches with hot reload).
+1. `pnpm dev` (builds `dist-chrome/` and watches with hot reload).
 2. `chrome://extensions` → toggle **Developer mode** (top right).
-3. **Load unpacked** → select the **`dist/`** folder.
+3. **Load unpacked** → select the **`dist-chrome/`** folder.
 
 Edit a Svelte surface and it **hot-reloads** live; service-worker changes auto-reload
 via crxjs. After pulling new deps or editing the manifest, hit the **reload** icon on
 the extension card.
+
+### Load it into Firefox
+
+`pnpm build:firefox` then `pnpm exec web-ext run -s dist-firefox` launches Firefox with the extension
+loaded. The persistent dashboard is the **sidebar** on Firefox (not a side panel). Full setup +
+release: [`docs/releasing-to-firefox.md`](docs/releasing-to-firefox.md).
 
 ### Viewing each surface
 
@@ -159,6 +167,10 @@ zips, and draft-uploads via `chrome-webstore-upload-cli` (gated on the `CWS_*` s
 
 Full detail — the one-time CWS/OAuth setup, the secrets, and the dashboard steps — is in
 [`docs/releasing-to-chrome-web-store.md`](docs/releasing-to-chrome-web-store.md).
+
+**Firefox / AMO** ships from the same codebase (`pnpm build:firefox` → `dist-firefox/`); account
+setup, `web-ext`, and the AMO release are in
+[`docs/releasing-to-firefox.md`](docs/releasing-to-firefox.md).
 
 ---
 

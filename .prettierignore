@@ -2,7 +2,8 @@
 pnpm-lock.yaml
 
 # Generated
-dist
+dist-chrome
+dist-firefox
 coverage
 icons
 

@@ -2,7 +2,8 @@
 node_modules/
 
 # Build output
-dist/
+dist-chrome/
+dist-firefox/
 *.zip
 
 # Test artifacts (browser-project: attachments + failure screenshots, coverage)

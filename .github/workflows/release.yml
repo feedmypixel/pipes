@@ -53,7 +53,7 @@ jobs:
           REFRESH_TOKEN: ${{ secrets.CWS_REFRESH_TOKEN }}
         run: |
           pnpm dlx chrome-webstore-upload-cli@3 upload \
-            --source pipes.zip \
+            --source pipes-chrome.zip \
             --extension-id "$EXTENSION_ID" \
             --client-id "$CLIENT_ID" \
             --client-secret "$CLIENT_SECRET" \

@@ -3,8 +3,11 @@ import { svelte } from '@sveltejs/vite-plugin-svelte'
 import { crx } from '@crxjs/vite-plugin'
 import manifest from './src/manifest.config'
 
+const target = process.env.TARGET === 'firefox' ? 'firefox' : 'chrome'
+
 export default defineConfig({
-  plugins: [svelte(), crx({ manifest })],
+  plugins: [svelte(), crx({ manifest, browser: target })],
+  build: { outDir: `dist-${target}` },
   server: {
     // Dual-stack bind. crxjs hardcodes the dev SW's fetch to `localhost:5173`,
     // and localhost resolves to BOTH ::1 and 127.0.0.1 on macOS. Binding a single
