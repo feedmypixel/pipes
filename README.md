@@ -78,7 +78,8 @@ Nothing is sent anywhere except your configured GitHub/GitLab hosts.
 - [`docs/faq.md`](docs/faq.md) — freshness (GitHub's ~60s cache), rate limits, token scopes, notifications.
 - [`docs/releasing-to-chrome-web-store.md`](docs/releasing-to-chrome-web-store.md) — Chrome listing, submission, and the release flow (`pnpm release` → tag → automated draft upload).
 - [`docs/releasing-to-firefox.md`](docs/releasing-to-firefox.md) — Firefox / AMO: dev account, API keys, `pnpm build:firefox`, `web-ext run`, and the AMO release.
-- [`docs/chromewebstore.md`](docs/chromewebstore.md) — source of truth for the store listing fields (copy, permission justifications, data disclosure, assets).
+- [`docs/chromewebstore.md`](docs/chromewebstore.md) — Chrome store listing source of truth (copy, permission justifications, data disclosure, assets).
+- [`docs/addons-mozilla.md`](docs/addons-mozilla.md) — Firefox / AMO listing source of truth (fields, license, categories, reviewer notes).
 - [`docs/marketing.md`](docs/marketing.md) — distribution + launch notes (channels, messaging, owned-channel plan).
 - [`docs/screenshots.md`](docs/screenshots.md) — refreshing the store screenshots (`pnpm capture` → `pnpm frame` from a curated mock scene).
 - [`docs/notifications.md`](docs/notifications.md) — when notifications fire + platform limits.
