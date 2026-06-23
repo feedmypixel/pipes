@@ -20,10 +20,11 @@ HTML + CSS + JS prototypes intended as the visual brief for re-implementation as
 
 ## Status
 
-**`v4/` is the current locked direction** (handoff 2026-06-18). It consolidates the full surface
-handoff (popup / side panel / options / notifications) with the forms + in-app notifications spec
-(`v4/FORMS.md`) and the **"Mine" authorship scope filter** (`v4/MINE-FILTER.md`). `v1`/`v2` are
-earlier iterations kept for reference.
+**`v5/` is the current locked direction** (handoff 2026-06-23). It is `v4` plus **author attribution
+on rows** (`v5/AUTHOR-ATTRIBUTION.md` — avatar + name "who caused this?" on default-branch + PR/MR
+rows). `v4` already carried the full surface handoff + forms/in-app notifications (`FORMS.md`) + the
+**"Mine" authorship scope filter** (`MINE-FILTER.md`); all of that is unchanged in `v5`. `v1`/`v2`
+are earlier iterations kept for reference.
 
 ## What you'll find in a bundle
 
@@ -58,6 +59,7 @@ earlier iterations kept for reference.
 
 | Date       | Version | Notes                                                                 |
 | ---------- | ------- | --------------------------------------------------------------------- |
-| 2026-06-18 | v4      | Current. Consolidated handoff: all four surfaces + forms/in-app notifications (`FORMS.md`) + the "Mine" authorship scope filter (`MINE-FILTER.md`). Supersedes v2. |
+| 2026-06-23 | v5      | Current. v4 + author attribution on rows (`AUTHOR-ATTRIBUTION.md`): avatar + name "who caused this?" on default-branch + PR/MR rows, split-target stretched link, greyscale→colour avatar, container-query avatar-only fallback. All other specs/assets unchanged from v4. |
+| 2026-06-18 | v4      | Consolidated handoff: all four surfaces + forms/in-app notifications (`FORMS.md`) + the "Mine" authorship scope filter (`MINE-FILTER.md`). Supersedes v2. |
 | 2026-06-06 | v2      | v1 plus the forms + in-app notifications spec (`FORMS.md`, `assets/forms.css`): fields, error states, toasts, banners, the undo pattern. |
 | 2026-06-05 | v1      | Initial handoff: tokens (Pixel Blue `#3194FC`, cool-slate neutrals, OKLCH status palette), green-tick logo, universal status-icon set (no provider marks), 4 surfaces (popup, side panel, options, notifications + toolbar), Lucide icons, system font. |

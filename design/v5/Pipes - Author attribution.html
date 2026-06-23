@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Pipes — author attribution on rows</title>
+<style>
+/* ── Pipes tokens (verbatim from src/lib/styles/tokens.css) ───────────── */
+:root{
+  color-scheme: light;
+  --bg:#fff; --canvas:#eef1f7; --surface:#fff; --surface-2:#f4f6fb; --hover:#eaeef6;
+  --border:#e3e8f1; --border-2:#d0d7e4; --text:#0f1620; --text-2:#545e6e; --text-3:#939dad;
+  --brand:#3194fc; --brand-ink:#fff; --link:oklch(55% 0.17 256deg);
+  --success:oklch(64% 0.15 152deg); --failed:oklch(60% 0.2 27deg); --running:oklch(66% 0.17 256deg);
+  --pending:oklch(72% 0.14 80deg); --neutral:oklch(60% 0.025 256deg); --status-ink:#fff;
+  --font-sans:-apple-system,blinkmacsystemfont,'Segoe UI',system-ui,sans-serif;
+  --font-mono:ui-monospace,'SF Mono','JetBrains Mono',menlo,consolas,monospace;
+  --radius:4px; --radius-pill:999px;
+  --space-3xs:.125rem; --space-2xs:.25rem; --space-xs:.375rem; --space-sm:.5rem;
+  --space-md:.625rem; --space-lg:.75rem; --space-xl:.875rem; --space-2xl:1rem; --space-3xl:1.25rem;
+  --space-4xl:1.5rem; --space-5xl:2rem;
+  --font-size-2xs:.625rem; --font-size-xs:.6875rem; --font-size-sm:.75rem; --font-size-base:.8125rem;
+  --font-size-md:.875rem; --font-size-lg:.9375rem; --font-size-2xl:1.3125rem;
+  --leading-none:1; --leading-snug:1.35; --leading-normal:1.45;
+  --weight-regular:400; --weight-medium:500; --weight-semibold:600; --weight-bold:650; --weight-heavy:700;
+  --appbar:var(--surface-2); --appbar-text:var(--text); --appbar-muted:var(--text-3);
+  --control-on:var(--hover); --control-on-ink:var(--text); --control-on-edge:var(--border-2);
+  --shadow:0 1px 0 rgb(15 22 32/4%),0 1px 3px rgb(15 22 32/10%);
+  --shadow-lg:0 8px 28px rgb(15 22 32/16%);
+}
+[data-theme="dark"]{
+  color-scheme: dark;
+  --bg:#0b0f17; --canvas:#070a10; --surface:#121826; --surface-2:#161d2c; --hover:#1b2333;
+  --border:#242d3e; --border-2:#2f3a4d; --text:#e7ecf3; --text-2:#9aa6b6; --text-3:#5d6b7e;
+  --brand:#3194fc; --brand-ink:#06152b; --link:oklch(72% 0.15 256deg);
+  --success:oklch(72% 0.16 152deg); --failed:oklch(68% 0.2 27deg); --running:oklch(72% 0.16 256deg);
+  --pending:oklch(78% 0.14 85deg); --neutral:oklch(64% 0.025 256deg);
+  --appbar:var(--surface-2); --control-on:var(--hover); --control-on-ink:var(--text); --control-on-edge:var(--border-2);
+}
+
+/* ── doc chrome (not part of the deliverable) ─────────────────────────── */
+*{box-sizing:border-box;}
+body{margin:0;background:#0c0e12;color:#e7ecf3;font-family:var(--font-sans);
+  -webkit-font-smoothing:antialiased;padding:48px 40px 90px;}
+.wrap{max-width:1120px;margin:0 auto;}
+.h-eyebrow{font:var(--weight-semibold) 12px/1 var(--font-mono);letter-spacing:.12em;
+  text-transform:uppercase;color:#5fa0ff;margin:0 0 12px;}
+h1{font-size:30px;letter-spacing:-.02em;margin:0 0 14px;font-weight:700;}
+.lede{color:#9aa3b2;font-size:15px;line-height:1.6;max-width:720px;margin:0 0 8px;}
+.lede b{color:#e7ecf3;font-weight:600;}
+.rec{display:inline-flex;align-items:center;gap:8px;margin-top:18px;padding:8px 14px;border-radius:999px;
+  background:rgba(49,148,252,.14);border:1px solid rgba(49,148,252,.4);color:#9cc4ff;
+  font:600 13px/1.4 var(--font-sans);}
+.rec b{color:#fff;}
+.section{margin-top:52px;}
+.section > h2{font-size:18px;letter-spacing:-.01em;margin:0 0 6px;}
+.section > p{color:#9aa3b2;font-size:14px;line-height:1.55;margin:0 0 22px;max-width:740px;}
+.row2{display:flex;gap:28px;flex-wrap:wrap;align-items:flex-start;}
+.col{display:flex;flex-direction:column;gap:10px;}
+.cap{display:flex;align-items:center;gap:8px;font:600 11px/1 var(--font-mono);color:#7f8a99;}
+.cap .sw{width:9px;height:9px;border-radius:2px;}
+.cap .sw.l{background:#fff;border:1px solid #444;}
+.cap .sw.d{background:#0b0f17;border:1px solid #2f3a4d;}
+
+/* device frame holding the real list */
+.dev{border-radius:10px;overflow:hidden;box-shadow:var(--shadow-lg);border:1px solid #20242c;}
+.dev[data-theme]{background:var(--bg);}
+.dev.w360{width:360px;} .dev.w440{width:440px;} .dev.w320{width:320px;}
+
+/* ── REAL LIST + ROWS (the deliverable) ──────────────────────────────── */
+.list{container-type:inline-size;padding:var(--space-2xs) 0;}
+.acct{display:flex;align-items:center;gap:var(--space-sm);padding:var(--space-md) var(--space-md) var(--space-xs);}
+.acct .o{font:var(--weight-bold) var(--font-size-xs)/1 var(--font-sans);color:var(--text-2);}
+.acct .c{margin-left:auto;font:var(--weight-medium) 10px/1 var(--font-mono);color:var(--text-3);
+  border:1px solid var(--border);border-radius:999px;padding:2px 7px;}
+
+.r{position:relative;display:flex;align-items:center;gap:var(--space-sm);
+  padding:var(--space-sm) var(--space-md);}
+.r + .r,.r + .sub,.sub + .r{border-top:1px solid var(--border);}
+.r:hover{background:var(--hover);}
+.r.head{box-shadow:inset 2px 0 0 var(--failed);background:color-mix(in oklab,var(--failed) 8%,var(--bg));}
+.r.head:hover{background:color-mix(in oklab,var(--failed) 12%,var(--bg));}
+
+/* primary target — the run / PR — stretched over the whole row */
+.r-link{position:absolute;inset:0;z-index:0;}
+.r:has(.r-link:focus-visible){outline:2px solid var(--brand);outline-offset:-2px;}
+
+.r-status{width:16px;height:16px;border-radius:50%;flex:none;display:grid;place-items:center;}
+.r-status svg{width:10px;height:10px;}
+.r-main{display:flex;align-items:center;gap:var(--space-xs);min-width:0;flex:1;}
+.r-name{font:var(--weight-semibold) var(--font-size-base)/1 var(--font-sans);color:var(--text);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.star{color:var(--pending);flex:none;display:grid;place-items:center;}
+.star svg{width:11px;height:11px;}
+.r-ref{font:var(--weight-medium) var(--font-size-2xs)/1 var(--font-mono);color:var(--text-3);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.pnum{font:var(--weight-bold) var(--font-size-2xs)/1 var(--font-mono);color:var(--text-2);flex:none;}
+.chip-br{font:var(--weight-medium) var(--font-size-2xs)/1 var(--font-mono);color:var(--text-2);
+  background:var(--surface-2);border:1px solid var(--border);border-radius:var(--radius);
+  padding:2px 5px;flex:none;white-space:nowrap;}
+
+/* ── AUTHOR ISLAND — its own link, raised above the stretched row link ── */
+.author{position:relative;z-index:1;display:inline-flex;align-items:center;gap:var(--space-2xs);
+  flex:none;max-width:88px;text-decoration:none;color:var(--text-2);border-radius:var(--radius-pill);}
+.author:hover .author-name{text-decoration:underline;text-underline-offset:2px;color:var(--text);}
+.author:hover .avatar{box-shadow:0 0 0 1px var(--border-2) inset,0 0 0 2px var(--bg),0 0 0 3px var(--border-2);}
+.author:focus-visible{outline:2px solid var(--brand);outline-offset:2px;}
+.avatar{width:18px;height:18px;border-radius:50%;flex:none;overflow:hidden;display:grid;place-items:center;
+  background:var(--surface-2);box-shadow:0 0 0 1px var(--border) inset;}
+.avatar img,.avatar .ph{width:100%;height:100%;object-fit:cover;display:block;
+  filter:grayscale(1);opacity:.82;transition:filter .12s ease,opacity .12s ease;}
+.author:hover .avatar img,.author:hover .avatar .ph,
+.author:focus-visible .avatar img,.author:focus-visible .avatar .ph{filter:none;opacity:1;}
+.avatar .ini{font:var(--weight-semibold) 8px/1 var(--font-sans);color:var(--text-2);text-transform:uppercase;}
+@media (prefers-reduced-motion:reduce){.avatar img,.avatar .ph{transition:none;}}
+.author-name{font:var(--weight-medium) var(--font-size-2xs)/1 var(--font-sans);color:var(--text-2);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:64px;}
+
+.r-time{font:var(--weight-medium) var(--font-size-2xs)/1 var(--font-mono);color:var(--text-3);
+  flex:none;white-space:nowrap;}
+.r.dense{padding:var(--space-xs) var(--space-md);}
+.r.dense .avatar{width:16px;height:16px;}
+
+/* sub-row (PR/MR) — TWO lines: title on top, meta (branch · author · time) beneath */
+.sub{position:relative;display:flex;align-items:flex-start;gap:var(--space-sm);
+  padding:var(--space-sm) var(--space-md) var(--space-sm) var(--space-3xl);}
+.sub:hover{background:var(--hover);}
+.sub .r-status{width:14px;height:14px;flex:none;margin-top:1px;} .sub .r-status svg{width:9px;height:9px;}
+.sub-body{flex:1;min-width:0;display:flex;flex-direction:column;gap:var(--space-2xs);}
+.sub-title{display:flex;align-items:center;gap:var(--space-xs);min-width:0;}
+.sub-title .r-ref{flex:1;min-width:0;}
+.sub-meta{display:flex;align-items:center;gap:var(--space-sm);min-width:0;}
+.sub-meta .chip-br{flex:none;}
+.sub-meta .meta-end{margin-left:auto;display:inline-flex;align-items:center;gap:var(--space-sm);flex:none;}
+
+/* narrow fallback → avatar only */
+@container (max-width:336px){ .author-name{display:none;} }
+
+/* annotation cards */
+.notes{margin-top:24px;display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:14px;}
+.note{border:1px solid #20242c;border-radius:8px;background:#11141a;padding:15px 17px;}
+.note h4{margin:0 0 7px;font-size:13px;display:flex;align-items:center;gap:8px;}
+.note h4 .d{width:8px;height:8px;border-radius:50%;}
+.note p{margin:0;font-size:12.5px;line-height:1.55;color:#9aa3b2;}
+.note code{font:600 11.5px/1 var(--font-mono);background:#1b1f27;padding:2px 5px;border-radius:4px;color:#cdd6e2;}
+
+/* two-target diagram */
+.diagram{position:relative;width:360px;}
+.zone{position:absolute;top:0;bottom:0;display:flex;align-items:flex-start;justify-content:center;
+  padding-top:6px;font:600 9px/1.3 var(--font-mono);letter-spacing:.04em;text-transform:uppercase;
+  border-radius:6px;pointer-events:none;text-align:center;}
+.zone.a{left:0;right:96px;background:rgba(49,148,252,.16);border:1px dashed rgba(49,148,252,.6);color:#9cc4ff;}
+.zone.b{right:42px;width:74px;background:rgba(63,176,90,.18);border:1px dashed rgba(63,176,90,.65);color:#7fdc9c;}
+
+.state-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(290px,1fr));gap:18px;}
+.state{border:1px solid #20242c;border-radius:10px;background:#0f1218;overflow:hidden;}
+.state .sh{padding:12px 15px 0;}
+.state .stag{font:600 10px/1 var(--font-mono);letter-spacing:.05em;text-transform:uppercase;color:#7f8a99;}
+.state h3{margin:5px 0 0;font-size:13.5px;}
+.state .sd{font-size:12px;color:#9aa3b2;line-height:1.5;padding:4px 15px 14px;}
+.state .sv{padding:0 0 6px;}
+
+.spec{border:1px solid #20242c;border-radius:10px;background:#0d1016;overflow:auto;margin-top:8px;}
+.spec pre{margin:0;padding:18px 20px;font:500 12px/1.7 var(--font-mono);color:#cdd6e2;white-space:pre;}
+.spec .c{color:#6f7c8c;} .spec .t{color:#7fb8ff;} .spec .v{color:#9cdc8f;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <p class="h-eyebrow">Pipes · row attribution</p>
+  <h1>“Who caused this?” — author on every row</h1>
+  <p class="lede">A small <b>avatar + truncated name</b> on every <code style="font:600 12px/1 var(--font-mono);background:#1b1f27;padding:2px 5px;border-radius:4px;color:#cdd6e2">Row</code>
+    and <code style="font:600 12px/1 var(--font-mono);background:#1b1f27;padding:2px 5px;border-radius:4px;color:#cdd6e2">ChangeRow</code>, so a red branch or PR/MR shows <b>who</b> at a glance — no click-through.
+    Display only; independent of the All&nbsp;|&nbsp;Mine scope filter. Built on the locked v4 tokens, light + dark,
+    at panel (360px) and popup (440px) widths.</p>
+  <div class="rec">Recommendation: <b>avatar + truncated name on the metadata line, before the time. Default Row stays one line (it’s roomy); the PR/MR ChangeRow goes two lines — title on top, branch · author · time beneath. Split target via stretched row-link + raised author link.</b></div>
+
+  <!-- IN CONTEXT -->
+  <div class="section">
+    <h2>In context — both row types, both widths</h2>
+    <p>Author sits in a fixed slot <b>immediately before the relative time</b>, on the right where the eye already
+      lands for “when”. The status icon (left) and time (right) never move. Hover a row → it opens the run/PR;
+      hover the avatar+name → it opens that person’s profile. Try it.</p>
+    <div class="row2">
+      <div class="col">
+        <div class="cap"><span class="sw l"></span>light · panel 360</div>
+        <div class="dev w360" data-theme="light" id="L360"></div>
+      </div>
+      <div class="col">
+        <div class="cap"><span class="sw d"></span>dark · panel 360</div>
+        <div class="dev w360" data-theme="dark" id="D360"></div>
+      </div>
+      <div class="col">
+        <div class="cap"><span class="sw d"></span>dark · popup 440</div>
+        <div class="dev w440" data-theme="dark" id="D440"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TWO TARGET RESOLUTION -->
+  <div class="section">
+    <h2>The nested-anchor problem — and the fix</h2>
+    <p>The whole row is already a single <code>&lt;a&gt;</code> to the run/PR. A profile link is a second destination,
+      and <code>&lt;a&gt;</code>-inside-<code>&lt;a&gt;</code> is invalid. <b>Recommended: a stretched-link split target.</b> The row link is
+      absolutely positioned to fill the row (<code>inset:0</code>); the author is a normal sibling <code>&lt;a&gt;</code> raised
+      above it (<code>z-index:1</code>). One row, two real anchors, valid HTML, two tab stops.</p>
+    <div class="row2">
+      <div class="col">
+        <div class="cap">two hit zones (one visual row)</div>
+        <div class="dev w360" data-theme="dark" id="DIAG"></div>
+      </div>
+      <div class="col">
+        <div class="cap">states — rest / row-hover / author-hover / focus</div>
+        <div class="dev w360" data-theme="dark" id="STATES"></div>
+      </div>
+    </div>
+    <div class="notes">
+      <div class="note"><h4><span class="d" style="background:#5fa0ff"></span>① Row link (run / PR)</h4>
+        <p><code>.r-link</code> fills the row at <code>z-index:0</code>. Clicking status, title, branch chip or time → the run.
+          Keeps today’s behaviour exactly; no regression.</p></div>
+      <div class="note"><h4><span class="d" style="background:#6fce86"></span>② Author link (profile)</h4>
+        <p><code>.author</code> is a sibling <code>&lt;a&gt;</code> at <code>z-index:1</code>, so it “punches through” the overlay and
+          owns its clicks. <code>aria-label="Open Sam Okafor’s profile"</code>; full name also in <code>title</code>.</p></div>
+      <div class="note"><h4><span class="d" style="background:var(--brand)"></span>Focus &amp; keyboard</h4>
+        <p>Two tab stops in DOM order: row link, then author. Row focus ring via
+          <code>.r:has(.r-link:focus-visible)</code>; author has its own <code>--brand</code> ring. AA, both schemes.</p></div>
+      <div class="note"><h4><span class="d" style="background:var(--text-3)"></span>Fallback (if split-target is fiddly)</h4>
+        <p>Render the author <b>non-linking</b> — avatar + name + <code>title</code> only, no profile link. Simplest; loses
+          click-to-profile but keeps the “who”. Documented as the acceptable fallback.</p></div>
+    </div>
+  </div>
+
+  <!-- STATES -->
+  <div class="section">
+    <h2>Avatar states</h2>
+    <p>Avatar is <b>18px, round</b> (16px in dense rows), <b>greyscale at rest</b> so it never competes with the
+      bright status icons — it comes to <b>full colour on hover / focus</b>. Photo (or bot avatar) when available;
+      otherwise a flat initials swatch. Name truncates with ellipsis at <b>~64px</b>, full name in the tooltip.</p>
+    <div class="state-grid">
+      <div class="state"><div class="sh"><span class="stag">photo</span><h3>User avatar</h3></div>
+        <div class="sd">The provider <code>avatar_url</code>, <code>object-fit:cover</code>, 1px <code>--border</code> inset ring.
+          <b>Grey at rest, colour on hover</b> — user photos are fine (not a provider brand mark).</div>
+        <div class="sv"><div class="dev w360" data-theme="dark" id="ST_photo"></div></div></div>
+      <div class="state"><div class="sh"><span class="stag">no image</span><h3>Initials fallback</h3></div>
+        <div class="sd">Initials on a neutral swatch — <code>--surface-2</code> fill, <code>--text-2</code> ink, <code>--border</code>
+          ring. No colour-coding (stays token-only; never reads as status).</div>
+        <div class="sv"><div class="dev w360" data-theme="dark" id="ST_ini"></div></div></div>
+      <div class="state"><div class="sh"><span class="stag">bot</span><h3>Dependabot / Renovate</h3></div>
+        <div class="sd">Bots supply an <code>avatar_url</code> too — show their avatar like any author (greyed at rest,
+          colour on hover). The <code>[bot]</code> name makes the automation obvious.</div>
+        <div class="sv"><div class="dev w360" data-theme="dark" id="ST_bot"></div></div></div>
+      <div class="state"><div class="sh"><span class="stag">none</span><h3>Unknown author</h3></div>
+        <div class="sd">No author data → render nothing (no avatar, no name, no gap). The slot simply collapses; time
+          stays put.</div>
+        <div class="sv"><div class="dev w360" data-theme="dark" id="ST_none"></div></div></div>
+    </div>
+  </div>
+
+  <!-- NARROW -->
+  <div class="section">
+    <h2>Narrow fallback — avatar only</h2>
+    <p>Name shown by default at panel and popup widths. Below <b>~336px</b> (or in a forced dense mode) the
+      <code>.author-name</code> hides via a container query, leaving the avatar — which still carries the tooltip and
+      profile link. Status and time never get crowded.</p>
+    <div class="row2">
+      <div class="col"><div class="cap"><span class="sw d"></span>dark · 320 (avatar-only)</div>
+        <div class="dev w320" data-theme="dark" id="N320"></div></div>
+      <div class="col"><div class="cap"><span class="sw l"></span>light · 320 (avatar-only)</div>
+        <div class="dev w320" data-theme="light" id="N320L"></div></div>
+    </div>
+  </div>
+
+  <!-- DECISIONS -->
+  <div class="section">
+    <h2>The six decisions</h2>
+    <div class="notes">
+      <div class="note"><h4>1 · Placement</h4><p>Fixed slot <b>just before the relative time</b>, right-aligned cluster. Status (left) and time (far right) never move; the title/ref takes the flexible middle and truncates first.</p></div>
+      <div class="note"><h4>2 · Avatar + name vs avatar-only</h4><p><b>Avatar + truncated name</b> by default (panel + popup). <b>Avatar-only</b> below ~336px or in dense mode, via container query. Confirmed.</p></div>
+      <div class="note"><h4>3 · Truncation</h4><p>Ellipsis at <b>max-width ~64px</b> (≈ 8–10 chars); full display name in <code>title</code>. Keeps the right cluster bounded so the title gets the slack.</p></div>
+      <div class="note"><h4>4 · Nested anchor</h4><p><b>Split target</b> — stretched row-link + raised author link (two real <code>&lt;a&gt;</code>). <b>Non-linking</b> avatar+name+tooltip is the documented fallback.</p></div>
+      <div class="note"><h4>5 · Same on both rows</h4><p><b>Identical</b> treatment on <code>Row</code> and <code>ChangeRow</code>, so “who” reads consistently whether it’s a <code>main</code> break or a PR/MR.</p></div>
+      <div class="note"><h4>6 · Avatar</h4><p><b>18px round</b> (16px dense). Chain: photo / bot <code>avatar_url</code> → initials on a neutral swatch. <b>Greyscale at rest, colour on hover/focus</b> so the status icons stay the focal point. Flat fallback, full name in <code>title</code>.</p></div>
+    </div>
+  </div>
+
+  <!-- BUILD SPEC -->
+  <div class="section">
+    <h2>Build spec — tokens only</h2>
+    <p>Drop-in markup for both rows. The only structural change is the stretched <code>.r-link</code> + the
+      <code>.author</code> sibling; everything else is your existing row grid.</p>
+    <div class="spec"><pre id="specCode"></pre></div>
+  </div>
+</div>
+
+<script>
+/* ── icons ─────────────────────────────────────────────── */
+const ICON_USER='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>';
+const ICON_BOT='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="8" width="16" height="12" rx="2"/><path d="M12 4v4M9 13h.01M15 13h.01M2 14h2M20 14h2"/></svg>';
+const ICON_STAR='<svg viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M12 2l2.9 6.3 6.9.7-5.2 4.6 1.5 6.8L12 17.8 5.9 20.4l1.5-6.8L2.2 9l6.9-.7z"/></svg>';
+/* settled-neutral statuses share the --neutral token, mirroring components.js */
+function statusTok(s){ return ['canceled','skipped','unknown'].includes(s) ? 'neutral' : s; }
+function stIcon(s){
+  if(s==='success')return '<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>';
+  if(s==='running')return '<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3.4" stroke-linecap="round"><path d="M12 3a9 9 0 1 1-8.5 6"/></svg>';
+  if(s==='pending')return '<svg viewBox="0 0 24 24" fill="#fff" stroke="none"><rect x="6" y="5" width="4" height="14" rx="1.5"/><rect x="14" y="5" width="4" height="14" rx="1.5"/></svg>';
+  if(s==='skipped')return '<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 5l5 7-5 7M13 5l5 7-5 7"/></svg>';
+  if(s==='canceled')return '<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3.2" stroke-linecap="round"><path d="M6 6l12 12"/></svg>';
+  return '<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3.4" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg>';
+}
+/* ── avatar — photo (or bot avatar) → initials. Greyscale at rest; colour on engage. ── */
+function avatar(p){
+  if(p.kind==='initials') return `<span class="avatar"><span class="ini">${p.ini}</span></span>`;
+  // flat solid stands in for the provider avatar_url (photos/bots both use it)
+  return `<span class="avatar"><span class="ph" style="background:oklch(60% 0.11 ${p.h})"></span></span>`;
+}
+function author(p,linking=true){
+  if(!p) return '';
+  const inner=`${avatar(p)}<span class="author-name">${p.name}</span>`;
+  if(linking) return `<a class="author" href="#" target="_blank" rel="noopener noreferrer" title="${p.full||p.name}" aria-label="Open ${p.full||p.name}’s profile — opens in a new tab">${inner}</a>`;
+  return `<span class="author" title="${p.full||p.name}">${inner}</span>`;
+}
+/* ── people ────────────────────────────────────────────── */
+const P={
+  jordan:{kind:'photo',h:265,name:'jordan',full:'Jordan Lee'},
+  alex:{kind:'photo',h:35,name:'alex',full:'Alex Rivera'},
+  sam:{kind:'photo',h:150,name:'sam',full:'Sam Okafor'},
+  priya:{kind:'initials',ini:'PR',name:'priya',full:'Priya Rao'},
+  dependa:{kind:'photo',h:235,name:'dependabot',full:'dependabot[bot]'},
+  noimg:{kind:'initials',ini:'MК',name:'marek',full:'Marek Kowalski'},
+};
+/* ── rows ──────────────────────────────────────────────── */
+function rowDefault(o){ // Row.svelte
+  return `<div class="r${o.head?' head':''}${o.dense?' dense':''}" data-status="${o.status}">
+    <a class="r-link" href="#" target="_blank" rel="noopener noreferrer" title="Open the ${o.status==='failed'?'failed job':'run'} — opens in a new tab" aria-label="Open ${o.name} run — opens in a new tab"></a>
+    <span class="r-status" style="background:var(--${statusTok(o.status)})">${stIcon(o.status)}</span>
+    <span class="r-main">
+      ${o.def?'<span class="star">'+ICON_STAR+'</span>':''}
+      <span class="r-name">${o.name}</span>
+    </span>
+    ${author(o.person,o.linking!==false)}
+    <span class="r-time">${o.time}</span>
+  </div>`;
+}
+function rowChange(o){ // ChangeRow.svelte — two lines
+  return `<div class="sub" data-status="${o.status}">
+    <a class="r-link" href="#" target="_blank" rel="noopener noreferrer" title="Open the ${o.status==='failed'?'failed job':o.kind} — opens in a new tab" aria-label="Open ${o.tag} — opens in a new tab"></a>
+    <span class="r-status" style="background:var(--${statusTok(o.status)})">${stIcon(o.status)}</span>
+    <div class="sub-body">
+      <div class="sub-title"><span class="pnum">${o.tag}</span><span class="r-ref">${o.title}</span></div>
+      <div class="sub-meta">
+        ${o.branch?`<span class="chip-br">${o.branch}</span>`:''}
+        <span class="meta-end">${author(o.person,o.linking!==false)}<span class="r-time">${o.time}</span></span>
+      </div>
+    </div>
+  </div>`;
+}
+/* ── compositions ──────────────────────────────────────── */
+function fullList(dense){
+  return `<div class="list">
+    <div class="acct"><span class="o">feedmypixel</span><span class="c">2</span></div>
+    ${rowDefault({status:'failed',name:'status-ui',def:true,time:'now',person:P.jordan,head:true,dense})}
+    ${rowChange({status:'failed',tag:'#152',title:'cap retry budget per endpoint, not globally',branch:'pr/fix-retry-budget',time:'6m',person:P.sam,kind:'PR'})}
+    ${rowChange({status:'running',tag:'#149',title:'build(deps): bump glob 10.4.5 → 10.5.0',branch:'dependabot/npm/glob-10.5.0',time:'18m',person:P.dependa,kind:'PR'})}
+    ${rowDefault({status:'success',name:'status-api',def:true,time:'36m',person:P.alex,dense})}
+    ${rowChange({status:'success',tag:'!88',title:'docs pass',branch:'mr/88',time:'2h',person:P.priya,kind:'MR'})}
+  </div>`;
+}
+document.getElementById('L360').innerHTML=fullList(false);
+document.getElementById('D360').innerHTML=fullList(false);
+document.getElementById('D440').innerHTML=fullList(false);
+
+/* diagram */
+document.getElementById('DIAG').innerHTML=`<div class="list" style="position:relative">
+  ${rowDefault({status:'failed',name:'status-ui',def:true,time:'now',person:P.sam,head:true})}
+  <div class="zone a">① run / PR — rest of row</div>
+  <div class="zone b">② profile</div>
+</div>`;
+
+/* states column: rest / row-hover / author-hover / focus */
+document.getElementById('STATES').innerHTML=`<div class="list">
+  ${rowDefault({status:'failed',name:'rest',def:true,time:'now',person:P.sam})}
+  <div style="background:var(--hover)">${rowDefault({status:'success',name:'row hover → run',def:true,time:'2h',person:P.alex})}</div>
+  ${rowDefault({status:'success',name:'author hover → profile',def:true,time:'2h',person:P.alex})}
+  ${rowDefault({status:'running',name:'keyboard focus',def:true,time:'now',person:P.jordan})}
+</div>`;
+// force the demonstrated states
+const sc=document.getElementById('STATES');
+const rows=sc.querySelectorAll('.r');
+rows[2].querySelector('.author-name').style.textDecoration='underline';
+rows[2].querySelector('.author-name').style.color='var(--text)';
+rows[2].querySelector('.avatar').style.boxShadow='0 0 0 1px var(--border-2) inset,0 0 0 2px var(--bg),0 0 0 3px var(--border-2)';
+rows[3].style.outline='2px solid var(--brand)';rows[3].style.outlineOffset='-2px';
+
+/* state cards */
+document.getElementById('ST_photo').innerHTML=`<div class="list">${rowDefault({status:'failed',name:'status-ui',def:true,time:'now',person:P.jordan,head:true})}${rowChange({status:'failed',tag:'#152',title:'cap retry budget',branch:'pr/152',time:'6m',person:P.sam,kind:'PR'})}</div>`;
+document.getElementById('ST_ini').innerHTML=`<div class="list">${rowChange({status:'success',tag:'!88',title:'docs pass',branch:'mr/88',time:'2h',person:P.priya,kind:'MR'})}${rowDefault({status:'success',name:'api',def:true,time:'1d',person:P.noimg})}</div>`;
+document.getElementById('ST_bot').innerHTML=`<div class="list">${rowChange({status:'running',tag:'#149',title:'bump deps',branch:'pr/149',time:'18m',person:P.dependa,kind:'PR'})}</div>`;
+document.getElementById('ST_none').innerHTML=`<div class="list">${rowDefault({status:'success',name:'status-web',def:true,time:'3h',person:null})}${rowChange({status:'canceled',tag:'#71',title:'spike: arm runners',branch:'pr/71',time:'1d',person:null,kind:'PR'})}</div>`;
+
+/* narrow */
+document.getElementById('N320').innerHTML=fullList(false);
+document.getElementById('N320L').innerHTML=fullList(false);
+
+/* spec code */
+const esc=s=>s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+const code=`<div class="r" data-status="failed">
+  <!-- ① primary target: the run / PR — stretched over the whole row -->
+  <a class="r-link" href={runUrl} target="_blank" rel="noopener noreferrer"
+     aria-label="Open the failed job — opens in a new tab"></a>
+
+  <span class="r-status">…</span>
+  <span class="r-main"><span class="star">★</span><span class="r-name">{repo}</span></span>
+
+  <!-- ② author island: its own link, raised above .r-link -->
+  <a class="author" href={profileUrl} target="_blank" rel="noopener noreferrer"
+     title={fullName} aria-label={\`Open \${fullName}'s profile — opens in a new tab\`}>
+    <span class="avatar"><img src={avatarUrl} alt=""/></span>   <!-- photo or bot avatar_url; initials swatch if none -->
+    <span class="author-name">{login}</span>
+  </a>
+
+  <span class="r-time">{rel}</span>
+</div>
+
+<!-- ChangeRow (PR/MR) — TWO lines: title on top, meta (branch · author · time) beneath -->
+<div class="sub" data-status="failed">
+  <a class="r-link" href={prUrl} target="_blank" rel="noopener noreferrer"
+     aria-label="Open #152 — opens in a new tab"></a>
+  <span class="r-status">…</span>
+  <div class="sub-body">
+    <div class="sub-title"><span class="pnum">#152</span><span class="r-ref">{title}</span></div>
+    <div class="sub-meta">
+      <span class="chip-br">⎇ {branch}</span>
+      <span class="meta-end"><a class="author" …>…</a><span class="r-time">{rel}</span></span>
+    </div>
+  </div>
+</div>
+
+/* key CSS — tokens only */
+.r        { position: relative; }
+.r-link   { position: absolute; inset: 0; z-index: 0; }      /* run/PR fills row */
+.author   { position: relative; z-index: 1; }                /* island on top   */
+.r:has(.r-link:focus-visible){ outline: 2px solid var(--brand); outline-offset: -2px; }
+.author:focus-visible        { outline: 2px solid var(--brand); outline-offset: 2px;  }
+.avatar      { width:18px; height:18px; border-radius:50%;
+               box-shadow:0 0 0 1px var(--border) inset; }
+.avatar img  { width:100%; height:100%; object-fit:cover;
+               filter:grayscale(1); opacity:.82; }            /* photos/bots only — calm at rest */
+.author:hover .avatar img,
+.author:focus-visible .avatar img { filter:none; opacity:1; } /* colour on engage */
+.avatar .ini { color:var(--text-2); }                         /* initials fallback: flat, neutral, no filter */
+.author-name { max-width:64px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+@container (max-width:336px){ .author-name{ display:none; } }   /* avatar-only fallback */
+
+/* ChangeRow is two-line: body stacks title over meta; status aligns to line 1 */
+.sub        { align-items: flex-start; }
+.sub-body   { flex:1; min-width:0; display:flex; flex-direction:column; gap:var(--space-2xs); }
+.sub-meta .meta-end { margin-left:auto; }   /* author + time pinned right; branch chip left */`;
+document.getElementById('specCode').innerHTML=esc(code)
+  .replace(/(\/\/[^\n]*|\/\*[\s\S]*?\*\/|&lt;!--[\s\S]*?--&gt;)/g,'<span class="c">$1</span>');
+</script>
+</body>
+</html>
