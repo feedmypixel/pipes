@@ -37,12 +37,12 @@
         <span class="branch-name">{change.headRef}</span>
       </span>
       <span class="meta-end">
-        <Author author={change.attribution} dense />
         {#if change.status === 'running' && change.startedAt}
           <ElapsedTime startedAt={change.startedAt} />
         {:else if change.updatedAt}
           <RelativeTime iso={change.updatedAt} />
         {/if}
+        <Author author={change.attribution} dense />
       </span>
     </div>
   </div>
