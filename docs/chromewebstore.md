@@ -1,6 +1,6 @@
 # Chrome Web Store Listing: Pipes
 
-> Last Updated: 2026-06-13
+> Last Updated: 2026-06-23
 
 Single source of truth for the Chrome Web Store listing: copy each field into the
 [Developer Dashboard](https://chrome.google.com/webstore/devconsole) at submission. Excluded from
@@ -51,22 +51,24 @@ English
 
 ## Graphics & Assets
 
-| Asset                          | Dimensions  | Status   | Filename                                            |
-| ------------------------------ | ----------- | -------- | --------------------------------------------------- |
-| Store Icon [REQUIRED]          | 128×128 PNG | ✅ Ready | `icons/icon-128.png`                                |
-| Screenshot 1 [REQUIRED]        | 1280×800    | ✅ Ready | `store-screenshots/framed/1-sidepanel-failures.png` |
-| Screenshot 2 [RECOMMENDED]     | 1280×800    | ✅ Ready | `store-screenshots/framed/3-popup.png`              |
-| Screenshot 3 [RECOMMENDED]     | 1280×800    | ✅ Ready | `store-screenshots/framed/4-notification.png`       |
-| Screenshot 4                   | 1280×800    | ✅ Ready | `store-screenshots/framed/5-options.png`            |
-| Screenshot 5                   | 1280×800    | ✅ Ready | `store-screenshots/framed/2-sidepanel-running.png`  |
-| Small Promo Tile [RECOMMENDED] | 440×280     | ✅ Ready | `store-screenshots/framed/6-promo-tile.png`         |
-| Marquee Promo Tile             | 1400×560    | ✅ Ready | `store-screenshots/framed/7-marquee-tile.png`       |
+| Asset                          | Dimensions  | Status   | Filename                                        |
+| ------------------------------ | ----------- | -------- | ----------------------------------------------- |
+| Store Icon [REQUIRED]          | 128×128 PNG | ✅ Ready | `icons/icon-128.png`                            |
+| Screenshot 1 [REQUIRED]        | 1280×800    | ✅ Ready | `store-screenshots/framed/1-sidepanel-dark.png` |
+| Screenshot 2 [RECOMMENDED]     | 1280×800    | ✅ Ready | `store-screenshots/framed/2-author-light.png`   |
+| Screenshot 3 [RECOMMENDED]     | 1280×800    | ✅ Ready | `store-screenshots/framed/3-popup-dark.png`     |
+| Screenshot 4                   | 1280×800    | ✅ Ready | `store-screenshots/framed/4-notification.png`   |
+| Screenshot 5                   | 1280×800    | ✅ Ready | `store-screenshots/framed/5-options-dark.png`   |
+| Small Promo Tile [RECOMMENDED] | 440×280     | ✅ Ready | `store-screenshots/framed/6-promo-tile.png`     |
+| Marquee Promo Tile             | 1400×560    | ✅ Ready | `store-screenshots/framed/7-marquee-tile.png`   |
 
 ### Screenshot Notes
 
-Capture the real extension in Chrome (light and/or dark). Show it in use, not empty: a side panel
-with a few repos where one default branch is red and the badge shows a count; the popup; a real
-desktop notification; the options page mid-setup. 1280×800 is the safest size.
+Screenshots 1-3 and 5 (plus the marquee tile) are regenerated from a curated mock scene via
+`pnpm capture` → `pnpm frame` — see [`screenshots.md`](screenshots.md). They spread light and dark
+and show the surfaces in use, not empty: the side panel with a failing default branch, author
+attribution ("see who broke it"), the popup, and the options page. The notification (4) is a
+standalone toast mock. 1280×800 is the safest size.
 
 ## Permissions Justification
 

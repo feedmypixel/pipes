@@ -1,61 +1,52 @@
 # Refreshing the store screenshots
 
-Two pieces make this repeatable and keep real work data out of the images:
+Two commands, no manual capture, no real work data in the images:
 
-1. A **curated mock scene** in `src/lib/dev-chrome.ts` that the surfaces render in dev. The provider
-   APIs are stubbed and the data is invented, so nothing real is ever shown.
-2. A **framing script** (`scripts/frame-screenshots.mjs`) that turns a raw capture into a 1280x800
-   store frame.
+```sh
+pnpm capture   # real Chrome screenshots the surfaces from a mock scene → store-screenshots/auto/
+pnpm frame     # wraps each capture in the marketing frame → store-screenshots/framed/
+```
 
-The CWS asset list (sizes, which screenshots) lives in [`chromewebstore.md`](chromewebstore.md).
+Then upload the framed files in the Chrome Web Store dashboard. The asset list (which file maps to
+which listing slot) lives in [`chromewebstore.md`](chromewebstore.md).
 
 ## 1. The scene
 
-`dev-chrome.ts` seeds two connections with friendly labels (`feedMyPixel`, `Work`) across two
-owners, and a spread of states in one view:
-
-- A failing `main` (the loud red headline) plus a couple of green and a running one.
-- PRs/MRs that are failing, running, a draft, and a bot (Dependabot).
-- Distinct **avatars** per row (DiceBear, synthetic) and the viewer is `octo-org`, so the
-  **All / Mine** toggle has rows on both sides.
-
-Adjust the scene by editing `seedData()` in `dev-chrome.ts`. Avatars come from DiceBear
-(`api.dicebear.com`), so they need a network connection while capturing.
+`src/lib/dev-chrome.ts` seeds two connections with friendly labels (`feedMyPixel`, `Work`) across two
+owners, and a spread of states in one view: a failing `main` (the loud red headline), running, draft
+and bot PRs, distinct author avatars (pixel-art + the feedMyPixel brand mark, synthetic), and the
+viewer set so the **All / Mine** toggle has rows on both sides. The provider APIs are stubbed, so
+nothing real is ever shown. Adjust the scene by editing `seedData()`.
 
 ## 2. Capture
 
-1. `pnpm dev`.
-2. Open each surface at its **dev-server URL in a normal browser tab** (not the loaded extension):
-   - side panel: `http://localhost:5173/src/sidepanel/index.html`
-   - popup: `http://localhost:5173/src/popup/index.html`
-   - options: `http://localhost:5173/src/options/index.html`
-
-   The mock scene only renders here. `dev-chrome.ts` installs the fake `chrome.*` + seeded data
-   **only when the real `chrome.*` is absent**, so the loaded extension shows empty storage, a plain
-   tab shows the scene.
-
-3. **Size the viewport** to the surface width with DevTools device mode (side panel ~360px, popup
-   440px) so the capture matches the real surface.
-4. **Both themes:** DevTools, command palette, "Show Rendering", then set
-   **Emulate CSS prefers-color-scheme** to `light` or `dark`. The surfaces follow it.
-5. Capture at a clean device-pixel ratio (a Retina screen gives crisp 2x output) and save the raws
-   into `store-screenshots/` (keep the existing names so the framed outputs line up).
-
-Spread **light and dark across the set** so the listing shows Pipes respects the OS theme.
+`scripts/capture-screenshots.mjs` starts `pnpm dev`, opens each surface in a real (non-headless)
+Chrome window at `deviceScaleFactor: 2`, sets the viewport width + colour scheme per target, and
+screenshots into `store-screenshots/auto/`. Headed Chrome matters: headless renders the status icons
+slightly off. Edit the `TARGETS` array to change which surfaces, themes, widths, or crops are shot.
 
 ## 3. Frame
 
-```sh
-pnpm frame -- store-screenshots/1-sidepanel.png store-screenshots/framed/1-sidepanel-failures.png
-pnpm frame -- store-screenshots/2-popup.png     store-screenshots/framed/3-popup.png --dark
-```
+`scripts/frame-store.mjs` wraps a capture in the brand frame: navy backdrop, headline + subline on
+the left, the surface in a window chrome on the right. Each entry in `SLOTS` sets the capture,
+headline copy, and output path; the marquee tile overrides the canvas size. Run one slot with
+`pnpm frame <slot>` (e.g. `pnpm frame marquee`) or all of them with `pnpm frame`.
 
-The script scales the capture to fit, rounds its corners, and centres it on a 1280x800 canvas
-(`--dark` uses the dark canvas, pair it with a dark capture). Tweak the margin, radius, or canvas
-colours at the top of `scripts/frame-screenshots.mjs`.
+Outputs (1280×800 unless noted):
+
+| Slot             | File                   | Note                  |
+| ---------------- | ---------------------- | --------------------- |
+| `sidepanel-dark` | `1-sidepanel-dark.png` | hero                  |
+| `author-light`   | `2-author-light.png`   | author attribution    |
+| `popup-dark`     | `3-popup-dark.png`     |                       |
+| `options-dark`   | `5-options-dark.png`   |                       |
+| `marquee`        | `7-marquee-tile.png`   | 1400×560 promo banner |
+
+`4-notification.png` (toast mock) and `6-promo-tile.png` (440×280, headline only) are hand-made, not
+part of the pipeline.
 
 ## 4. Update the listing
 
-Drop the framed files into `store-screenshots/framed/`, check them against the asset table in
-[`chromewebstore.md`](chromewebstore.md), then upload them in the Chrome Web Store dashboard
-(screenshots are not part of the extension zip, so they are a manual dashboard step).
+Check the framed files against the asset table in [`chromewebstore.md`](chromewebstore.md), then
+upload them in the Chrome Web Store dashboard (screenshots are not part of the extension zip, so they
+are a manual dashboard step).

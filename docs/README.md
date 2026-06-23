@@ -9,7 +9,7 @@ cross-cutting behaviour.
 - [`releasing-to-chrome-web-store.md`](releasing-to-chrome-web-store.md) — package + publish to the CWS.
 - [`chromewebstore.md`](chromewebstore.md) — the store listing's source of truth: copy, permission justifications, data disclosure, asset table.
 - [`marketing.md`](marketing.md) — distribution + launch notes: channels ranked by fit, messaging, the owned-channel plan.
-- [`screenshots.md`](screenshots.md) — refreshing the store screenshots: the curated mock scene + the framing script.
+- [`screenshots.md`](screenshots.md) — refreshing the store screenshots: `pnpm capture` → `pnpm frame` from a curated mock scene.
 
 ## Principles (WIP)
 
