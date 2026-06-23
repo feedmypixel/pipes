@@ -77,19 +77,19 @@
     ada: {
       login: 'ada',
       name: 'Ada Lovelace',
-      avatarUrl: dicebear('thumbs', 'ada'),
+      avatarUrl: dicebear('identicon', 'ada'),
       profileUrl: 'https://example.test/ada'
     },
     grace: {
       login: 'grace',
       name: 'Grace Hopper',
-      avatarUrl: dicebear('thumbs', 'grace'),
+      avatarUrl: dicebear('identicon', 'grace'),
       profileUrl: 'https://example.test/grace'
     },
     linus: {
       login: 'linus',
       name: 'Linus T',
-      avatarUrl: dicebear('thumbs', 'linus'),
+      avatarUrl: dicebear('identicon', 'linus'),
       profileUrl: 'https://example.test/linus'
     },
     bot: {
