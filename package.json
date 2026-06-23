@@ -39,6 +39,7 @@
     "test:watch": "vitest",
     "security-audit": "pnpm audit --audit-level=moderate",
     "icons": "node scripts/generate-icons.mjs",
+    "frame": "node scripts/frame-screenshots.mjs",
     "release": "commit-and-tag-version",
     "zip": "cd dist && zip -r ../pipes.zip . -x '*.DS_Store'",
     "prepare": "husky",
