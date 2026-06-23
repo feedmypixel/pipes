@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [1.3.0](https://github.com/feedmypixel/pipes/compare/v1.2.0...v1.3.0) (2026-06-23)
+
+### Features
+
+- author attribution on rows (who caused this?) ([731414f](https://github.com/feedmypixel/pipes/commit/731414f9b10d30e5604760c8929d056b523b97b4))
+- **author:** colour avatars at rest, greyscale on hover ([2b6d4d4](https://github.com/feedmypixel/pipes/commit/2b6d4d44a0ad5df0fb2196a5fa33b330ba1ebd43))
+
+### Bug Fixes
+
+- **author:** keep avatars in colour on hover ([e6af2c8](https://github.com/feedmypixel/pipes/commit/e6af2c8fa25d4d6ed47cb1513501163439aee50d))
+- review follow-ups for author attribution ([b9767ad](https://github.com/feedmypixel/pipes/commit/b9767addbe8f5f15b149bbcc85de2460f9e51119))
+- **showcase:** FilterBar demo fills its container ([1b5b620](https://github.com/feedmypixel/pipes/commit/1b5b620bdade25842b77fb9bfad7272a974205e2))
+
 ## [1.2.0](https://github.com/feedmypixel/pipes/compare/v1.1.1...v1.2.0) (2026-06-18)
 
 ### Features
