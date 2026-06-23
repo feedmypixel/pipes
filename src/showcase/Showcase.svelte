@@ -83,13 +83,13 @@
     grace: {
       login: 'grace',
       name: 'Grace Hopper',
-      avatarUrl: dicebear('identicon', 'grace'),
+      avatarUrl: dicebear('thumbs', 'grace'),
       profileUrl: 'https://example.test/grace'
     },
     linus: {
       login: 'linus',
       name: 'Linus T',
-      avatarUrl: dicebear('identicon', 'linus'),
+      avatarUrl: dicebear('avataaars', 'linus'),
       profileUrl: 'https://example.test/linus'
     },
     bot: {
