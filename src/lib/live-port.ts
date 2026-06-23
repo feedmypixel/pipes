@@ -1,4 +1,5 @@
 import { LIVE_PORT } from './config'
+import browser from './browser'
 
 /**
  * Hold a live port open so the service worker drives the fast poll loop while a surface is visible.
@@ -15,7 +16,7 @@ export function holdLivePort(): () => void {
   let stopped = false
 
   function connect(): void {
-    port = chrome.runtime.connect({ name: LIVE_PORT })
+    port = browser.runtime.connect({ name: LIVE_PORT })
     port.onDisconnect.addListener(() => {
       if (!stopped) {
         retry = setTimeout(connect, 1000) // worker recycled — reconnect to restart its loop

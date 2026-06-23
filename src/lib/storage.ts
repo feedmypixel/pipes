@@ -1,4 +1,5 @@
 import type { Account, Change, Pipeline, Repo } from '../providers/types'
+import browser from './browser'
 
 export interface Settings {
   /** Poll interval in minutes. Chrome enforces a 0.5 minimum on alarms. */
@@ -84,7 +85,7 @@ function matchesShape(value: unknown, fallback: unknown): boolean {
 }
 
 export async function get<K extends keyof StorageShape>(key: K): Promise<StorageShape[K]> {
-  const result = await chrome.storage.local.get(key)
+  const result = await browser.storage.local.get(key)
   const value = result[key]
   return (matchesShape(value, DEFAULTS[key]) ? value : DEFAULTS[key]) as StorageShape[K]
 }
@@ -96,7 +97,7 @@ export async function set<K extends keyof StorageShape>(
   // Callers pass Svelte $state, which is a Proxy. chrome.storage serializes via
   // structured clone, which throws on a Proxy — strip to a plain value first.
   // Our stored shapes are all JSON-safe, so a JSON round-trip does it.
-  await chrome.storage.local.set({ [key]: JSON.parse(JSON.stringify(value)) })
+  await browser.storage.local.set({ [key]: JSON.parse(JSON.stringify(value)) })
 }
 
 /**
@@ -105,7 +106,7 @@ export async function set<K extends keyof StorageShape>(
  * no per-value Proxy-stripping clone, unlike `set`.
  */
 export async function setMany(values: Partial<StorageShape>): Promise<void> {
-  await chrome.storage.local.set(values)
+  await browser.storage.local.set(values)
 }
 
 // Bump when a release changes the shape OR the derivation of a cached value, so the old cache
@@ -132,18 +133,18 @@ const SCHEMA_VERSION = 10
  * must re-validate immediately rather than serve a stale entry that lacks it for minutes.
  */
 export async function migrate(): Promise<void> {
-  const stored = await chrome.storage.local.get('schemaVersion')
+  const stored = await browser.storage.local.get('schemaVersion')
   if (stored.schemaVersion === SCHEMA_VERSION) {
     return
   }
-  await chrome.storage.local.remove([
+  await browser.storage.local.remove([
     'snapshots',
     'repoEtags',
     'changeEtags',
     'branchCache',
     'lastHealthAt'
   ])
-  await chrome.storage.local.set({ schemaVersion: SCHEMA_VERSION })
+  await browser.storage.local.set({ schemaVersion: SCHEMA_VERSION })
 }
 
 /**
@@ -159,6 +160,6 @@ export function subscribe<K extends keyof StorageShape>(
       callback((changes[key].newValue ?? DEFAULTS[key]) as StorageShape[K])
     }
   }
-  chrome.storage.onChanged.addListener(listener)
-  return () => chrome.storage.onChanged.removeListener(listener)
+  browser.storage.onChanged.addListener(listener)
+  return () => browser.storage.onChanged.removeListener(listener)
 }

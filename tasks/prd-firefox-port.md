@@ -45,12 +45,13 @@ a WXT migration.
    emit a Firefox-valid bundle + manifest into a separate output (e.g. `dist-firefox/`), while the
    default build stays Chrome and byte-for-byte unchanged. Add `build:firefox` + a `zip:firefox`
    script alongside the existing ones.
-2. **Browser-API seam.** All extension API access must go through a **promise-based `browser.*`**
-   (via `webextension-polyfill`) so the same code runs on both engines (Chrome's `chrome.*` is
-   promise-capable; Firefox's `chrome.*` is callback-style, so the polyfill is required). Replace the
-   direct `chrome.*` calls in the audited files: `lib/storage.ts`, `background/service-worker.ts`,
-   `background/poll.ts` (if any), `lib/notify.ts`, `lib/live-port.ts`, `popup/App.svelte`,
-   `options/App.svelte`, `lib/dashboard.svelte.ts`. Behaviour on Chrome must be unchanged.
+2. **Browser-API seam.** All extension API access must go through a single **promise-based `browser`**
+   seam so the same code runs on both engines. A tiny Proxy (`src/lib/browser.ts`) resolves
+   `globalThis.browser ?? globalThis.chrome` per access — Firefox's native promise `browser`, else
+   Chrome MV3's already-promise-capable `chrome` (no `webextension-polyfill`; its throwing import +
+   callback-wrapping fought the dev mock and test stubs). Per-call resolution keeps the existing
+   `chrome` test stubs working. Replace the direct `chrome.*` calls in the audited files. Behaviour on
+   Chrome must be unchanged.
 3. **Firefox manifest.** For the Firefox target the manifest must:
    1. add `browser_specific_settings.gecko.id` (`pipes@feedmypixel.com`) and
       `gecko.strict_min_version` (`121.0`);
@@ -88,8 +89,13 @@ a WXT migration.
     no Firefox-specific capture is required (the screenshot pipeline is browser-agnostic).
 12. **Docs.** `docs/releasing-to-chrome-web-store.md` (or a sibling) and the READMEs must cover the
     Firefox build, `web-ext run` for local testing, the AMO secrets, and the dual-store release.
-13. **No Chrome regression.** `pnpm check`, `pnpm test`, `pnpm lint` must pass; the Chrome `dist/` and
-    manifest must be unchanged by the seam/polyfill work.
+13. **No Chrome regression.** `pnpm check`, `pnpm test`, `pnpm lint` must pass; the Chrome manifest is
+    unchanged by the seam work and Chrome behaviour is identical.
+14. **Cross-browser e2e tests.** Add Playwright end-to-end tests that prove parity: the surfaces
+    rendering in **both Chromium and Firefox** (UI tier), the **full extension flow in Chrome**
+    (load-unpacked: storage → poll → badge → popup → side panel), and a **Firefox smoke** via
+    `web-ext` (or documented-deferred, since Playwright can't load FF extensions directly). Wired into
+    CI, separate from the fast unit suite.
 
 ## Non-Goals (Out of Scope)
 

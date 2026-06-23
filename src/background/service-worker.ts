@@ -3,10 +3,11 @@ import * as storage from '../lib/storage'
 import { POLL_ALARM, MIN_POLL_MINUTES, LIVE_PORT, LIVE_POLL_MS } from '../lib/config'
 import { openNotificationLink, forgetNotificationLink } from '../lib/notify'
 import { log } from '../lib/log'
+import browser from '../lib/browser'
 
 async function scheduleAlarm(): Promise<void> {
   const { pollMinutes } = await storage.get('settings')
-  await chrome.alarms.create(POLL_ALARM, {
+  await browser.alarms.create(POLL_ALARM, {
     periodInMinutes: Math.max(MIN_POLL_MINUTES, pollMinutes)
   })
 }
@@ -23,7 +24,7 @@ function liveLoop(): void {
   liveTimer = setTimeout(liveLoop, LIVE_POLL_MS)
 }
 
-chrome.runtime.onConnect.addListener((port) => {
+browser.runtime.onConnect.addListener((port) => {
   if (port.name !== LIVE_PORT) {
     return
   }
@@ -43,7 +44,7 @@ chrome.runtime.onConnect.addListener((port) => {
 
 // --- All listeners registered synchronously at top level (SW may restart). ---
 
-chrome.runtime.onInstalled.addListener(async (details) => {
+browser.runtime.onInstalled.addListener(async (details) => {
   try {
     if (details.reason === 'install') {
       await storage.set('settings', storage.DEFAULT_SETTINGS)
@@ -56,21 +57,21 @@ chrome.runtime.onInstalled.addListener(async (details) => {
   }
 })
 
-chrome.runtime.onStartup.addListener(() => {
+browser.runtime.onStartup.addListener(() => {
   storage
     .migrate()
     .then(() => poll())
     .catch((err) => log.warn(`Startup poll failed: ${(err as Error).message}`))
 })
 
-chrome.alarms.onAlarm.addListener((alarm) => {
+browser.alarms.onAlarm.addListener((alarm) => {
   if (alarm.name === POLL_ALARM) {
     poll().catch((err) => log.warn(`Alarm poll failed: ${(err as Error).message}`))
   }
 })
 
 // Re-arm the alarm whenever the poll interval changes.
-chrome.storage.onChanged.addListener((changes, area) => {
+browser.storage.onChanged.addListener((changes, area) => {
   if (area === 'local' && 'settings' in changes) {
     scheduleAlarm()
   }
@@ -91,13 +92,11 @@ chrome.notifications.onClosed.addListener((notifId) => {
 })
 
 // Manual "refresh now" from popup / side panel.
-chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
+browser.runtime.onMessage.addListener((message, _sender, sendResponse) => {
   if (message?.type === 'poll-now') {
-    // Manual Refresh forces a full re-check (bypasses the health throttle). The recurring live
-    // poll is driven by the LIVE_PORT loop above, not this message.
     poll(message.force === true)
       .then(() => sendResponse({ ok: true }))
       .catch((err) => sendResponse({ ok: false, error: (err as Error).message }))
-    return true // keep the channel open for the async response
+    return true
   }
 })

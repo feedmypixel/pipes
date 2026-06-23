@@ -3,6 +3,7 @@ import type { Snapshots, AccountHealth } from './storage'
 import type { Account, Repo } from '../providers/types'
 import { countDefaultBranchFailures } from './group'
 import { holdLivePort } from './live-port'
+import browser from './browser'
 
 /**
  * Shared dashboard state for the popup + side panel: mirrors the chrome.storage keys both
@@ -75,7 +76,7 @@ export function useDashboard() {
   async function refresh() {
     refreshing = true
     try {
-      await chrome.runtime.sendMessage({ type: 'poll-now', force: true })
+      await browser.runtime.sendMessage({ type: 'poll-now', force: true })
     } finally {
       refreshing = false
     }
