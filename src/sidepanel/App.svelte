@@ -190,6 +190,8 @@
   .list {
     flex: 1;
     overflow-y: auto;
+    /* Row width drives the author avatar-only container query. */
+    container-type: inline-size;
   }
   .empty {
     padding: var(--space-5xl) var(--space-4xl);

@@ -97,7 +97,7 @@
       webUrl: 'https://example.test/pull',
       isDraft,
       isBot: false,
-      author: ''
+      attribution: { login: 'octocat', name: 'The Octocat' }
     }
   }
   function view(

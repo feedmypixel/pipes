@@ -5,8 +5,8 @@
   import StatusIcon from './StatusIcon.svelte'
   import RelativeTime from './RelativeTime.svelte'
   import ElapsedTime from './ElapsedTime.svelte'
+  import Author from './Author.svelte'
   import { statusVisual } from './status-icon'
-  import { tooltip } from '../tooltip'
 
   let { change }: { change: Change } = $props()
 
@@ -15,44 +15,55 @@
   )
 </script>
 
-<a
-  class="row"
-  class:draft={change.isDraft}
-  data-status={change.status}
-  href={change.webUrl}
-  target="_blank"
-  rel="noopener noreferrer"
-  aria-label={label}
->
+<div class="row" class:draft={change.isDraft} data-status={change.status}>
+  <a
+    class="r-link"
+    href={change.webUrl}
+    target="_blank"
+    rel="noopener noreferrer"
+    title={change.title}
+    aria-label={label}
+  ></a>
   <StatusIcon status={change.status} size={16} />
-  <span class="ref">
-    <GitPullRequest class="pr-mark" size={12} aria-hidden="true" />
-    <span class="number">#{change.number}</span>
-    <span class="name" use:tooltip={change.title}>{change.title}</span>
-  </span>
-  <span class="branch" use:tooltip={change.headRef}>
-    <GitBranch size={11} aria-hidden="true" />
-    <span class="branch-name">{change.headRef}</span>
-  </span>
-  {#if change.status === 'running' && change.startedAt}
-    <ElapsedTime startedAt={change.startedAt} />
-  {:else if change.updatedAt}
-    <RelativeTime iso={change.updatedAt} />
-  {/if}
-</a>
+  <div class="sub-body">
+    <div class="sub-title">
+      <GitPullRequest class="pr-mark" size={12} aria-hidden="true" />
+      <span class="number">#{change.number}</span>
+      <span class="name">{change.title}</span>
+    </div>
+    <div class="sub-meta">
+      <span class="branch">
+        <GitBranch size={11} aria-hidden="true" />
+        <span class="branch-name">{change.headRef}</span>
+      </span>
+      <span class="meta-end">
+        <Author author={change.attribution} dense />
+        {#if change.status === 'running' && change.startedAt}
+          <ElapsedTime startedAt={change.startedAt} />
+        {:else if change.updatedAt}
+          <RelativeTime iso={change.updatedAt} />
+        {/if}
+      </span>
+    </div>
+  </div>
+</div>
 
 <style>
   .row {
+    position: relative;
     display: grid;
-    grid-template-columns: auto 1fr auto auto;
-    align-items: center;
+    grid-template-columns: auto 1fr;
+    align-items: start;
     gap: var(--space-md);
     /* indented: these rows always sit under a repo-name header */
     padding: var(--space-md) var(--space-xl) var(--space-md) var(--space-3xl);
     border-bottom: 1px solid var(--border);
-    color: inherit;
-    text-decoration: none;
     transition: background 0.1s;
+  }
+  .r-link {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
   }
   .row:hover {
     background: var(--hover);
@@ -67,16 +78,25 @@
   .row[data-status='running'] {
     box-shadow: inset 2px 0 0 var(--running);
   }
-  .ref {
-    display: inline-flex;
+  .row:has(.r-link:focus-visible) {
+    outline: 2px solid var(--brand);
+    outline-offset: -2px;
+  }
+  .sub-body {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2xs);
+    min-width: 0;
+  }
+  .sub-title {
+    display: flex;
     align-items: center;
     gap: var(--space-xs);
     min-width: 0;
     color: var(--text-2);
   }
-  .ref :global(.pr-mark) {
+  .sub-title :global(.pr-mark) {
     flex: none;
-    opacity: 1;
     color: var(--text-2);
   }
   .number {
@@ -95,6 +115,12 @@
     text-decoration: underline;
     text-underline-offset: 2px;
   }
+  .sub-meta {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+    min-width: 0;
+  }
   .branch {
     display: inline-flex;
     align-items: center;
@@ -111,5 +137,12 @@
     text-overflow: ellipsis;
     white-space: nowrap;
     font: var(--weight-regular) var(--font-size-xs) / var(--leading-tight) var(--font-mono);
+  }
+  .meta-end {
+    margin-left: auto;
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-sm);
+    flex: none;
   }
 </style>

@@ -41,7 +41,7 @@ function change(number: number, status: PipelineStatus, isDraft = false, author 
     webUrl: `https://x/pull/${number}`,
     isDraft,
     isBot: false,
-    author
+    attribution: { login: author }
   }
 }
 

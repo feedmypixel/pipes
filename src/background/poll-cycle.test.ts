@@ -98,7 +98,7 @@ function change(number: number, status: PipelineStatus, isDraft = false) {
     webUrl: `https://x/pull/${number}`,
     isDraft,
     isBot: false,
-    author: 'me'
+    attribution: { login: 'me' }
   }
 }
 function openChanges(list: ReturnType<typeof change>[]) {
@@ -200,8 +200,10 @@ test('a PR row carries the joined author from the open-changes metadata', async 
   seed()
   h.provider.listOpenChanges.mockResolvedValue(openChanges([change(5, 'success')]))
   await poll()
-  const pr = (snap().changes as { number: number; author: string }[]).find((c) => c.number === 5)
-  expect(pr?.author).toBe('me')
+  const pr = (snap().changes as { number: number; attribution?: { login: string } }[]).find(
+    (c) => c.number === 5
+  )
+  expect(pr?.attribution?.login).toBe('me')
 })
 
 test('a rate limit pauses the account', async () => {

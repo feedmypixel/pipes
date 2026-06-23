@@ -117,7 +117,8 @@ export async function setMany(values: Partial<StorageShape>): Promise<void> {
 // v8: changes carry `author` (snapshots) for the "mine" scope filter.
 // v9: accountHealth carries the authenticated `user` (for "mine"); drop the health throttle so the
 //     next poll re-validates and populates it, instead of waiting out HEALTH_REFRESH_MS.
-const SCHEMA_VERSION = 9
+// v10: changes + default pipelines carry `attribution` (avatar/name) for the row author.
+const SCHEMA_VERSION = 10
 
 /**
  * Drop derived caches whose shape or derivation changed across a release (e.g. snapshots went from

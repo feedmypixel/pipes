@@ -5,6 +5,7 @@
   import StatusIcon from './StatusIcon.svelte'
   import RelativeTime from './RelativeTime.svelte'
   import ElapsedTime from './ElapsedTime.svelte'
+  import Author from './Author.svelte'
   import { statusVisual } from './status-icon'
   import { tooltip } from '../tooltip'
 
@@ -15,14 +16,15 @@
   )
 </script>
 
-<a
-  class="row"
-  data-status={pipeline.status}
-  href={pipeline.webUrl}
-  target="_blank"
-  rel="noopener noreferrer"
-  aria-label={label}
->
+<div class="row" data-status={pipeline.status}>
+  <a
+    class="r-link"
+    href={pipeline.webUrl}
+    target="_blank"
+    rel="noopener noreferrer"
+    title={pipeline.title}
+    aria-label={label}
+  ></a>
   <StatusIcon status={pipeline.status} size={16} />
   <span class="ref">
     {#if pipeline.isDefaultBranch}
@@ -32,17 +34,21 @@
     {:else}
       <GitBranch class="branch-mark" size={12} aria-hidden="true" />
     {/if}
-    <span class="name" use:tooltip={pipeline.title}>{pipeline.ref}</span>
+    <span class="name">{pipeline.ref}</span>
   </span>
-  {#if pipeline.status === 'running' && pipeline.startedAt}
-    <ElapsedTime startedAt={pipeline.startedAt} />
-  {:else}
-    <RelativeTime iso={pipeline.updatedAt} />
-  {/if}
-</a>
+  <span class="meta-end">
+    <Author author={pipeline.attribution} />
+    {#if pipeline.status === 'running' && pipeline.startedAt}
+      <ElapsedTime startedAt={pipeline.startedAt} />
+    {:else}
+      <RelativeTime iso={pipeline.updatedAt} />
+    {/if}
+  </span>
+</div>
 
 <style>
   .row {
+    position: relative;
     display: grid;
     grid-template-columns: auto 1fr auto;
     align-items: center;
@@ -50,9 +56,12 @@
     /* indented: these rows always sit under a repo-name header */
     padding: var(--space-md) var(--space-xl) var(--space-md) var(--space-3xl);
     border-bottom: 1px solid var(--border);
-    color: inherit;
-    text-decoration: none;
     transition: background 0.1s;
+  }
+  .r-link {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
   }
   .row:hover {
     background: var(--hover);
@@ -63,6 +72,10 @@
   }
   .row[data-status='running'] {
     box-shadow: inset 2px 0 0 var(--running);
+  }
+  .row:has(.r-link:focus-visible) {
+    outline: 2px solid var(--brand);
+    outline-offset: -2px;
   }
   .mark {
     display: inline-flex;
@@ -99,5 +112,10 @@
   .row:hover .name {
     text-decoration: underline;
     text-underline-offset: 2px;
+  }
+  .meta-end {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-sm);
   }
 </style>

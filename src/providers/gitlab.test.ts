@@ -57,7 +57,13 @@ test('listOpenChanges maps open MRs to metadata (status is joined in poll)', asy
           web_url: 'https://x/mr/3',
           source_branch: 'fix',
           sha: 's3',
-          author: { username: 'dev', bot: false }
+          author: {
+            username: 'dev',
+            name: 'Dev Eloper',
+            avatar_url: 'https://avatars/dev.png',
+            web_url: 'https://gitlab.com/dev',
+            bot: false
+          }
         }
       ]),
       { status: 200, headers: { etag: 'W/"m"' } }
@@ -74,7 +80,12 @@ test('listOpenChanges maps open MRs to metadata (status is joined in poll)', asy
         webUrl: 'https://x/mr/3',
         isDraft: false,
         isBot: false,
-        author: 'dev'
+        attribution: {
+          login: 'dev',
+          name: 'Dev Eloper',
+          avatarUrl: 'https://avatars/dev.png',
+          profileUrl: 'https://gitlab.com/dev'
+        }
       }
     ])
     expect(result.etag).toBe('W/"m"')
@@ -157,6 +168,49 @@ test('listPipelines sets the default-branch title to its commit message', async 
     expect(pipelines.find((pipeline) => pipeline.isDefaultBranch)?.title).toBe(
       'fix: broke the build'
     )
+  } finally {
+    restore()
+  }
+})
+
+test('listPipelines attributes the default-branch pipeline to the pipeline user', async () => {
+  const restore = stubByUrl({
+    '/pipelines?': new Response(
+      JSON.stringify([
+        {
+          id: 50,
+          status: 'success',
+          ref: 'main',
+          sha: 'sha50',
+          web_url: 'https://x/p/50',
+          updated_at: '2026-06-23T00:00:00Z'
+        }
+      ]),
+      { status: 200 }
+    ),
+    '/repository/commits/sha50': new Response(JSON.stringify({ title: 'ship it' }), {
+      status: 200
+    }),
+    '/pipelines/50': new Response(
+      JSON.stringify({
+        user: {
+          username: 'dev',
+          name: 'Dev Eloper',
+          avatar_url: 'https://avatars/dev.png',
+          web_url: 'https://gitlab.com/dev'
+        }
+      }),
+      { status: 200 }
+    )
+  })
+  try {
+    const { pipelines } = await gitlab.listPipelines(account, repo)
+    expect(pipelines.find((pipeline) => pipeline.isDefaultBranch)?.attribution).toEqual({
+      login: 'dev',
+      name: 'Dev Eloper',
+      avatarUrl: 'https://avatars/dev.png',
+      profileUrl: 'https://gitlab.com/dev'
+    })
   } finally {
     restore()
   }

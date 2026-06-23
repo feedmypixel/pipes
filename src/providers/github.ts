@@ -1,5 +1,6 @@
 import type {
   Account,
+  Author,
   ChangeMeta,
   OpenChangesResult,
   Pipeline,
@@ -51,6 +52,12 @@ interface GhRepo {
   html_url: string
 }
 
+interface GhActor {
+  login: string
+  avatar_url: string
+  html_url: string
+}
+
 interface GhRun {
   head_branch: string | null
   status: string | null
@@ -62,6 +69,7 @@ interface GhRun {
   display_title: string
   id: number
   workflow_id: number
+  actor?: GhActor | null
 }
 
 interface GhPull {
@@ -69,8 +77,15 @@ interface GhPull {
   title: string
   draft: boolean
   html_url: string
-  user: { login: string; type: string } | null
+  user: (GhActor & { type: string }) | null
   head: { ref: string; sha: string }
+}
+
+/** GitHub user/actor objects share login + avatar + profile, all we need for attribution. */
+function ghAuthor(actor: GhActor | null | undefined): Author | undefined {
+  return actor
+    ? { login: actor.login, avatarUrl: actor.avatar_url, profileUrl: actor.html_url }
+    : undefined
 }
 
 export function mapGithubStatus(status: string | null, conclusion: string | null): PipelineStatus {
@@ -171,7 +186,8 @@ export function pipelinesFromRuns(runs: GhRun[], defaultBranch: string): Pipelin
       sha: newest.head_sha,
       title: lead.display_title,
       updatedAt,
-      startedAt
+      startedAt,
+      attribution: ghAuthor(newest.actor)
     })
   }
 
@@ -267,7 +283,7 @@ export const github: Provider = {
       webUrl: httpUrl(pull.html_url),
       isDraft: pull.draft,
       isBot: pull.user?.type === 'Bot',
-      author: pull.user?.login ?? ''
+      attribution: ghAuthor(pull.user)
     }))
     return { changes, etag: newEtag, notModified: false, rateLimit }
   }

@@ -147,7 +147,12 @@ test('listOpenChanges maps open PRs to metadata (status is joined in poll)', asy
           title: 'Add x',
           draft: false,
           html_url: 'https://x/pull/7',
-          user: { login: 'octocat', type: 'User' },
+          user: {
+            login: 'octocat',
+            type: 'User',
+            avatar_url: 'https://avatars/octocat.png',
+            html_url: 'https://github.com/octocat'
+          },
           head: { ref: 'feat', sha: 'sha7' }
         }
       ]),
@@ -165,13 +170,37 @@ test('listOpenChanges maps open PRs to metadata (status is joined in poll)', asy
         webUrl: 'https://x/pull/7',
         isDraft: false,
         isBot: false,
-        author: 'octocat'
+        attribution: {
+          login: 'octocat',
+          avatarUrl: 'https://avatars/octocat.png',
+          profileUrl: 'https://github.com/octocat'
+        }
       }
     ])
     expect(result.etag).toBe('W/"p"')
   } finally {
     restore()
   }
+})
+
+test('pipelinesFromRuns attributes a pipeline to the run actor', () => {
+  const [pipeline] = pipelinesFromRuns(
+    [
+      run({
+        actor: {
+          login: 'pusher',
+          avatar_url: 'https://avatars/pusher.png',
+          html_url: 'https://github.com/pusher'
+        }
+      })
+    ],
+    'main'
+  )
+  expect(pipeline.attribution).toEqual({
+    login: 'pusher',
+    avatarUrl: 'https://avatars/pusher.png',
+    profileUrl: 'https://github.com/pusher'
+  })
 })
 
 test('listOpenChanges flags bots and drafts', async () => {
