@@ -1,6 +1,7 @@
 <script lang="ts">
-  import type { Change, Pipeline, PipelineStatus } from '../providers/types'
+  import type { Author, Change, Pipeline, PipelineStatus } from '../providers/types'
   import StatusIcon from '../lib/components/StatusIcon.svelte'
+  import AuthorBadge from '../lib/components/Author.svelte'
   import RefChip from '../lib/components/RefChip.svelte'
   import RelativeTime from '../lib/components/RelativeTime.svelte'
   import ElapsedTime from '../lib/components/ElapsedTime.svelte'
@@ -69,11 +70,43 @@
     '--neutral'
   ]
 
+  const dicebear = (style: string, seed: string) =>
+    `https://api.dicebear.com/9.x/${style}/png?seed=${seed}`
+
+  const demoAuthors = {
+    ada: {
+      login: 'ada',
+      name: 'Ada Lovelace',
+      avatarUrl: dicebear('thumbs', 'ada'),
+      profileUrl: 'https://example.test/ada'
+    },
+    grace: {
+      login: 'grace',
+      name: 'Grace Hopper',
+      avatarUrl: dicebear('thumbs', 'grace'),
+      profileUrl: 'https://example.test/grace'
+    },
+    linus: {
+      login: 'linus',
+      name: 'Linus T',
+      avatarUrl: dicebear('thumbs', 'linus'),
+      profileUrl: 'https://example.test/linus'
+    },
+    bot: {
+      login: 'dependabot[bot]',
+      name: 'Dependabot',
+      avatarUrl: dicebear('bottts', 'dependabot'),
+      profileUrl: 'https://example.test/dependabot'
+    },
+    initials: { login: 'octocat', name: 'The Octocat', profileUrl: 'https://example.test/octocat' }
+  } satisfies Record<string, Author>
+
   function pipeline(
     status: PipelineStatus,
     ref: string,
     isDefaultBranch: boolean,
-    agoMinutes: number
+    agoMinutes: number,
+    attribution?: Author
   ): Pipeline {
     return {
       id: `${ref}-${status}`,
@@ -83,11 +116,17 @@
       webUrl: 'https://example.test/run',
       sha: 'abc1234',
       title: `${ref} ${status}`,
-      updatedAt: new Date(Date.now() - agoMinutes * 60_000).toISOString()
+      updatedAt: new Date(Date.now() - agoMinutes * 60_000).toISOString(),
+      attribution
     }
   }
 
-  function change(number: number, status: PipelineStatus, isDraft = false): Change {
+  function change(
+    number: number,
+    status: PipelineStatus,
+    isDraft = false,
+    attribution: Author = demoAuthors.ada
+  ): Change {
     return {
       number,
       title: `Change ${number}`,
@@ -96,8 +135,8 @@
       status,
       webUrl: 'https://example.test/pull',
       isDraft,
-      isBot: false,
-      attribution: { login: 'octocat', name: 'The Octocat' }
+      isBot: attribution.login.endsWith('[bot]'),
+      attribution
     }
   }
   function view(
@@ -119,12 +158,12 @@
     }
   }
   const repoViews: RepoView[] = [
-    view('status-api', pipeline('failed', 'main', true, 4), [
-      change(210, 'failed'),
-      change(208, 'success', true)
+    view('status-api', pipeline('failed', 'main', true, 4, demoAuthors.grace), [
+      change(210, 'failed', false, demoAuthors.linus),
+      change(208, 'success', true, demoAuthors.bot)
     ]),
-    view('marketing-site', pipeline('success', 'main', true, 90)),
-    view('cli', pipeline('running', 'main', true, 1))
+    view('marketing-site', pipeline('success', 'main', true, 90, demoAuthors.ada)),
+    view('cli', pipeline('running', 'main', true, 1, demoAuthors.initials))
   ]
   let repoCollapsed = $state<Record<string, boolean>>({})
 
@@ -229,6 +268,27 @@
           onToggle={() => (repoCollapsed[repoView.repo.id] = !repoCollapsed[repoView.repo.id])}
         />
       {/each}
+    </div>
+  </section>
+
+  <section>
+    <p class="eyebrow">Author (who caused this): avatar, full name on hover, link to profile</p>
+    <p class="note">
+      Greyscale at rest so the status leads; colour on hover. Avatar, or initials when there is no
+      image.
+    </p>
+    <div class="inline">
+      <span class="author-demo"><AuthorBadge author={demoAuthors.ada} /><code>photo</code></span>
+      <span class="author-demo"><AuthorBadge author={demoAuthors.bot} /><code>bot</code></span>
+      <span class="author-demo"
+        ><AuthorBadge author={demoAuthors.initials} /><code>initials</code></span
+      >
+      <span class="author-demo"
+        ><AuthorBadge author={demoAuthors.grace} dense /><code>dense</code></span
+      >
+      <span class="author-demo">
+        <AuthorBadge author={{ login: 'nolink', name: 'No profile' }} /><code>no link</code>
+      </span>
     </div>
   </section>
 
@@ -569,6 +629,11 @@
     margin: calc(-1 * var(--space-md)) 0 var(--space-lg);
     font-size: var(--font-size-sm);
     color: var(--text-3);
+  }
+  .author-demo {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-sm);
   }
   .inline {
     display: flex;
