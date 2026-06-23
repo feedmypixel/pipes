@@ -8,7 +8,8 @@ cross-cutting behaviour.
 - [`accessibility.md`](accessibility.md) — WCAG 2.1 AA: what's in place, the `/a11y-sweep` audit, axe-core setup.
 - [`releasing-to-chrome-web-store.md`](releasing-to-chrome-web-store.md) — package + publish to the CWS.
 - [`releasing-to-firefox.md`](releasing-to-firefox.md) — Firefox / AMO: dev account, API keys, `build:firefox`, `web-ext run`, the AMO release.
-- [`chromewebstore.md`](chromewebstore.md) — the store listing's source of truth: copy, permission justifications, data disclosure, asset table.
+- [`chromewebstore.md`](chromewebstore.md) — the Chrome store listing's source of truth: copy, permission justifications, data disclosure, asset table.
+- [`addons-mozilla.md`](addons-mozilla.md) — the Firefox / AMO listing's source of truth: fields, license, categories, reviewer notes.
 - [`marketing.md`](marketing.md) — distribution + launch notes: channels ranked by fit, messaging, the owned-channel plan.
 - [`screenshots.md`](screenshots.md) — refreshing the store screenshots: `pnpm capture` → `pnpm frame` from a curated mock scene.
 

@@ -64,8 +64,8 @@ not by CI:
 
 - Reuse the framed **store screenshots** in `store-screenshots/framed/` and the 128px icon. No
   Firefox-specific capture (the framing pipeline is browser-agnostic). See [`screenshots.md`](screenshots.md).
-- Copy (name, summary, description, permission justifications) mirrors the Chrome listing in
-  [`chromewebstore.md`](chromewebstore.md).
+- All listing fields (name, summary, description, categories, license, reviewer notes) live in
+  [`addons-mozilla.md`](addons-mozilla.md).
 
 ### AMO review notes
 
