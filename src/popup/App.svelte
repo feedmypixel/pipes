@@ -156,8 +156,6 @@
     flex: 1;
     min-height: 0;
     overflow-y: auto;
-    /* Row width drives the author avatar-only container query. */
-    container-type: inline-size;
   }
 
   .empty {

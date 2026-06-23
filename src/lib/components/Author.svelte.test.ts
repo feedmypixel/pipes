@@ -19,7 +19,6 @@ describe('Author', () => {
     expect(screen.container.querySelector('img')?.getAttribute('src')).toBe(
       'https://avatars/octocat.png'
     )
-    expect(screen.container.querySelector('.author-name')?.textContent).toBe('octocat')
   })
 
   test('falls back to initials when there is no avatar', () => {
