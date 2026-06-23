@@ -24,12 +24,22 @@ Adjust the scene by editing `seedData()` in `dev-chrome.ts`. Avatars come from D
 
 ## 2. Capture
 
-1. `pnpm dev`, then load `dist/` unpacked (or open the surface at its dev URL).
-2. Show the surface you want: side panel, popup, options.
-3. **Both themes:** DevTools, command palette, "Show Rendering", then set
+1. `pnpm dev`.
+2. Open each surface at its **dev-server URL in a normal browser tab** (not the loaded extension):
+   - side panel: `http://localhost:5173/src/sidepanel/index.html`
+   - popup: `http://localhost:5173/src/popup/index.html`
+   - options: `http://localhost:5173/src/options/index.html`
+
+   The mock scene only renders here. `dev-chrome.ts` installs the fake `chrome.*` + seeded data
+   **only when the real `chrome.*` is absent**, so the loaded extension shows empty storage, a plain
+   tab shows the scene.
+
+3. **Size the viewport** to the surface width with DevTools device mode (side panel ~360px, popup
+   440px) so the capture matches the real surface.
+4. **Both themes:** DevTools, command palette, "Show Rendering", then set
    **Emulate CSS prefers-color-scheme** to `light` or `dark`. The surfaces follow it.
-4. Capture the surface at a clean device-pixel ratio (a Retina screen gives crisp 2x output).
-5. Save the raws into `store-screenshots/` (keep the existing names so the framed outputs line up).
+5. Capture at a clean device-pixel ratio (a Retina screen gives crisp 2x output) and save the raws
+   into `store-screenshots/` (keep the existing names so the framed outputs line up).
 
 Spread **light and dark across the set** so the listing shows Pipes respects the OS theme.
 
