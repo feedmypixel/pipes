@@ -126,7 +126,8 @@ export const ALL_BRANCH_STATES: ReadonlySet<PipelineStatus> = new Set(BRANCH_STA
 
 /** True when a change was opened by the account's authenticated user. */
 function isMine(change: Change, view: RepoView): boolean {
-  return change.author !== '' && change.author === view.viewerLogin
+  const login = change.attribution?.login
+  return login != null && login === view.viewerLogin
 }
 
 /**

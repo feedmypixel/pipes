@@ -168,7 +168,7 @@ async function pollRepo(
         webUrl: meta.webUrl,
         isDraft: meta.isDraft,
         isBot: meta.isBot,
-        author: meta.author,
+        attribution: meta.attribution,
         status: pipeline?.status ?? previous?.status ?? 'unknown',
         updatedAt: pipeline?.updatedAt ?? previous?.updatedAt,
         startedAt: pipeline?.startedAt ?? previous?.startedAt

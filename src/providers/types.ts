@@ -46,6 +46,18 @@ export interface Repo {
   webUrl: string
 }
 
+/** A person an event is attributed to — drives the avatar + name + profile link on a row. */
+export interface Author {
+  /** Provider login/username (GitHub `user.login` / GitLab `username`). Also the "mine" match key. */
+  login: string
+  /** Display name for the tooltip; falls back to `login` when the provider gives none. */
+  name?: string
+  /** Avatar image URL. */
+  avatarUrl?: string
+  /** Link to the person's provider profile. */
+  profileUrl?: string
+}
+
 export interface Pipeline {
   /** Provider-native id, stringified. */
   id: string
@@ -62,6 +74,8 @@ export interface Pipeline {
   updatedAt: string
   /** ISO start time, for a live "running Xm" while in progress. */
   startedAt?: string
+  /** Who triggered this run/pipeline (default-branch row attribution). */
+  attribution?: Author
 }
 
 export interface ValidationResult {
@@ -104,9 +118,9 @@ export interface Change {
   isDraft: boolean
   /** Opened by a bot (Dependabot, Renovate, …). */
   isBot: boolean
-  /** Login of who opened it (GitHub `user.login` / GitLab `author.username`), for the "mine"
-   * scope filter. Empty string when the provider gave no author. */
-  author: string
+  /** Who opened it (GitHub `pull.user` / GitLab `mr.author`): avatar + name + profile link, and the
+   * `login` is the "mine" scope-filter match key. Absent when the provider gave no author. */
+  attribution?: Author
 }
 
 /**

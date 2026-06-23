@@ -1,5 +1,6 @@
 import type {
   Account,
+  Author,
   ChangeMeta,
   OpenChangesResult,
   Pipeline,
@@ -38,6 +39,24 @@ interface GlCommit {
   title: string
 }
 
+interface GlUser {
+  username: string
+  name?: string
+  avatar_url?: string
+  web_url?: string
+}
+
+function glAuthor(user: GlUser | null | undefined): Author | undefined {
+  return user
+    ? {
+        login: user.username,
+        name: user.name,
+        avatarUrl: user.avatar_url,
+        profileUrl: user.web_url
+      }
+    : undefined
+}
+
 // GitLab's pipelines list has no commit message, so look it up by sha for the row tooltip. Cached
 // per sha (transient, per worker activation) so the same commit isn't refetched across polls.
 const commitTitleBySha = new Map<string, string>()
@@ -60,6 +79,29 @@ async function commitTitle(
     return commit.title
   } catch {
     return null
+  }
+}
+
+const pipelineAuthorById = new Map<string, Author | undefined>()
+
+async function pipelineAuthor(
+  account: Account,
+  projectId: string,
+  pipelineId: string
+): Promise<Author | undefined> {
+  if (pipelineAuthorById.has(pipelineId)) {
+    return pipelineAuthorById.get(pipelineId)
+  }
+  try {
+    const pipeline = await request<{ user: GlUser | null }>(
+      account,
+      `/projects/${projectId}/pipelines/${pipelineId}`
+    )
+    const author = glAuthor(pipeline.user)
+    pipelineAuthorById.set(pipelineId, author)
+    return author
+  } catch {
+    return undefined
   }
 }
 
@@ -87,7 +129,7 @@ interface GlMergeRequest {
   web_url: string
   source_branch: string
   sha: string
-  author: { username: string; bot?: boolean } | null
+  author: (GlUser & { bot?: boolean }) | null
 }
 
 export function mapGitlabStatus(status: string): PipelineStatus {
@@ -201,6 +243,7 @@ export const gitlab: Provider = {
       if (title) {
         defaultPipeline.title = title
       }
+      defaultPipeline.attribution = await pipelineAuthor(account, repo.id, defaultPipeline.id)
     }
 
     return { pipelines, etag: newEtag, notModified: false, rateLimit }
@@ -234,7 +277,7 @@ export const gitlab: Provider = {
       webUrl: httpUrl(mr.web_url),
       isDraft: mr.draft,
       isBot: mr.author?.bot ?? false,
-      author: mr.author?.username ?? ''
+      attribution: glAuthor(mr.author)
     }))
     return { changes, etag: newEtag, notModified: false, rateLimit }
   }

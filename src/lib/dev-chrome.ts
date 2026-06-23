@@ -55,7 +55,7 @@ function change(
     webUrl: `https://example.test/pull/${number}`,
     isDraft,
     isBot: false,
-    author
+    attribution: { login: author }
   }
 }
 
