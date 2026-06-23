@@ -68,5 +68,5 @@ From `prd-author-attribution.md`. Design contract: `design/v5/AUTHOR-ATTRIBUTION
   - [x] 5.2 Update `poll-cycle.test.ts` (attribution in the snapshot) + `group.test.ts` / Mine fixtures + `storage.test.ts` (version)
   - [x] 5.3 Update `Row.svelte.test.ts` / `ChangeRow.svelte.test.ts` for the author + two-anchor structure
   - [x] 5.4 Full gate: `pnpm check && pnpm lint && pnpm test && pnpm build`
-  - [ ] 5.5 Functional pass on `dist/`: light + dark, narrow width (avatar-only kicks in), avatar → profile + row → run both work; **decide name-beside-avatar vs avatar-only** (PRD Req. 6 / Open Q1) and tune the breakpoint
-  - [ ] 5.6 Independent review (`pr-review-toolkit`) on the diff, then open the PR off `main`
+  - [x] 5.5 Functional pass on `dist/`: light + dark, narrow width (avatar-only kicks in), avatar → profile + row → run both work; **decide name-beside-avatar vs avatar-only** (PRD Req. 6 / Open Q1) and tune the breakpoint
+  - [x] 5.6 Independent review (`pr-review-toolkit`) on the diff, then open the PR off `main`
