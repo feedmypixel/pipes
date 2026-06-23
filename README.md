@@ -79,6 +79,7 @@ Nothing is sent anywhere except your configured GitHub/GitLab hosts.
 - [`docs/releasing-to-chrome-web-store.md`](docs/releasing-to-chrome-web-store.md) — listing, submission, and the release flow (`pnpm release` → tag → automated draft upload).
 - [`docs/chromewebstore.md`](docs/chromewebstore.md) — source of truth for the store listing fields (copy, permission justifications, data disclosure, assets).
 - [`docs/marketing.md`](docs/marketing.md) — distribution + launch notes (channels, messaging, owned-channel plan).
+- [`docs/screenshots.md`](docs/screenshots.md) — refreshing the store screenshots (curated mock scene + framing script).
 - [`docs/notifications.md`](docs/notifications.md) — when notifications fire + platform limits.
 - [`docs/accessibility.md`](docs/accessibility.md) — WCAG 2.1 AA, the `/a11y-sweep` audit, axe-core setup.
 - [`docs/README.md`](docs/README.md) — docs index (+ engineering principles, WIP).

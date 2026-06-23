@@ -4,15 +4,52 @@
 // Guarded by import.meta.env.DEV and a "is chrome already here?" check, so it never runs
 // in the real extension and is tree-shaken out of production.
 
-import type { Account, Change, Pipeline, PipelineStatus, Repo } from '../providers/types'
+import type { Account, Author, Change, Pipeline, PipelineStatus, Repo } from '../providers/types'
 import type { RepoSnapshot } from './storage'
+
+const dicebear = (style: string, seed: string) =>
+  `https://api.dicebear.com/9.x/${style}/png?seed=${seed}`
+
+const A = {
+  me: {
+    login: 'octo-org',
+    name: 'Octo Org',
+    avatarUrl: dicebear('thumbs', 'octo-org'),
+    profileUrl: 'https://example.test/octo-org'
+  },
+  ada: {
+    login: 'ada',
+    name: 'Ada Lovelace',
+    avatarUrl: dicebear('thumbs', 'ada'),
+    profileUrl: 'https://example.test/ada'
+  },
+  grace: {
+    login: 'grace',
+    name: 'Grace Hopper',
+    avatarUrl: dicebear('thumbs', 'grace'),
+    profileUrl: 'https://example.test/grace'
+  },
+  linus: {
+    login: 'linus',
+    name: 'Linus T',
+    avatarUrl: dicebear('thumbs', 'linus'),
+    profileUrl: 'https://example.test/linus'
+  },
+  bot: {
+    login: 'dependabot[bot]',
+    name: 'Dependabot',
+    avatarUrl: dicebear('bottts', 'dependabot'),
+    profileUrl: 'https://example.test/dependabot'
+  }
+} satisfies Record<string, Author>
 
 function pipe(
   id: string,
   ref: string,
   status: PipelineStatus,
   isDefaultBranch: boolean,
-  agoMinutes: number
+  agoMinutes: number,
+  attribution?: Author
 ): Pipeline {
   return {
     id,
@@ -22,14 +59,15 @@ function pipe(
     webUrl: 'https://example.test/run',
     sha: 'abc1234',
     title: `${ref} ${status}`,
-    updatedAt: new Date(Date.now() - agoMinutes * 60_000).toISOString()
+    updatedAt: new Date(Date.now() - agoMinutes * 60_000).toISOString(),
+    attribution
   }
 }
 
-function repo(name: string): Repo {
+function repo(name: string, accountId = 'gh'): Repo {
   return {
     id: name,
-    accountId: 'gh',
+    accountId,
     name,
     defaultBranch: 'main',
     webUrl: `https://example.test/${name}`
@@ -43,7 +81,7 @@ function change(
   status: PipelineStatus,
   agoMinutes: number,
   isDraft = false,
-  author = 'octo-org' // the dev viewer (see the mocked /user), so the "mine" toggle demos
+  attribution: Author = A.me
 ): Change {
   return {
     number,
@@ -54,8 +92,8 @@ function change(
     updatedAt: new Date(Date.now() - agoMinutes * 60_000).toISOString(),
     webUrl: `https://example.test/pull/${number}`,
     isDraft,
-    isBot: false,
-    attribution: { login: author }
+    isBot: attribution.login.endsWith('[bot]'),
+    attribution
   }
 }
 
@@ -64,35 +102,51 @@ function seedData() {
     {
       id: 'gh',
       provider: 'github',
-      label: 'personal',
+      label: 'feedMyPixel',
       host: 'https://github.com',
       token: 'ghp_dev'
-    }
+    },
+    { id: 'gl', provider: 'gitlab', label: 'Work', host: 'https://gitlab.com', token: 'glpat_dev' }
   ]
   const watchedRepos = [
-    repo('octo-org/marketing-site'),
-    repo('octo-org/cli'),
-    repo('octo-org/status-api'),
-    repo('globex/api'),
-    repo('globex/database')
+    repo('feedmypixel/pipes'),
+    repo('feedmypixel/stat-api'),
+    repo('feedmypixel/stat-ui'),
+    repo('whiskyinvestdirect/api', 'gl'),
+    repo('whiskyinvestdirect/database', 'gl'),
+    repo('whiskyinvestdirect/web', 'gl')
   ]
   const snapshots: Record<string, RepoSnapshot> = {
-    'octo-org/marketing-site': { default: pipe('1', 'main', 'success', true, 90), changes: [] },
-    'octo-org/cli': { default: pipe('2', 'main', 'running', true, 1), changes: [] },
-    'octo-org/status-api': {
-      default: pipe('3', 'main', 'failed', true, 4),
+    'feedmypixel/pipes': {
+      default: pipe('1', 'main', 'failed', true, 4, A.grace),
       changes: [
-        change(210, 'Retry flaky integration test', 'pr/210-retry', 'failed', 9),
-        change(208, 'Bump request timeout', 'fix/timeout', 'success', 120, false, 'alex'),
-        change(205, 'WIP: caching layer', 'feat/cache', 'pending', 200, true, 'sam')
+        change(212, 'Author attribution on rows', 'feat/attribution', 'running', 2, false, A.me),
+        change(210, 'Retry flaky integration test', 'pr/210-retry', 'failed', 9, false, A.ada),
+        change(205, 'WIP: caching layer', 'feat/cache', 'pending', 40, true, A.bot)
       ]
     },
-    'globex/api': { default: pipe('6', 'main', 'success', true, 40), changes: [] },
-    'globex/database': { default: pipe('7', 'main', 'failed', true, 30), changes: [] }
+    'feedmypixel/stat-api': {
+      default: pipe('2', 'main', 'success', true, 70, A.me),
+      changes: [change(88, 'Bump request timeout', 'fix/timeout', 'success', 120, false, A.linus)]
+    },
+    'feedmypixel/stat-ui': { default: pipe('3', 'main', 'running', true, 1, A.me), changes: [] },
+    'whiskyinvestdirect/api': {
+      default: pipe('4', 'main', 'success', true, 30, A.grace),
+      changes: [change(64, 'Balance mapper test', 'wid-464-balance', 'running', 3, false, A.me)]
+    },
+    'whiskyinvestdirect/database': {
+      default: pipe('5', 'main', 'failed', true, 21, A.linus),
+      changes: [change(24, 'Enforce email uniqueness', 'wid-409', 'failed', 200, false, A.me)]
+    },
+    'whiskyinvestdirect/web': {
+      default: pipe('6', 'main', 'success', true, 90, A.ada),
+      changes: []
+    }
   }
-  // No poll loop runs in the tab preview, so seed the identity the "mine" filter matches against
-  // (octo-org owns PR #210 above; alex/sam own the others).
-  const accountHealth = { gh: { ok: true, user: 'octo-org' } }
+  const accountHealth = {
+    gh: { ok: true, user: 'octo-org' },
+    gl: { ok: true, user: 'octo-org' }
+  }
   return {
     accounts,
     watchedRepos,
@@ -172,18 +226,21 @@ function mockFetch() {
     const hasToken = Boolean(headers.get('authorization') || headers.get('private-token'))
     if (hasToken && /^https:\/\/api\.github\.com\/user\/repos/.test(url)) {
       return json([
-        repos('octo-org/marketing-site'),
-        repos('octo-org/cli'),
-        repos('octo-org/status-api'),
-        repos('acme-corp/billing'),
-        repos('acme-corp/dashboard')
+        repos('feedmypixel/pipes'),
+        repos('feedmypixel/stat-api'),
+        repos('feedmypixel/stat-ui'),
+        repos('feedmypixel/website')
       ])
     }
     if (hasToken && /^https:\/\/api\.github\.com\/user(\?|$)/.test(url)) {
       return json({ login: 'octo-org' })
     }
     if (hasToken && /^https:\/\/gitlab\.com\/api\/v4\/projects/.test(url)) {
-      return json([projects(1, 'globex/api'), projects(2, 'globex/database')])
+      return json([
+        projects(1, 'whiskyinvestdirect/api'),
+        projects(2, 'whiskyinvestdirect/database'),
+        projects(3, 'whiskyinvestdirect/web')
+      ])
     }
     if (hasToken && /^https:\/\/gitlab\.com\/api\/v4\/user(\?|$)/.test(url)) {
       return json({ username: 'octo-org' })
