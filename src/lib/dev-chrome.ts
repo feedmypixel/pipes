@@ -13,26 +13,26 @@ const dicebear = (style: string, seed: string) =>
 const A = {
   me: {
     login: 'octo-org',
-    name: 'Octo Org',
-    avatarUrl: dicebear('thumbs', 'octo-org-7'),
+    name: 'feedMyPixel',
+    avatarUrl: 'https://github.com/feedmypixel.png',
     profileUrl: 'https://example.test/octo-org'
   },
   ada: {
     login: 'ada',
     name: 'Ada Lovelace',
-    avatarUrl: dicebear('identicon', 'ada-3'),
+    avatarUrl: dicebear('pixel-art', 'ada-3'),
     profileUrl: 'https://example.test/ada'
   },
   grace: {
     login: 'grace',
     name: 'Grace Hopper',
-    avatarUrl: dicebear('thumbs', 'grace-9'),
+    avatarUrl: dicebear('pixel-art', 'grace-9'),
     profileUrl: 'https://example.test/grace'
   },
   linus: {
     login: 'linus',
     name: 'Linus Torvalds',
-    avatarUrl: dicebear('avataaars', 'linus-2'),
+    avatarUrl: dicebear('pixel-art', 'linus-2'),
     profileUrl: 'https://example.test/linus'
   },
   pat: { login: 'pat', name: 'Pat Lee', profileUrl: 'https://example.test/pat' },

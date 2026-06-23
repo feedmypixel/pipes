@@ -77,19 +77,19 @@
     ada: {
       login: 'ada',
       name: 'Ada Lovelace',
-      avatarUrl: dicebear('identicon', 'ada'),
+      avatarUrl: dicebear('pixel-art', 'ada'),
       profileUrl: 'https://example.test/ada'
     },
     grace: {
       login: 'grace',
       name: 'Grace Hopper',
-      avatarUrl: dicebear('thumbs', 'grace'),
+      avatarUrl: 'https://github.com/feedmypixel.png',
       profileUrl: 'https://example.test/grace'
     },
     linus: {
       login: 'linus',
       name: 'Linus T',
-      avatarUrl: dicebear('avataaars', 'linus'),
+      avatarUrl: dicebear('pixel-art', 'linus'),
       profileUrl: 'https://example.test/linus'
     },
     bot: {
@@ -274,7 +274,7 @@
   <section>
     <p class="eyebrow">Author (who caused this): avatar, full name on hover, link to profile</p>
     <p class="note">
-      Greyscale at rest so the status leads; colour on hover. Avatar, or initials when there is no
+      Colour at rest; greyscale on hover so the status leads. Avatar, or initials when there is no
       image.
     </p>
     <div class="inline">
