@@ -216,6 +216,39 @@ test('listPipelines attributes the default-branch pipeline to the pipeline user'
   }
 })
 
+test('pipeline-author cache is project-scoped (two projects, same pipeline id)', async () => {
+  const list = (sha: string) =>
+    new Response(
+      JSON.stringify([
+        { id: 77, status: 'success', ref: 'main', sha, web_url: 'https://x/p/77', updated_at: 't' }
+      ]),
+      { status: 200 }
+    )
+  const commit = new Response(JSON.stringify({ title: 't' }), { status: 200 })
+
+  const restoreA = stubByUrl({
+    '/projects/projA/pipelines?': list('shaA'),
+    '/repository/commits/shaA': commit,
+    '/projects/projA/pipelines/77': new Response(JSON.stringify({ user: { username: 'dev-a' } }), {
+      status: 200
+    })
+  })
+  const a = await gitlab.listPipelines({ ...account }, { ...repo, id: 'projA' })
+  expect(a.pipelines.find((p) => p.isDefaultBranch)?.attribution?.login).toBe('dev-a')
+  restoreA()
+
+  const restoreB = stubByUrl({
+    '/projects/projB/pipelines?': list('shaB'),
+    '/repository/commits/shaB': commit,
+    '/projects/projB/pipelines/77': new Response(JSON.stringify({ user: { username: 'dev-b' } }), {
+      status: 200
+    })
+  })
+  const b = await gitlab.listPipelines({ ...account }, { ...repo, id: 'projB' })
+  expect(b.pipelines.find((p) => p.isDefaultBranch)?.attribution?.login).toBe('dev-b')
+  restoreB()
+})
+
 test('listPipelines keeps the newest pipeline per ref by id, not by update time', async () => {
   // GitLab cancels a superseded run when a new commit lands, which bumps the canceled run's
   // updated_at above the newer run that is still pending/running. Ordered by updated_at the

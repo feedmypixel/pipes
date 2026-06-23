@@ -21,7 +21,7 @@
     href={change.webUrl}
     target="_blank"
     rel="noopener noreferrer"
-    title={change.title}
+    title={`${change.title}\n${change.headRef}`}
     aria-label={label}
   ></a>
   <StatusIcon status={change.status} size={16} />

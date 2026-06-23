@@ -89,8 +89,9 @@ async function pipelineAuthor(
   projectId: string,
   pipelineId: string
 ): Promise<Author | undefined> {
-  if (pipelineAuthorById.has(pipelineId)) {
-    return pipelineAuthorById.get(pipelineId)
+  const key = `${projectId}:${pipelineId}`
+  if (pipelineAuthorById.has(key)) {
+    return pipelineAuthorById.get(key)
   }
   try {
     const pipeline = await request<{ user: GlUser | null }>(
@@ -98,7 +99,7 @@ async function pipelineAuthor(
       `/projects/${projectId}/pipelines/${pipelineId}`
     )
     const author = glAuthor(pipeline.user)
-    pipelineAuthorById.set(pipelineId, author)
+    pipelineAuthorById.set(key, author)
     return author
   } catch {
     return undefined
