@@ -50,13 +50,13 @@ Source PRD: [`prd-firefox-port.md`](prd-firefox-port.md)
   - [x] 2.6 Added `build:firefox`, `build:all`, `zip:firefox` scripts.
   - [x] 2.7 Added `web-ext` dev dep. `web-ext lint -s dist-firefox`: **0 errors**, 6 expected warnings (`sidePanel.open` → 3.1, Svelte `innerHTML`, Android-only `optional_host_permissions`).
 
-- [ ] 3.0 Firefox surface + behaviour parity
-  - [ ] 3.1 Add `src/lib/platform.ts` with an engine/capability check (no `process.env`) and an `openDashboard()` helper: `sidePanel.open()` on Chrome, `sidebarAction.toggle()`/`open()` on Firefox.
-  - [ ] 3.2 Route the popup "open dashboard" button through `openDashboard()`.
-  - [ ] 3.3 Build the notification options per engine: lean on Firefox (no `buttons`/`requireInteraction`/`contextMessage`/`priority`); keep the rich Chrome shape; guard the `onButtonClicked` path so its absence on FF is harmless.
-  - [ ] 3.4 Verify the self-hosted `permissions.request({ origins })` flow works on Firefox (user gesture).
-  - [ ] 3.5 Verify the `action` badge text/colour renders on Firefox.
-  - [ ] 3.6 `web-ext run` the Firefox build: exercise poll → badge → notification → click-through, popup, and the sidebar dashboard; tune the live-port cadence if the event page suspends (PRD open question 3).
+- [x] 3.0 Firefox surface + behaviour parity (code; FF interactive checks are Ben's gate)
+  - [x] 3.1 `src/lib/platform.ts`: `isFirefox()` + `openDashboard()` via **feature detection** (no `process.env`) — `browser.sidebarAction` exists only on Firefox, so `openDashboard()` does `sidebarAction.toggle()` on FF, else `browser.sidePanel.open()` on Chrome.
+  - [x] 3.2 Popup routes its open button through `openDashboard()` (+ `window.close()`); button relabelled "Open dashboard". No `chrome.*` left in the popup.
+  - [x] 3.3 `notify.ts` + the `service-worker.ts` notification listeners now use the seam. FF gets **lean** options (drop `contextMessage`/`buttons`/`priority`/`requireInteraction` via a per-call spread); `onButtonClicked` is guarded with `?.` (Firefox omits it). Badge uses `browser.action`. **Every runtime `chrome.*` call is now on the seam** — only comments/`@types/chrome` type names remain.
+  - [ ] 3.4 (Ben, `web-ext run`) verify the self-hosted `permissions.request` flow on Firefox.
+  - [ ] 3.5 (Ben, `web-ext run`) verify the badge renders on Firefox.
+  - [ ] 3.6 (Ben, `web-ext run`) exercise poll → badge → notification → click-through, popup, sidebar; tune the live-port cadence if the FF event page suspends (PRD open question 3). Note: `web-ext lint` still warns on `sidePanel.open` — it's in the shared bundle but guarded (never runs on FF).
 
 - [ ] 4.0 Dual-store release automation
   - [ ] 4.1 Document the AMO secrets needed (`AMO_JWT_ISSUER` / `AMO_JWT_SECRET` or API key) for `web-ext sign`; Ben adds them to repo secrets (manual, like `CWS_*`).

@@ -8,6 +8,7 @@
   import UpdatedFooter from '../lib/components/UpdatedFooter.svelte'
   import { useDashboard } from '../lib/dashboard.svelte'
   import browser from '../lib/browser'
+  import { openDashboard } from '../lib/platform'
 
   const dash = useDashboard()
 
@@ -15,12 +16,9 @@
     filterGroups(groupByOwner(dash.watchedRepos, dash.snapshots, dash.accounts), ALL_BRANCH_STATES)
   )
 
-  async function openSidePanel() {
-    const win = await chrome.windows.getCurrent()
-    if (win.id !== undefined) {
-      await chrome.sidePanel.open({ windowId: win.id })
-      window.close()
-    }
+  async function showDashboard() {
+    await openDashboard()
+    window.close()
   }
 
   function openOptions() {
@@ -46,9 +44,9 @@
       {/if}
       <button
         class="icon-button"
-        title="Open side panel"
-        aria-label="Open side panel"
-        onclick={openSidePanel}
+        title="Open dashboard"
+        aria-label="Open dashboard"
+        onclick={showDashboard}
       >
         <PanelRight size={17} />
       </button>

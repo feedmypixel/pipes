@@ -77,17 +77,17 @@ browser.storage.onChanged.addListener((changes, area) => {
   }
 })
 
-chrome.notifications.onClicked.addListener((notifId) => {
+browser.notifications.onClicked.addListener((notifId) => {
   openNotificationLink(notifId)
 })
 
 // The single action button ("Open run" / "Open PR" / "Open") opens the same link as a body click.
-chrome.notifications.onButtonClicked.addListener((notifId) => {
+browser.notifications.onButtonClicked?.addListener((notifId) => {
   openNotificationLink(notifId)
 })
 
 // Reclaim the stored link when a notification is dismissed or expires unclicked.
-chrome.notifications.onClosed.addListener((notifId) => {
+browser.notifications.onClosed.addListener((notifId) => {
   forgetNotificationLink(notifId)
 })
 

@@ -1,6 +1,8 @@
 import type { Change, Pipeline, Repo } from '../providers/types'
 import * as storage from './storage'
 import { BADGE_FAIL_COLOR, NOTIF_PREFIX } from './config'
+import browser from './browser'
+import { isFirefox } from './platform'
 
 // Packaged status glyphs (see manifest web_accessible_resources). Used as the notification icon
 // so the toast leads with a red cross / green tick, not the app's green-tick logo.
@@ -42,15 +44,19 @@ export async function notifyMainFailed({
 }): Promise<void> {
   const id = `${NOTIF_PREFIX.fail}${repo.id}-default`
   await rememberLink(id, pipeline.webUrl)
-  await chrome.notifications.create(id, {
+  await browser.notifications.create(id, {
     type: 'basic',
     iconUrl: ICON_FAILED,
     title: `${shortName(repo)} · ${repo.defaultBranch} failed`,
     message: pipeline.title,
-    contextMessage: repo.name,
-    buttons: [{ title: 'Open' }],
-    priority: 2,
-    requireInteraction: true
+    ...(isFirefox()
+      ? {}
+      : {
+          contextMessage: repo.name,
+          buttons: [{ title: 'Open' }],
+          priority: 2,
+          requireInteraction: true
+        })
   })
 }
 
@@ -64,14 +70,14 @@ export async function notifyChangeFailed({
 }): Promise<void> {
   const id = `${NOTIF_PREFIX.fail}${repo.id}-pr-${change.number}`
   await rememberLink(id, change.webUrl)
-  await chrome.notifications.create(id, {
+  await browser.notifications.create(id, {
     type: 'basic',
     iconUrl: ICON_FAILED,
     title: `${shortName(repo)} · #${change.number} failed`,
     message: change.title,
-    contextMessage: change.headRef,
-    buttons: [{ title: 'Open' }],
-    priority: 1
+    ...(isFirefox()
+      ? {}
+      : { contextMessage: change.headRef, buttons: [{ title: 'Open' }], priority: 1 })
   })
 }
 
@@ -93,21 +99,19 @@ export async function notifyRecovered({
 }): Promise<void> {
   const id = `${NOTIF_PREFIX.recover}${repo.id}-${key}`
   await rememberLink(id, url)
-  await chrome.notifications.create(id, {
+  await browser.notifications.create(id, {
     type: 'basic',
     iconUrl: ICON_SUCCESS,
     title: `${shortName(repo)} · ${label} recovered`,
     message: 'Back to green',
-    contextMessage: repo.name,
-    buttons: [{ title: 'Open' }],
-    priority: 0
+    ...(isFirefox() ? {} : { contextMessage: repo.name, buttons: [{ title: 'Open' }], priority: 0 })
   })
 }
 
 /** Toolbar badge = count of refs currently failing across all watched repos. */
 export async function setBadge(failCount: number): Promise<void> {
-  await chrome.action.setBadgeText({ text: failCount ? String(failCount) : '' })
-  await chrome.action.setBadgeBackgroundColor({ color: BADGE_FAIL_COLOR })
+  await browser.action.setBadgeText({ text: failCount ? String(failCount) : '' })
+  await browser.action.setBadgeBackgroundColor({ color: BADGE_FAIL_COLOR })
 }
 
 /** Drop a stored link. Called when a notification is closed or after it's opened. */
@@ -125,7 +129,7 @@ export async function openNotificationLink(notifId: string): Promise<void> {
   if (!url) {
     return
   }
-  await chrome.tabs.create({ url })
-  await chrome.notifications.clear(notifId)
+  await browser.tabs.create({ url })
+  await browser.notifications.clear(notifId)
   await forgetNotificationLink(notifId)
 }
