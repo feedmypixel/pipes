@@ -14,7 +14,7 @@ const A = {
   me: {
     login: 'octo-org',
     name: 'Octo Org',
-    avatarUrl: dicebear('identicon', 'octo-org-7'),
+    avatarUrl: dicebear('thumbs', 'octo-org-7'),
     profileUrl: 'https://example.test/octo-org'
   },
   ada: {
@@ -26,13 +26,13 @@ const A = {
   grace: {
     login: 'grace',
     name: 'Grace Hopper',
-    avatarUrl: dicebear('identicon', 'grace-9'),
+    avatarUrl: dicebear('thumbs', 'grace-9'),
     profileUrl: 'https://example.test/grace'
   },
   linus: {
     login: 'linus',
     name: 'Linus Torvalds',
-    avatarUrl: dicebear('identicon', 'linus-2'),
+    avatarUrl: dicebear('avataaars', 'linus-2'),
     profileUrl: 'https://example.test/linus'
   },
   pat: { login: 'pat', name: 'Pat Lee', profileUrl: 'https://example.test/pat' },
