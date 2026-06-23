@@ -12,8 +12,11 @@ Scope: **desktop Firefox 121+**. Add-on id `pipes@feedmypixel.com` (set in the m
 
 1. **Create a Firefox Add-on developer account** at <https://addons.mozilla.org> — sign in with a
    Firefox account and register as a developer. **Free** (unlike Chrome's one-off $5).
-2. **Generate API credentials** for signing/uploading: AMO → **Tools → Manage API Keys → Generate new
-   credentials**. Copy the **JWT issuer** and **JWT secret**.
+2. **Generate API credentials** for signing/uploading at
+   <https://addons.mozilla.org/developers/addon/api/key/> (it's in the **Developer Hub** →
+   **Tools → Manage API Keys**, not the main-site Tools menu). First visit: **read + accept the
+   agreement** on that page, then **Generate new credentials** appears. Copy the **JWT issuer** and
+   the **JWT secret** (the secret is shown once).
 3. **Add them as GitHub repo secrets** (Settings → Secrets and variables → Actions), mirroring the
    `CWS_*` set:
    - `AMO_JWT_ISSUER`
