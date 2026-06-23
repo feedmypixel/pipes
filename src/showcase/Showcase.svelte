@@ -295,7 +295,7 @@
   <section>
     <p class="eyebrow">FilterBar (side panel: search · All|Mine scope · status pills)</p>
     <p class="note">
-      Shown at the side panel's ~360px width — the row wraps to two lines when the pills don't fit.
+      Full width of its container; the pill row wraps to more lines at narrow side-panel widths.
     </p>
     <div class="surface-frame filter-demo">
       <FilterBar bind:search={filterSearch} bind:scope={filterScope} allowed={filterAllowed} />
@@ -622,7 +622,6 @@
     overflow: hidden;
   }
   .filter-demo {
-    max-width: 360px;
     background: var(--bg);
   }
   .note {
