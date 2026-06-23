@@ -107,7 +107,7 @@ fake. Journeys to cover:
 
 ## Phase 6: Web Store release ⏳
 
-- `CHROMEWEBSTORE.md`: listing copy, permission justifications, privacy disclosure
+- `docs/chromewebstore.md`: listing copy, permission justifications, privacy disclosure
 - Privacy policy, screenshots (1280×800), store assets
 - Package + submit
 

@@ -4,7 +4,7 @@
 
 Single source of truth for the Chrome Web Store listing: copy each field into the
 [Developer Dashboard](https://chrome.google.com/webstore/devconsole) at submission. Excluded from
-the shipped zip (it's internal). See also [`docs/releasing-to-chrome-web-store.md`](docs/releasing-to-chrome-web-store.md).
+the shipped zip (it's internal). See also [`releasing-to-chrome-web-store.md`](releasing-to-chrome-web-store.md).
 
 ## Store Listing
 
