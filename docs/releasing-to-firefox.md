@@ -10,7 +10,7 @@ Scope: **desktop Firefox 121+**. Add-on id `pipes@feedmypixel.com` (set in the m
 
 ## One-time setup
 
-1. **Create a Firefox Add-on developer account** at <https://addons.mozilla.org> — sign in with a
+1. **Create a Firefox Add-on developer account** at <https://addons.mozilla.org>, sign in with a
    Firefox account and register as a developer. **Free** (unlike Chrome's one-off $5).
 2. **Generate API credentials** for signing/uploading at
    <https://addons.mozilla.org/developers/addon/api/key/> (it's in the **Developer Hub** →
@@ -31,14 +31,14 @@ pnpm exec web-ext lint -s dist-firefox    # 0 errors expected
 pnpm exec web-ext run -s dist-firefox     # launches Firefox with the extension loaded
 ```
 
-`web-ext run` opens a temporary Firefox profile with Pipes installed — use it to click through the
+`web-ext run` opens a temporary Firefox profile with Pipes installed; use it to click through the
 popup, the **sidebar** (Firefox's equivalent of the Chrome side panel), and the options page, and to
 confirm the badge + a notification fire. The dashboard lives in the **sidebar** on Firefox
 (`sidebar_action`), not a side panel.
 
 Known Firefox differences (by design):
 
-- Notifications are **leaner** — no sticky/`requireInteraction`, no action buttons. The toast + the
+- Notifications are **leaner**: no sticky/`requireInteraction`, no action buttons. The toast + the
   red badge count still fire; the badge is the durable failure signal.
 - The persistent dashboard is the **sidebar**, opened from the popup's **Open dashboard** button or
   Firefox's own sidebar button.

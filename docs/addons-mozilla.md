@@ -3,7 +3,7 @@
 > Last Updated: 2026-06-23
 
 Single source of truth for the **addons.mozilla.org** listing: copy each field into the AMO Developer
-Hub at submission. The Firefox counterpart of [`chromewebstore.md`](chromewebstore.md) — most copy is
+Hub at submission. The Firefox counterpart of [`chromewebstore.md`](chromewebstore.md). Most copy is
 shared; AMO-only fields (license, categories, reviewer notes) are called out. Release mechanics:
 [`releasing-to-firefox.md`](releasing-to-firefox.md). Add-on id: `pipes@feedmypixel.com`.
 
@@ -77,7 +77,7 @@ later (relabel in `scripts/frame-store.mjs`). See [`screenshots.md`](screenshots
 ## Permissions (from the Firefox manifest)
 
 AMO derives the prompt from the manifest; no per-permission form like Chrome's. The Firefox build's
-permission set (note: **no `sidePanel`** — Firefox uses `sidebar_action`, which is not a permission):
+permission set (note: **no `sidePanel`**; Firefox uses `sidebar_action`, which is not a permission):
 
 | Permission                 | Why                                                                                  |
 | -------------------------- | ------------------------------------------------------------------------------------ |
@@ -100,4 +100,4 @@ The uploaded package is a bundled build, so the AMO reviewer needs to reproduce 
 
 - Source: this repository at the released tag.
 - Build: Node from `.nvmrc`, `pnpm` from `package.json`'s `packageManager`. Run `pnpm install` then
-  `pnpm build:firefox` — output is `dist-firefox/`. Build tooling: Vite + `@crxjs/vite-plugin`.
+  `pnpm build:firefox` (output is `dist-firefox/`). Build tooling: Vite + `@crxjs/vite-plugin`.
