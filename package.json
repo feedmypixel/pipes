@@ -31,6 +31,8 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
+    "build:firefox": "TARGET=firefox vite build",
+    "build:all": "pnpm build && pnpm build:firefox",
     "preview": "vite preview",
     "check": "svelte-check --tsconfig ./tsconfig.json",
     "format": "prettier --write .",
@@ -42,7 +44,8 @@
     "capture": "node scripts/capture-screenshots.mjs",
     "frame": "node scripts/frame-store.mjs",
     "release": "commit-and-tag-version",
-    "zip": "cd dist && zip -r ../pipes.zip . -x '*.DS_Store'",
+    "zip": "cd dist-chrome && zip -r ../pipes-chrome.zip . -x '*.DS_Store'",
+    "zip:firefox": "cd dist-firefox && zip -r ../pipes-firefox.zip . -x '*.DS_Store'",
     "prepare": "husky",
     "test:coverage": "vitest run --coverage"
   },
@@ -82,7 +85,8 @@
     "typescript-eslint": "8.61.1",
     "vite": "8.0.16",
     "vitest": "4.1.9",
-    "vitest-browser-svelte": "2.1.1"
+    "vitest-browser-svelte": "2.1.1",
+    "web-ext": "10.4.0"
   },
   "dependencies": {
     "@lucide/svelte": "1.20.0",

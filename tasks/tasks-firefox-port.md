@@ -41,14 +41,14 @@ Source PRD: [`prd-firefox-port.md`](prd-firefox-port.md)
   - [x] 1.4 Rename `dev-chrome.ts` → `dev-extension.ts` (cross-browser intent) + update the 3 entry imports and docs. Reword the options page's user-facing "stored via chrome.storage.local" copy to browser-neutral.
   - [ ] 1.5 **Deferred to 3.x (needs FF testing):** `lib/notify.ts` + the `notifications.*` listeners in `service-worker.ts` stay on `chrome.*` until the FF degrade (3.3); `popup/App.svelte`'s `windows.getCurrent` + `sidePanel.open` stay on `chrome.*` until the platform `openDashboard()` helper (3.1). Drop `@types/chrome` once no `chrome.*` runtime refs remain (the `chrome.runtime.Port` / `chrome.storage.StorageChange` type names stay — they are the standard `@types/chrome` shapes the seam is typed against).
 
-- [ ] 2.0 Firefox build target + manifest
-  - [ ] 2.1 Read a `TARGET` (chrome|firefox) env in `vite.config.ts` / `manifest.config.ts`; default chrome.
-  - [ ] 2.2 For the Firefox target add `browser_specific_settings.gecko.id` (`pipes@feedmypixel.com`) + `gecko.strict_min_version` (`121.0`).
-  - [ ] 2.3 Declare `background` with **both** `service_worker` and `scripts` so FF 121+ runs the event page.
-  - [ ] 2.4 Replace Chrome's `side_panel` with `sidebar_action.default_panel` pointing at the existing sidepanel HTML (FF target only).
-  - [ ] 2.5 Pass `browser: 'firefox'` to crxjs for the FF build (strips Chrome-only fields); output to `dist-firefox/`.
-  - [ ] 2.6 Add `build:firefox` and `zip:firefox` package scripts (+ a convenience `build:all`).
-  - [ ] 2.7 Add `web-ext` dev dependency; `web-ext lint dist-firefox/` clean.
+- [x] 2.0 Firefox build target + manifest
+  - [x] 2.1 `vite.config.ts` reads `process.env.TARGET` (chrome|firefox, default chrome) → `crx({ browser })` + `build.outDir = dist-${target}`. Renamed the Chrome output `dist` → **`dist-chrome`** (symmetry with `dist-firefox`); updated `.gitignore`, `release.yml`, the `zip` script (`pipes-chrome.zip`), and the README load-unpacked docs.
+  - [x] 2.2 FF manifest adds `browser_specific_settings.gecko` (id `pipes@feedmypixel.com`, `strict_min_version` `121.0`).
+  - [x] 2.3 `background` is conditional: Chrome `service_worker`, **Firefox `scripts: [...]`** (crxjs's FF path reads `background.scripts[0]` and does NOT transform `service_worker` — declaring `service_worker` alone crashes its `renderCrxManifest`). `type: module` on both.
+  - [x] 2.4 FF target swaps `side_panel` → `sidebar_action.default_panel` (same sidepanel HTML) and drops the Chrome-only `sidePanel` permission.
+  - [x] 2.5 `crx({ browser: 'firefox' })` builds `dist-firefox/` (generates the background loader, strips Chrome-only fields). `pnpm build` (Chrome) + `pnpm build:firefox` both succeed; `check` green.
+  - [x] 2.6 Added `build:firefox`, `build:all`, `zip:firefox` scripts.
+  - [x] 2.7 Added `web-ext` dev dep. `web-ext lint -s dist-firefox`: **0 errors**, 6 expected warnings (`sidePanel.open` → 3.1, Svelte `innerHTML`, Android-only `optional_host_permissions`).
 
 - [ ] 3.0 Firefox surface + behaviour parity
   - [ ] 3.1 Add `src/lib/platform.ts` with an engine/capability check (no `process.env`) and an `openDashboard()` helper: `sidePanel.open()` on Chrome, `sidebarAction.toggle()`/`open()` on Firefox.
@@ -72,8 +72,5 @@ Source PRD: [`prd-firefox-port.md`](prd-firefox-port.md)
   - [ ] 5.4 Final gates: `pnpm check`, `pnpm test`, `pnpm lint`, `pnpm security-audit`; re-confirm Chrome `dist/` unchanged; `web-ext lint` clean.
   - [ ] 5.5 Independent review (`pr-review-toolkit`) on the diff; open the PR off `main`.
 
-- [ ] 6.0 Cross-browser e2e tests (Chrome + Firefox)
-  - [ ] 6.1 **Tier 1 (both engines, UI):** a Playwright project that drives the dev-mock surface pages (`/src/popup|sidepanel|options/index.html`) in **Chromium and Firefox**, asserting the rendered dashboard, filters, and author rows. Reuses the `dev-extension` scene + the capture infra; proves the seam + surfaces render on both engines.
-  - [ ] 6.2 **Tier 2 (Chrome, full extension):** Playwright `launchPersistentContext` with the unpacked `dist/` loaded; e2e the real flow — storage write → background poll → badge → popup → open side panel.
-  - [ ] 6.3 **Tier 3 (Firefox, smoke):** Playwright can't load FF extensions directly, so a `web-ext run`-driven smoke (or deferred) that loads `dist-firefox/` and checks the surfaces + that the background event page registers. Document the limitation if deferred.
-  - [ ] 6.4 Wire the e2e into CI (a job that builds both targets and runs the tiers); keep it separate from the fast unit `pnpm test`.
+- [ ] 6.0 (Optional, deferred) Cross-browser smoke test
+  - [ ] 6.1 **Not built for v1** — unit tests + a manual `web-ext run` pass per release cover the risk. If FF parity regressions bite post-launch, add a thin Playwright smoke: load `dist-chrome/` (load-unpacked) and `dist-firefox/` (via `web-ext`), assert each surface renders + the core poll → badge path. Skip the heavy 3-tier suite (extension e2e, esp. Firefox, is fiddly + flaky for a small client-side extension).

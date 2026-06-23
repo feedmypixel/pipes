@@ -1,5 +1,6 @@
 # Generated
-dist
+dist-chrome
+dist-firefox
 coverage
 
 # Design reference (claude.ai prototypes, not production code)
