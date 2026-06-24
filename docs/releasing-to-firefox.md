@@ -59,8 +59,14 @@ run creates the add-on from `gecko.id`; later runs add a version. AMO's human re
 
 ### First listing (one-time, in the dashboard)
 
-Like the CWS listing, the **listing details + screenshots** are set once in the AMO Developer Hub,
-not by CI:
+The very first version is uploaded **by hand** (AMO → Submit a New Add-on → Upload Version); CI takes
+over for later versions. Build the package to upload:
+
+```sh
+pnpm build:firefox && pnpm zip:firefox   # → pipes-firefox.zip (AMO accepts .zip)
+```
+
+The **listing details + screenshots** are then set once in the AMO Developer Hub, not by CI:
 
 - Reuse the framed **store screenshots** in `store-screenshots/framed/` and the 128px icon. No
   Firefox-specific capture (the framing pipeline is browser-agnostic). See [`screenshots.md`](screenshots.md).
