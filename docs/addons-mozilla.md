@@ -106,3 +106,6 @@ The uploaded package is a bundled build, so the AMO reviewer needs to reproduce 
 - Source: this repository at the released tag.
 - Build: Node from `.nvmrc`, `pnpm` from `package.json`'s `packageManager`. Run `pnpm install` then
   `pnpm build:firefox` (output is `dist-firefox/`). Build tooling: Vite + `@crxjs/vite-plugin`.
+- The "unsafe `innerHTML`" validation warnings come from the Svelte 5 compiler + `@lucide/svelte` SVG
+  icons, not from us: there is no `{@html}` or manual `innerHTML` anywhere in `src/`, so no
+  unsanitised or user-controlled HTML is ever assigned.
