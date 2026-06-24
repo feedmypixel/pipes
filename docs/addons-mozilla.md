@@ -47,8 +47,11 @@ Pipes is fully client-side. There is no Pipes server. Your token and all setting
 **Categories** (AMO taxonomy)
 Web Development
 
-**Tags / keywords**
-github actions, gitlab, ci, cd, pipelines, devops
+**Tags**
+Leave empty. AMO tags are a fixed controlled list (ad blocker, dark mode, search, vpn, etc.); none fit a CI/CD pipeline watcher.
+
+**Contributions URL**
+None (no donation page; `github.com`/Sponsors is an allowed domain if one is added later).
 
 **Homepage**
 https://github.com/feedmypixel/pipes
