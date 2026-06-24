@@ -80,6 +80,14 @@ which is identical on Firefox; the only Chrome-ism is the window-chrome titlebar
 (Firefox calls it the **sidebar**). Acceptable as-is; optionally regenerate a Firefox-flavoured set
 later (relabel in `scripts/frame-store.mjs`). See [`screenshots.md`](screenshots.md).
 
+**Screenshot captions** (AMO shows one per shot; optional but recommended):
+
+1. `1-sidepanel-dark`: Every GitHub Actions and GitLab pipeline in one panel, grouped by owner.
+2. `2-author-light`: Every run and PR shows who pushed it, so you know who to nudge.
+3. `3-popup-dark`: A toolbar popup for a quick glance; one click through to the failing run.
+4. `4-notification`: A desktop notification the instant a watched branch fails, and again when it recovers.
+5. `5-options-dark`: Pick the repos to watch. Your read-only token stays on your device.
+
 ## Permissions (from the Firefox manifest)
 
 AMO derives the prompt from the manifest; no per-permission form like Chrome's. The Firefox build's
