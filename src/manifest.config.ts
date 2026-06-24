@@ -52,7 +52,11 @@ export default defineManifest({
   ...(isFirefox
     ? {
         browser_specific_settings: {
-          gecko: { id: 'pipes@feedmypixel.com', strict_min_version: '121.0' }
+          gecko: {
+            id: 'pipes@feedmypixel.com',
+            strict_min_version: '121.0',
+            data_collection_permissions: { required: ['none'] }
+          }
         }
       }
     : {}),

@@ -94,6 +94,11 @@ Same as Chrome (see [`chromewebstore.md`](chromewebstore.md)): the access token 
 and transmitted **only** to the user's chosen Git host (GitHub/GitLab). No PII, web history, activity,
 or content is collected; nothing is shared with third parties; there is no Pipes server.
 
+Mozilla's mandatory disclosure (Nov 2025) is declared in the Firefox manifest as
+`browser_specific_settings.gecko.data_collection_permissions: { required: ['none'] }`. The token goes
+only to the first-party host it authenticates, so nothing is collected or transmitted to us or a third
+party. (If a reviewer prefers the token declared explicitly, switch `none` to `authenticationInfo`.)
+
 ## Notes for the reviewer (source + build)
 
 The uploaded package is a bundled build, so the AMO reviewer needs to reproduce it:
