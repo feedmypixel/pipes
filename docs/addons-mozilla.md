@@ -15,7 +15,9 @@ Pipes: watch your CI/CD pipelines
 **Summary** (≤250 chars)
 Watch GitHub Actions and GitLab CI/CD pipeline status across the repos you care about. Loud the moment a default branch breaks.
 
-**Description**
+**Description** (everything inside the fence below; the field ends before Categories)
+
+```text
 Pipes watches your GitHub Actions and GitLab CI/CD pipelines and shows you the moment a default branch breaks, so you find out from your browser, not from a teammate.
 
 Pick the repositories you care about and Pipes shows, at a glance, the status of each default branch plus its open pull requests and merge requests. When a branch you watch starts failing, you get a desktop notification and a count on the toolbar; when it goes green again, Pipes tells you that too.
@@ -37,6 +39,7 @@ How to use it
 
 Privacy
 Pipes is fully client-side. There is no Pipes server. Your token and all settings stay on your device in local storage, and your token is sent only to the Git host you connected it to. No analytics, no tracking, no third parties. Full policy: https://feedmypixel.com/pipes-feedback/privacy/
+```
 
 **Categories** (AMO taxonomy)
 Web Development
@@ -51,7 +54,7 @@ https://github.com/feedmypixel/pipes
 https://github.com/feedmypixel/pipes-feedback/issues
 
 **Support email**
-ben@feedmypixel.com
+pipes@feedmypixel.com
 
 **License** (AMO requires one for listed add-ons)
 MIT
