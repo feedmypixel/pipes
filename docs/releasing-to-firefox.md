@@ -63,8 +63,13 @@ The very first version is uploaded **by hand** (AMO → Submit a New Add-on → 
 over for later versions. Build the package to upload:
 
 ```sh
-pnpm build:firefox && pnpm zip:firefox   # → pipes-firefox.zip (AMO accepts .zip)
+pnpm build:firefox && pnpm zip:firefox            # → pipes-firefox.zip (the add-on package)
+git archive --format=zip -o pipes-source.zip HEAD # → pipes-source.zip (source for the reviewer)
 ```
+
+AMO asks "Do you use a build process?" on submit: answer **Yes** and upload `pipes-source.zip` (the
+`git archive` is tracked files only, so no `node_modules`/`dist`). The build steps are in
+[`addons-mozilla.md`](addons-mozilla.md) under "Notes for the reviewer".
 
 The **listing details + screenshots** are then set once in the AMO Developer Hub, not by CI:
 
