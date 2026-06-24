@@ -12,6 +12,9 @@ shared; AMO-only fields (license, categories, reviewer notes) are called out. Re
 **Name**
 Pipes: watch your CI/CD pipelines
 
+**Add-on URL slug** (≤30 chars)
+pipes
+
 **Summary** (≤250 chars)
 Watch GitHub Actions and GitLab CI/CD pipeline status across the repos you care about. Loud the moment a default branch breaks.
 
