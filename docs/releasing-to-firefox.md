@@ -5,7 +5,8 @@ Pipes ships from **one codebase** to two stores. This is the Firefox / AMO side;
 by the `TARGET` env var, so the same source produces a Chrome bundle (`dist-chrome/`) and a Firefox
 bundle (`dist-firefox/`).
 
-Scope: **desktop Firefox 121+**. Add-on id `pipes@feedmypixel.com` (set in the manifest via
+Scope: **desktop Firefox 142+** (the floor where `data_collection_permissions` is supported on every
+gecko target). Add-on id `pipes@feedmypixel.com` (set in the manifest via
 `browser_specific_settings.gecko`).
 
 ## One-time setup
