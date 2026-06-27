@@ -2,6 +2,21 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [1.4.0](https://github.com/feedmypixel/pipes/compare/v1.3.0...v1.4.0) (2026-06-27)
+
+### Features
+
+- **firefox:** AMO release CI + final docs (tasks 4.0, 5.0) ([3ff03d7](https://github.com/feedmypixel/pipes/commit/3ff03d7ac6a93372ad7e920f4694b36d270835bf))
+- **firefox:** browser-API seam (task 1.0) ([b4772b1](https://github.com/feedmypixel/pipes/commit/b4772b1c6832959214557b2edf15c87d4dfe45ad))
+- **firefox:** build target + manifest + docs (task 2.0) ([6c2ad6a](https://github.com/feedmypixel/pipes/commit/6c2ad6af4cfc78ef04101c7deba9387325aad981))
+- **firefox:** surface + notification parity (task 3.0) ([0432715](https://github.com/feedmypixel/pipes/commit/0432715a4b162baa46b570257ebdf354f04a44ae))
+
+### Bug Fixes
+
+- **firefox:** build the sidepanel HTML for the FF target ([c112ed2](https://github.com/feedmypixel/pipes/commit/c112ed2f18f80df85a2a8074585c440b261b34af))
+- **firefox:** declare data_collection_permissions in the manifest ([46e1eb9](https://github.com/feedmypixel/pipes/commit/46e1eb9147a0c6ddb09df4143d535913c6edd48e))
+- **firefox:** raise gecko strict_min_version to 142 ([0cbd767](https://github.com/feedmypixel/pipes/commit/0cbd76737dfc8104e04ac8ea65566a6390774c02))
+
 ## [1.3.0](https://github.com/feedmypixel/pipes/compare/v1.2.0...v1.3.0) (2026-06-23)
 
 ### Features
