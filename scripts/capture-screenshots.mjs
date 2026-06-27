@@ -56,6 +56,10 @@ try {
     })
     const page = await context.newPage()
     await page.goto(urlFor(target.surface), { waitUntil: 'networkidle' })
+    await page.addStyleTag({
+      content:
+        '::-webkit-scrollbar { width: 0 !important; height: 0 !important; display: none !important }'
+    })
     await sleep(600)
     await page.screenshot({ path: `${OUT_DIR}/${target.name}.png` })
     await context.close()
