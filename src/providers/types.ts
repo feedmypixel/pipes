@@ -9,13 +9,7 @@ export type ProviderId = 'github' | 'gitlab'
 
 /** The state we collapse every provider's many statuses into. */
 export type PipelineStatus =
-  | 'success'
-  | 'failed'
-  | 'running'
-  | 'pending'
-  | 'canceled'
-  | 'skipped'
-  | 'unknown'
+  'success' | 'failed' | 'running' | 'pending' | 'canceled' | 'skipped' | 'unknown'
 
 /** Terminal states: a transition *into* one of these is worth a notification. */
 export const TERMINAL_STATUSES: ReadonlySet<PipelineStatus> = new Set([

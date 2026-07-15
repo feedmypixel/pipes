@@ -80,9 +80,7 @@ import RepoCard from './RepoCard.svelte'
 
 test('RepoCard has no axe violations', async () => {
   const { container } = render(RepoCard, {
-    props: {
-      /* ... */
-    }
+    props: {/* ... */}
   })
   expect(await axe(container)).toHaveNoViolations()
 })
