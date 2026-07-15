@@ -72,11 +72,11 @@
     "eslint-plugin-svelte": "3.19.0",
     "globals": "17.6.0",
     "husky": "9.1.7",
-    "lint-staged": "17.0.7",
+    "lint-staged": "17.0.8",
     "playwright": "1.61.1",
     "prettier": "3.8.4",
     "prettier-plugin-svelte": "4.1.1",
-    "sharp": "0.35.1",
+    "sharp": "0.35.3",
     "stylelint": "17.13.0",
     "stylelint-config-standard": "40.0.0",
     "svelte": "5.56.4",
@@ -89,7 +89,7 @@
     "web-ext": "10.4.0"
   },
   "dependencies": {
-    "@lucide/svelte": "1.20.0",
+    "@lucide/svelte": "1.23.0",
     "pino": "10.3.1"
   }
 }
