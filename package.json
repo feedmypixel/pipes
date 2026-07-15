@@ -23,10 +23,10 @@
   "bugs": {
     "url": "https://github.com/feedmypixel/pipes/issues"
   },
-  "packageManager": "pnpm@10.33.0",
+  "packageManager": "pnpm@11.13.0",
   "engines": {
     "node": ">=24",
-    "pnpm": ">=10"
+    "pnpm": ">=11"
   },
   "scripts": {
     "dev": "vite",
@@ -48,12 +48,6 @@
     "zip:firefox": "cd dist-firefox && zip -r ../pipes-firefox.zip . -x '*.DS_Store'",
     "prepare": "husky",
     "test:coverage": "vitest run --coverage"
-  },
-  "pnpm": {
-    "onlyBuiltDependencies": [
-      "sharp",
-      "esbuild"
-    ]
   },
   "devDependencies": {
     "@crxjs/vite-plugin": "2.7.0",
