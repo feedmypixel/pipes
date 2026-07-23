@@ -6,6 +6,7 @@ import * as storage from '../lib/storage'
 import type { RepoSnapshot, Snapshots, StorageShape } from '../lib/storage'
 import { mapLimit } from '../lib/async'
 import { HEALTH_REFRESH_MS } from '../lib/config'
+import { isMine } from '../lib/group'
 import { log } from '../lib/log'
 import * as notify from '../lib/notify'
 
@@ -103,17 +104,27 @@ interface RepoPollResult {
 
 const EMPTY_SNAPSHOT: RepoSnapshot = { default: null, changes: [] }
 
+/** Which change (PR/MR) transitions may notify. The default branch is never gated. */
+interface NotifyGate {
+  notifyOnSuccess: boolean
+  /** Scope is "mine": only the viewer's own changes notify. */
+  mineOnly: boolean
+  /** Authenticated login for the repo's account; undefined until health resolves it. */
+  viewerLogin: string | undefined
+}
+
 /**
  * Fetch + diff one repo with two parallel calls and no per-PR fan-out: the runs list gives every
  * ref's status + time (default branch + PR head branches); the open-PR list is joined to those by
- * head ref. Both calls are ETag-conditional (GitHub caches /actions/runs ~60s, so an open panel is
- * already as fresh as the API allows). A 304 keeps the cached side; any error keeps the old snapshot.
+ * head sha, head ref, or MR number. Both calls are ETag-conditional (GitHub caches /actions/runs
+ * ~60s, so an open panel is already as fresh as the API allows). A 304 keeps the cached side; any
+ * error keeps the old snapshot.
  */
 async function pollRepo(
   account: Account,
   repo: Repo,
   prevSnapshots: Snapshots,
-  notifyOnSuccess: boolean,
+  gate: NotifyGate,
   etag: string | undefined,
   changeEtag: string | undefined
 ): Promise<RepoPollResult> {
@@ -132,8 +143,12 @@ async function pollRepo(
       ? prev.default
       : (runs.pipelines.find((pipeline) => pipeline.isDefaultBranch) ?? null)
 
-    // Join each open PR/MR to its pipeline (status + time) by head ref. On a runs 304 (no new run,
-    // so no change) fall back to the previously-known status/time per PR number.
+    // Join each open PR/MR to its pipeline (status + time): prefer the candidate at the MR head
+    // sha (a `workflow:rules` repo also leaves a skipped branch pipeline on the source ref, which
+    // must not mask the real MR pipeline), else by head ref, else by MR number. On a runs 304 (no
+    // new run, so no change) fall back to the previously-known status/time per PR number.
+    // FOLLOWUP: merged-results pipelines run at a merge commit, not the head sha — the sha
+    // preference can't rescue those. https://github.com/feedmypixel/pipes/issues/134
     const pipelineByRef = new Map(
       runs.notModified ? [] : runs.pipelines.map((pipeline) => [pipeline.ref, pipeline])
     )
@@ -158,7 +173,10 @@ async function pollRepo(
     const prevByNumber = new Map(prev.changes.map((change) => [change.number, change]))
     const metas = open.notModified ? prev.changes : open.changes
     const nextChanges: Change[] = metas.map((meta) => {
-      const pipeline = pipelineByRef.get(meta.headRef) ?? pipelineByNumber.get(meta.number)
+      const byRef = pipelineByRef.get(meta.headRef)
+      const byNumber = pipelineByNumber.get(meta.number)
+      const pipeline =
+        [byNumber, byRef].find((candidate) => candidate?.sha === meta.headSha) ?? byRef ?? byNumber
       const previous = prevByNumber.get(meta.number)
       return {
         number: meta.number,
@@ -176,10 +194,13 @@ async function pollRepo(
     })
 
     if (nextDefault) {
-      await diffDefault(repo, prev.default, nextDefault, notifyOnSuccess)
+      await diffDefault(repo, prev.default, nextDefault, gate.notifyOnSuccess)
     }
     for (const change of nextChanges) {
-      await diffChange(repo, prevByNumber.get(change.number), change, notifyOnSuccess)
+      if (gate.mineOnly && !isMine(change, gate.viewerLogin)) {
+        continue
+      }
+      await diffChange(repo, prevByNumber.get(change.number), change, gate.notifyOnSuccess)
     }
     return {
       snapshot: { default: nextDefault, changes: nextChanges },
@@ -243,6 +264,7 @@ async function runPollCycle(force: boolean): Promise<void> {
     accounts,
     watchedRepos,
     settings,
+    scope,
     prevSnapshots,
     repoEtags,
     changeEtags,
@@ -253,6 +275,7 @@ async function runPollCycle(force: boolean): Promise<void> {
     storage.get('accounts'),
     storage.get('watchedRepos'),
     storage.get('settings'),
+    storage.get('scope'),
     storage.get('snapshots'),
     storage.get('repoEtags'),
     storage.get('changeEtags'),
@@ -328,7 +351,11 @@ async function runPollCycle(force: boolean): Promise<void> {
       account,
       repo,
       prevSnapshots,
-      settings.notifyOnSuccess,
+      {
+        notifyOnSuccess: settings.notifyOnSuccess,
+        mineOnly: scope === 'mine',
+        viewerLogin: health[account.id]?.user
+      },
       repoEtags[repo.id],
       changeEtags[repo.id]
     )

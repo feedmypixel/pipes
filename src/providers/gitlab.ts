@@ -268,8 +268,8 @@ export const gitlab: Provider = {
     if (status === 304 || data === null) {
       return { changes: [], etag: etag ?? null, notModified: true, rateLimit }
     }
-    // Just the open-MR list — poll joins each one's status from the project's pipelines (by source
-    // branch), the same path GitHub uses.
+    // Just the open-MR list — poll joins each one's status from the project's pipelines (by head
+    // sha, source branch, or MR ref), the same path GitHub uses.
     const changes: ChangeMeta[] = data.map((mr) => ({
       number: mr.iid,
       title: mr.title,
