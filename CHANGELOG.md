@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [1.5.0](https://github.com/feedmypixel/pipes/compare/v1.4.0...v1.5.0) (2026-07-23)
+
+### Features
+
+- gate change notifications by Mine scope; fix skipped MR pipeline join ([#135](https://github.com/feedmypixel/pipes/issues/135)) ([d45a0f2](https://github.com/feedmypixel/pipes/commit/d45a0f22c10b146acd7cb43fc06c0f8a03f4b305))
+
+### Bug Fixes
+
+- **screenshots:** hide scrollbars in store captures ([12db8fa](https://github.com/feedmypixel/pipes/commit/12db8fa60509770e02c0c9c84e718a8e2b5ca462))
+
 ## [1.4.0](https://github.com/feedmypixel/pipes/compare/v1.3.0...v1.4.0) (2026-06-27)
 
 ### Features
