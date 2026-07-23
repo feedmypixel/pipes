@@ -124,10 +124,11 @@ export const BRANCH_STATE_ORDER: PipelineStatus[] = [
 /** Every branch state — the side panel's default (show all). */
 export const ALL_BRANCH_STATES: ReadonlySet<PipelineStatus> = new Set(BRANCH_STATE_ORDER)
 
-/** True when a change was opened by the account's authenticated user. */
-function isMine(change: Change, view: RepoView): boolean {
+/** True when a change was opened by the account's authenticated user. Shared by the panel's
+ * Mine filter and the worker's notification gate — an unresolved login matches nothing. */
+export function isMine(change: Change, viewerLogin: string | undefined): boolean {
   const login = change.attribution?.login
-  return login != null && login === view.viewerLogin
+  return login != null && login === viewerLogin
 }
 
 /**
@@ -140,7 +141,7 @@ export function visibleChanges(
   mineOnly = false
 ): Change[] {
   return view.changes.filter(
-    (change) => allowed.has(change.status) && (!mineOnly || isMine(change, view))
+    (change) => allowed.has(change.status) && (!mineOnly || isMine(change, view.viewerLogin))
   )
 }
 

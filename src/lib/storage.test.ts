@@ -23,6 +23,7 @@ test('returns the stored value when it matches the shape', async () => {
 test('falls back to the default when the key is absent', async () => {
   expect(await storage.get('accounts')).toEqual([])
   expect(await storage.get('snapshots')).toEqual({})
+  expect(await storage.get('scope')).toBe('all')
 })
 
 test('heals a corrupt non-array accounts (the add-connection bug) → default', async () => {
@@ -66,11 +67,11 @@ test('migrate clears shape-changed caches and stamps the schema version', async 
   expect(store.branchCache).toBeUndefined()
   expect(store.lastHealthAt).toBeUndefined()
   expect(store.accounts).toEqual([{ id: 'a' }]) // accounts/settings untouched
-  expect(store.schemaVersion).toBe(10)
+  expect(store.schemaVersion).toBe(11)
 })
 
 test('migrate is a no-op once the schema version matches', async () => {
-  store.schemaVersion = 10
+  store.schemaVersion = 11
   store.snapshots = { keep: { default: null, changes: [] } }
   await storage.migrate()
   expect(store.snapshots).toEqual({ keep: { default: null, changes: [] } })

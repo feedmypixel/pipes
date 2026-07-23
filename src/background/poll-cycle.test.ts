@@ -31,6 +31,9 @@ vi.mock('../lib/storage', () => ({
     if (key === 'settings') {
       return { pollMinutes: 1, notifyOnSuccess: true }
     }
+    if (key === 'scope') {
+      return 'all'
+    }
     if (key === 'lastPolledAt' || key === 'lastHealthAt') {
       return 0
     }
@@ -181,6 +184,94 @@ test('a GitLab MR with head + merge pipelines joins the newest by id, not list o
   await poll()
   const mr = (snap().changes as { number: number; status: string }[]).find((c) => c.number === 9)
   expect(mr?.status).toBe('running')
+})
+
+test('a GitLab MR prefers its own pipeline over a same-sha skipped branch pipeline', async () => {
+  seed()
+  const skippedBranch = { ...prPipe('f9', 'skipped'), id: '100', sha: 's9' }
+  const realMr = { ...prPipe('refs/merge-requests/9/head', 'failed'), id: '200', sha: 's9' }
+  h.provider.listPipelines.mockResolvedValue(runs(undefined, [skippedBranch, realMr]))
+  h.provider.listOpenChanges.mockResolvedValue(openChanges([change(9, 'pending')]))
+  await poll()
+  const mr = (snap().changes as { number: number; status: string }[]).find((c) => c.number === 9)
+  expect(mr?.status).toBe('failed')
+})
+
+test('a GitLab MR prefers the branch pipeline at its head sha over a stale newer-id MR pipeline', async () => {
+  seed()
+  const atHead = { ...prPipe('f9', 'failed'), id: '100', sha: 's9' }
+  const stale = { ...prPipe('refs/merge-requests/9/head', 'success'), id: '200', sha: 'older' }
+  h.provider.listPipelines.mockResolvedValue(runs(undefined, [atHead, stale]))
+  h.provider.listOpenChanges.mockResolvedValue(openChanges([change(9, 'pending')]))
+  await poll()
+  const mr = (snap().changes as { number: number; status: string }[]).find((c) => c.number === 9)
+  expect(mr?.status).toBe('failed')
+})
+
+test("scope mine suppresses failure notifications for others' PRs but still stores the status", async () => {
+  seed({
+    scope: 'mine',
+    snapshots: { 'o/r': { default: null, changes: [change(7, 'success')] } }
+  })
+  const theirs = { ...change(7, 'success'), attribution: { login: 'phil' } }
+  h.provider.listPipelines.mockResolvedValue(runs(undefined, [prPipe('f7', 'failed')]))
+  h.provider.listOpenChanges.mockResolvedValue(openChanges([theirs]))
+  await poll()
+  expect(h.notify.notifyChangeFailed).not.toHaveBeenCalled()
+  const pr = (snap().changes as { number: number; status: string }[]).find((c) => c.number === 7)
+  expect(pr?.status).toBe('failed')
+})
+
+test('scope mine still notifies for a PR the viewer authored', async () => {
+  seed({
+    scope: 'mine',
+    snapshots: { 'o/r': { default: null, changes: [change(7, 'success')] } }
+  })
+  const mine = { ...change(7, 'success'), attribution: { login: 'u' } }
+  h.provider.listPipelines.mockResolvedValue(runs(undefined, [prPipe('f7', 'failed')]))
+  h.provider.listOpenChanges.mockResolvedValue(openChanges([mine]))
+  await poll()
+  expect(h.notify.notifyChangeFailed).toHaveBeenCalledTimes(1)
+})
+
+test("scope mine suppresses recovery notifications for others' PRs too", async () => {
+  seed({
+    scope: 'mine',
+    snapshots: {
+      'o/r': {
+        default: null,
+        changes: [{ ...change(7, 'failed'), attribution: { login: 'phil' } }]
+      }
+    }
+  })
+  const theirs = { ...change(7, 'failed'), attribution: { login: 'phil' } }
+  h.provider.listPipelines.mockResolvedValue(runs(undefined, [prPipe('f7', 'success')]))
+  h.provider.listOpenChanges.mockResolvedValue(openChanges([theirs]))
+  await poll()
+  expect(h.notify.notifyRecovered).not.toHaveBeenCalled()
+})
+
+test('scope mine never silences a default-branch failure', async () => {
+  seed({
+    scope: 'mine',
+    snapshots: { 'o/r': { default: defaultPipe('success'), changes: [] } }
+  })
+  h.provider.listPipelines.mockResolvedValue(runs('failed'))
+  await poll()
+  expect(h.notify.notifyMainFailed).toHaveBeenCalledTimes(1)
+})
+
+test('scope mine suppresses PR notifications while the viewer identity is unresolved', async () => {
+  h.provider.validateToken.mockResolvedValue({ ok: true })
+  seed({
+    scope: 'mine',
+    snapshots: { 'o/r': { default: null, changes: [change(7, 'success')] } }
+  })
+  const mine = { ...change(7, 'success'), attribution: { login: 'u' } }
+  h.provider.listPipelines.mockResolvedValue(runs(undefined, [prPipe('f7', 'failed')]))
+  h.provider.listOpenChanges.mockResolvedValue(openChanges([mine]))
+  await poll()
+  expect(h.notify.notifyChangeFailed).not.toHaveBeenCalled()
 })
 
 test('open PRs are stored in the snapshot', async () => {

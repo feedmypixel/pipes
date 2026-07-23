@@ -2,6 +2,8 @@
   import RefreshCw from '@lucide/svelte/icons/refresh-cw'
   import Settings from '@lucide/svelte/icons/settings'
   import { groupByOwner, filterGroups, ALL_BRANCH_STATES } from '../lib/group'
+  import * as storage from '../lib/storage'
+  import type { Scope } from '../lib/storage'
   import type { PipelineStatus } from '../providers/types'
   import { SvelteSet } from 'svelte/reactivity'
   import FilterBar from '../lib/components/FilterBar.svelte'
@@ -9,16 +11,24 @@
   import TopAlerts from '../lib/components/TopAlerts.svelte'
   import UpdatedFooter from '../lib/components/UpdatedFooter.svelte'
   import { useDashboard } from '../lib/dashboard.svelte'
+  import { migrateLegacyScope } from './migrate-scope'
   import browser from '../lib/browser'
 
   const dash = useDashboard()
   let search = $state('')
   const allowed = new SvelteSet<PipelineStatus>(readAllowed())
 
-  // Scope: show everyone's PRs/MRs, or just the ones I opened. Panel-local, like the status pills.
-  type Scope = 'all' | 'mine'
-  let scope = $state<Scope>(localStorage.getItem('pipes-scope') === 'mine' ? 'mine' : 'all')
-  $effect(() => localStorage.setItem('pipes-scope', scope))
+  let scope = $state<Scope>('all')
+  $effect(() => {
+    migrateLegacyScope()
+      .then(() => storage.get('scope'))
+      .then((value) => (scope = value))
+    return storage.subscribe('scope', (value) => (scope = value))
+  })
+  function setScope(value: Scope) {
+    scope = value
+    storage.set('scope', value)
+  }
   const mineOnly = $derived(scope === 'mine')
 
   // View prefs are panel-local, so they live in localStorage, not chrome.storage.
@@ -87,7 +97,7 @@
       </button>
     </div>
   {:else}
-    <FilterBar bind:search bind:scope {allowed} />
+    <FilterBar bind:search bind:scope={() => scope, setScope} {allowed} />
 
     <main class="list">
       <RepoList {groups} {allowed} {mineOnly} storageKey="pipes" />

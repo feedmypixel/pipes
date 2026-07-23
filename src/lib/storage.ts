@@ -1,6 +1,10 @@
 import type { Account, Change, Pipeline, Repo } from '../providers/types'
 import browser from './browser'
 
+/** PR/MR scope — everyone's changes, or only the viewer's. Drives the panel filter AND which
+ * change notifications fire; the default branch always shows and always notifies. */
+export type Scope = 'all' | 'mine'
+
 export interface Settings {
   /** Poll interval in minutes. Chrome enforces a 0.5 minimum on alarms. */
   pollMinutes: number
@@ -37,6 +41,8 @@ export interface StorageShape {
   /** Repos a connection can see, cached per accountId so the picker renders without refetching. */
   availableRepos: Record<string, Repo[]>
   settings: Settings
+  /** All/Mine toggle, stored here (not panel localStorage) so the worker can honour it too. */
+  scope: Scope
   snapshots: Snapshots
   /** ETag per repo id for the default-branch runs fetch (304s don't cost rate-limit budget). */
   repoEtags: Record<string, string>
@@ -59,6 +65,7 @@ const DEFAULTS: StorageShape = {
   watchedRepos: [],
   availableRepos: {},
   settings: DEFAULT_SETTINGS,
+  scope: 'all',
   snapshots: {},
   repoEtags: {},
   changeEtags: {},
@@ -119,7 +126,9 @@ export async function setMany(values: Partial<StorageShape>): Promise<void> {
 // v9: accountHealth carries the authenticated `user` (for "mine"); drop the health throttle so the
 //     next poll re-validates and populates it, instead of waiting out HEALTH_REFRESH_MS.
 // v10: changes + default pipelines carry `attribution` (avatar/name) for the row author.
-const SCHEMA_VERSION = 10
+// v11: the MR join prefers the pipeline at the MR head sha, so a skipped `workflow:rules` branch
+//      pipeline no longer masks the real MR pipeline.
+const SCHEMA_VERSION = 11
 
 /**
  * Drop derived caches whose shape or derivation changed across a release (e.g. snapshots went from
