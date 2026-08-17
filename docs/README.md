@@ -12,6 +12,7 @@ cross-cutting behaviour.
 - [`addons-mozilla.md`](addons-mozilla.md) — the Firefox / AMO listing's source of truth: fields, license, categories, reviewer notes.
 - [`marketing.md`](marketing.md) — distribution + launch notes: channels ranked by fit, messaging, the owned-channel plan.
 - [`screenshots.md`](screenshots.md) — refreshing the store screenshots: `pnpm capture` → `pnpm frame` from a curated mock scene.
+- [`dependencies.md`](dependencies.md) — why each override exists, and which advisories are accepted while upstream has no fix.
 
 ## Principles (WIP)
 
