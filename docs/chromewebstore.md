@@ -35,10 +35,10 @@ How to use it
 3. Leave Pipes running. It polls in the background and notifies you when something breaks.
 
 Privacy
-Pipes is fully client-side. There is no Pipes server. Your token and all settings stay on your device in local storage, and your token is sent only to the Git host you connected it to. No analytics, no tracking, no third parties. Full policy: https://feedmypixel.com/pipes-feedback/privacy/
+Pipes is fully client-side. There is no Pipes server. Your token and all settings stay on your device in local storage, and your token is sent only to the Git host you connected it to. No analytics, no tracking, no third parties. Full policy: https://feedmypixel.com/pipes/privacy
 
 Support and feedback
-Report bugs or request features: https://github.com/feedmypixel/pipes-feedback/issues
+Report bugs or request features: https://github.com/feedmypixel/pipes/issues
 
 **Category**
 Developer Tools
@@ -106,7 +106,7 @@ All other categories: not collected.
 
 ## Privacy Policy
 
-**Privacy Policy URL**: https://feedmypixel.com/pipes-feedback/privacy/
+**Privacy Policy URL**: https://feedmypixel.com/pipes/privacy
 
 ## Distribution
 
@@ -118,8 +118,8 @@ All other categories: not collected.
 
 **Publisher Name**: Ben Chidgey (feedmypixel)
 **Contact Email**: pipes@feedmypixel.com
-**Support URL**: https://github.com/feedmypixel/pipes-feedback/issues
-**Homepage URL**: https://github.com/feedmypixel/pipes-feedback
+**Support URL**: https://github.com/feedmypixel/pipes/issues
+**Homepage URL**: https://github.com/feedmypixel/pipes
 
 ## Additional fields (dashboard)
 
@@ -127,8 +127,8 @@ These appear on the listing form, not the sections above. All optional except wh
 
 - **Official URL**: None — only selectable if `feedmypixel.com` is verified in Google Search
   Console; leave None otherwise.
-- **Homepage URL**: https://github.com/feedmypixel/pipes-feedback
-- **Support URL**: https://github.com/feedmypixel/pipes-feedback/issues
+- **Homepage URL**: https://github.com/feedmypixel/pipes
+- **Support URL**: https://github.com/feedmypixel/pipes/issues
 - **Mature content**: Off (no mature content).
 - **Item support visibility**: On — so the Support URL shows on the store listing.
 

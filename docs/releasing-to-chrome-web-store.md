@@ -140,28 +140,29 @@ eyeballs each release.
 How users report bugs, and what going public does (or doesn't) protect.
 
 **Bug/feedback channel.** Chrome doesn't require an in-app contact; the Web Store listing's
-**Support** tab takes an email _or_ a URL (a URL is enough — no inbox spam). To keep bugs
-structured without exposing the code, there's a **separate public
-[`pipes-feedback`](https://github.com/feedmypixel/pipes-feedback) repo** (README + issue
-templates, no source); the CWS Support tab points there, and it also hosts the
-[privacy policy](https://feedmypixel.com/pipes-feedback/privacy/) via GitHub Pages. `pipes` stays
-private. (A future in-app bug icon can deep-link to the same repo.) Alternatives if ever wanted: a
-hosted board (Canny/Tally) or a filtered email alias.
+**Support** tab takes an email _or_ a URL (a URL is enough — no inbox spam). Now this repo is
+public, bugs and feature requests come straight
+[here](https://github.com/feedmypixel/pipes/issues), with the issue templates in
+`.github/ISSUE_TEMPLATE/`. The CWS Support tab points there. The
+[privacy policy](https://feedmypixel.com/pipes/privacy) lives on the site. The old separate
+`pipes-feedback` repo is retired — it only ever held those two things.
 
-**Licensing if the code goes public.** Note first: an extension's JS already ships readable
-(anyone can unpack the `.crx`), and a licence governs legal _reuse_, not access. So publishing
-source reveals little more than shipping does — the moat is the listing, polish, and upkeep, not
-the code. Pick deliberately:
+**Licensing.** An extension's JS already ships readable (anyone can unpack the `.crx`), and a
+licence governs legal _reuse_, not access. So publishing source revealed little more than shipping
+already did — the moat is the listing, polish and upkeep, not the code. For reference, the options
+were:
 
-- **MIT** (current) — maximal permissive: anyone may copy, modify, **and sell**. Great for
+- **MIT** (chosen) — maximal permissive: anyone may copy, modify, **and sell**. Great for
   adoption, zero protection against being lifted.
 - **AGPL-3.0 / GPL-3.0** — copyleft: forks/redistribution must stay open-source. Deters closed
   commercial copies.
 - **Source-available (e.g. BSL)** — viewable, but no redistribution/commercial use. Protective,
   but not OSI "open source" (some won't contribute).
 
-Current stance: keep `pipes` **private**, use the separate public feedback repo for Issues, and
-revisit the licence only if/when the code is made public. (Not legal advice.)
+Current stance: `pipes` is **public under MIT**, deliberately — the audience for the source is
+prospective clients and contributors, not competitors, and a restrictive licence would cost more in
+goodwill than it buys in protection nobody would enforce. What the licence does **not** grant is the
+Pipes name, logo or store identity; a fork needs its own. (Not legal advice.)
 
 ## Checklist
 

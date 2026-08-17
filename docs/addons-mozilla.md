@@ -41,7 +41,7 @@ How to use it
 3. Leave Pipes running. It polls in the background and notifies you when something breaks.
 
 Privacy
-Pipes is fully client-side. There is no Pipes server. Your token and all settings stay on your device in local storage, and your token is sent only to the Git host you connected it to. No analytics, no tracking, no third parties. Full policy: https://feedmypixel.com/pipes-feedback/privacy/
+Pipes is fully client-side. There is no Pipes server. Your token and all settings stay on your device in local storage, and your token is sent only to the Git host you connected it to. No analytics, no tracking, no third parties. Full policy: https://feedmypixel.com/pipes/privacy
 ```
 
 **Categories** (AMO taxonomy)
@@ -57,7 +57,7 @@ None (no donation page; `github.com`/Sponsors is an allowed domain if one is add
 https://github.com/feedmypixel/pipes
 
 **Support site**
-https://github.com/feedmypixel/pipes-feedback/issues
+https://github.com/feedmypixel/pipes/issues
 
 **Support email**
 pipes@feedmypixel.com
@@ -66,7 +66,7 @@ pipes@feedmypixel.com
 MIT
 
 **Privacy Policy**
-https://feedmypixel.com/pipes-feedback/privacy/
+https://feedmypixel.com/pipes/privacy
 
 **Default locale**
 English (US)

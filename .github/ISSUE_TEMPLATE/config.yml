@@ -1,0 +1,5 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Privacy policy
+    url: https://feedmypixel.com/pipes/privacy
+    about: 'How Pipes handles your data (spoiler: it stays on your device).'

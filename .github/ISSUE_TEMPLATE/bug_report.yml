@@ -1,0 +1,59 @@
+name: Bug report
+description: Something in Pipes isn't working as expected
+labels: [bug]
+body:
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: What did you see, and what did you expect instead?
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. ...
+        2. ...
+        3. ...
+    validations:
+      required: true
+  - type: dropdown
+    id: provider
+    attributes:
+      label: Provider
+      options:
+        - GitHub
+        - GitLab
+        - Both
+        - Not provider-specific
+    validations:
+      required: true
+  - type: dropdown
+    id: surface
+    attributes:
+      label: Where in Pipes?
+      options:
+        - Popup
+        - Side panel
+        - Options
+        - Notification
+        - Toolbar badge
+        - Other / not sure
+    validations:
+      required: true
+  - type: input
+    id: versions
+    attributes:
+      label: Pipes version & browser
+      placeholder: e.g. Pipes 0.1.0, Chrome 138
+    validations:
+      required: false
+  - type: textarea
+    id: extra
+    attributes:
+      label: Anything else?
+      description: Screenshots, console errors, or context. Do not paste access tokens.
+    validations:
+      required: false

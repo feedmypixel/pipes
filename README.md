@@ -202,6 +202,15 @@ extension requests host permission at runtime (`optional_host_permissions` +
 - MV3 service workers are ephemeral: polling is `chrome.alarms`-driven and all
   state (snapshots, seen-status) lives in `chrome.storage`, never memory.
 
+## Bugs and feedback
+
+[Open an issue](https://github.com/feedmypixel/pipes/issues) — bug reports and feature requests
+both welcome. Privacy questions: [the privacy policy](https://feedmypixel.com/pipes/privacy), or
+pipes@feedmypixel.com.
+
 ## Licence
 
-MIT.
+MIT — see [`LICENSE`](LICENSE). Fork it, learn from it, build on it.
+
+The licence covers the **code**. The **Pipes name, logo and store listings** stay feedMyPixel's, so
+a fork needs its own name and mark rather than presenting itself as Pipes.
