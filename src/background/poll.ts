@@ -143,12 +143,11 @@ async function pollRepo(
       ? prev.default
       : (runs.pipelines.find((pipeline) => pipeline.isDefaultBranch) ?? null)
 
-    // Join each open PR/MR to its pipeline (status + time): prefer the candidate at the MR head
-    // sha (a `workflow:rules` repo also leaves a skipped branch pipeline on the source ref, which
-    // must not mask the real MR pipeline), else by head ref, else by MR number. On a runs 304 (no
-    // new run, so no change) fall back to the previously-known status/time per PR number.
-    // FOLLOWUP: merged-results pipelines run at a merge commit, not the head sha — the sha
-    // preference can't rescue those. https://github.com/feedmypixel/pipes/issues/134
+    // Join each open PR/MR to its pipeline (status + time): prefer a NON-skipped candidate at the MR
+    // head sha (a `workflow:rules` repo leaves a skipped branch pipeline on the source ref that must
+    // not mask the real MR pipeline), else the MR-ref pipeline by number (merged-results pipelines
+    // run at an ephemeral merge commit, not the head sha, so they only match here), else the branch
+    // ref. On a runs 304 (no new run) fall back to the previously-known status/time per PR number.
     const pipelineByRef = new Map(
       runs.notModified ? [] : runs.pipelines.map((pipeline) => [pipeline.ref, pipeline])
     )
@@ -175,8 +174,11 @@ async function pollRepo(
     const nextChanges: Change[] = metas.map((meta) => {
       const byRef = pipelineByRef.get(meta.headRef)
       const byNumber = pipelineByNumber.get(meta.number)
-      const pipeline =
-        [byNumber, byRef].find((candidate) => candidate?.sha === meta.headSha) ?? byRef ?? byNumber
+      const atHeadReal = [byNumber, byRef].find(
+        (candidate) =>
+          candidate != null && candidate.sha === meta.headSha && candidate.status !== 'skipped'
+      )
+      const pipeline = atHeadReal ?? byNumber ?? byRef
       const previous = prevByNumber.get(meta.number)
       return {
         number: meta.number,
