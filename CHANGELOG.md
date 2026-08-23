@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [1.5.1](https://github.com/feedmypixel/pipes/compare/v1.5.0...v1.5.1) (2026-08-23)
+
+### Bug Fixes
+
+- keep dev-only seed (and dicebear URL) out of the prod bundle ([#147](https://github.com/feedmypixel/pipes/issues/147)) ([6c36ee3](https://github.com/feedmypixel/pipes/commit/6c36ee3a75184c2d5ef38bc22df70f1a52c4cfba))
+- regenerate pnpm-lock to clear duplicated fdir key ([#145](https://github.com/feedmypixel/pipes/issues/145)) ([2a0cf1d](https://github.com/feedmypixel/pipes/commit/2a0cf1d3c9f55e1cb434dbd433ecb756e498ffd2))
+- rescue GitLab merged-results MRs in the pipeline join ([#148](https://github.com/feedmypixel/pipes/issues/148)) ([be6891e](https://github.com/feedmypixel/pipes/commit/be6891e29c73b71f050ab7caf5b44423d35ec149)), closes [#134](https://github.com/feedmypixel/pipes/issues/134)
+
 ## [1.5.0](https://github.com/feedmypixel/pipes/compare/v1.4.0...v1.5.0) (2026-07-23)
 
 ### Features
