@@ -197,6 +197,21 @@ test('a GitLab MR prefers its own pipeline over a same-sha skipped branch pipeli
   expect(mr?.status).toBe('failed')
 })
 
+test('a GitLab merged-results MR prefers its merge-ref pipeline over a skipped branch pipeline at head', async () => {
+  seed()
+  const skippedAtHead = { ...prPipe('f9', 'skipped'), id: '100', sha: 's9' }
+  const mergedResults = {
+    ...prPipe('refs/merge-requests/9/merge', 'failed'),
+    id: '200',
+    sha: 'mergecommit'
+  }
+  h.provider.listPipelines.mockResolvedValue(runs(undefined, [skippedAtHead, mergedResults]))
+  h.provider.listOpenChanges.mockResolvedValue(openChanges([change(9, 'pending')]))
+  await poll()
+  const mr = (snap().changes as { number: number; status: string }[]).find((c) => c.number === 9)
+  expect(mr?.status).toBe('failed')
+})
+
 test('a GitLab MR prefers the branch pipeline at its head sha over a stale newer-id MR pipeline', async () => {
   seed()
   const atHead = { ...prPipe('f9', 'failed'), id: '100', sha: 's9' }

@@ -67,11 +67,11 @@ test('migrate clears shape-changed caches and stamps the schema version', async 
   expect(store.branchCache).toBeUndefined()
   expect(store.lastHealthAt).toBeUndefined()
   expect(store.accounts).toEqual([{ id: 'a' }]) // accounts/settings untouched
-  expect(store.schemaVersion).toBe(11)
+  expect(store.schemaVersion).toBe(12)
 })
 
 test('migrate is a no-op once the schema version matches', async () => {
-  store.schemaVersion = 11
+  store.schemaVersion = 12
   store.snapshots = { keep: { default: null, changes: [] } }
   await storage.migrate()
   expect(store.snapshots).toEqual({ keep: { default: null, changes: [] } })

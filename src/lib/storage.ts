@@ -128,7 +128,9 @@ export async function setMany(values: Partial<StorageShape>): Promise<void> {
 // v10: changes + default pipelines carry `attribution` (avatar/name) for the row author.
 // v11: the MR join prefers the pipeline at the MR head sha, so a skipped `workflow:rules` branch
 //      pipeline no longer masks the real MR pipeline.
-const SCHEMA_VERSION = 11
+// v12: the join also rescues merged-results MRs (whose pipeline runs at a merge commit, not the
+//      head sha) by falling back to the MR-ref pipeline over a skipped branch pipeline.
+const SCHEMA_VERSION = 12
 
 /**
  * Drop derived caches whose shape or derivation changed across a release (e.g. snapshots went from
