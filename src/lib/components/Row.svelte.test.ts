@@ -17,15 +17,15 @@ function pipeline(overrides: Partial<Pipeline> = {}): Pipeline {
 }
 
 describe('Row', () => {
-  test('links to the run and shows the ref', () => {
-    const screen = render(Row, { props: { pipeline: pipeline() } })
+  test('links to the run and shows the ref', async () => {
+    const screen = await render(Row, { props: { pipeline: pipeline() } })
     const link = screen.container.querySelector('a.r-link') as HTMLAnchorElement
     expect(link.href).toBe('https://example.test/run/1')
     expect(screen.container.querySelector('.name')?.textContent).toBe('main')
   })
 
-  test('accessible name uses the polished status word + flags the default branch', () => {
-    const screen = render(Row, {
+  test('accessible name uses the polished status word + flags the default branch', async () => {
+    const screen = await render(Row, {
       props: { pipeline: pipeline({ ref: 'main', status: 'success' }) }
     })
     expect(screen.container.querySelector('a.r-link')?.getAttribute('aria-label')).toBe(
@@ -33,8 +33,8 @@ describe('Row', () => {
     )
   })
 
-  test('non-default branch omits the default-branch note', () => {
-    const screen = render(Row, {
+  test('non-default branch omits the default-branch note', async () => {
+    const screen = await render(Row, {
       props: { pipeline: pipeline({ ref: 'feature', isDefaultBranch: false, status: 'failed' }) }
     })
     expect(screen.container.querySelector('a.r-link')?.getAttribute('aria-label')).toBe(
@@ -42,13 +42,13 @@ describe('Row', () => {
     )
   })
 
-  test('reflects status as a data attribute for the status stripe', () => {
-    const screen = render(Row, { props: { pipeline: pipeline({ status: 'failed' }) } })
+  test('reflects status as a data attribute for the status stripe', async () => {
+    const screen = await render(Row, { props: { pipeline: pipeline({ status: 'failed' }) } })
     expect(screen.container.querySelector('.row')?.getAttribute('data-status')).toBe('failed')
   })
 
-  test('shows the author avatar + login when attributed', () => {
-    const screen = render(Row, {
+  test('shows the author avatar + login when attributed', async () => {
+    const screen = await render(Row, {
       props: {
         pipeline: pipeline({
           attribution: { login: 'pusher', profileUrl: 'https://github.com/pusher' }

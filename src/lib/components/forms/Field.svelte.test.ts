@@ -8,20 +8,22 @@ const inputSnippet = createRawSnippet(() => ({
 
 describe('Field', () => {
   test('renders the label tied to the field name', async () => {
-    const screen = render(Field, { props: { name: 'host', label: 'Host', children: inputSnippet } })
+    const screen = await render(Field, {
+      props: { name: 'host', label: 'Host', children: inputSnippet }
+    })
     await expect.element(screen.getByText('Host')).toBeVisible()
     expect(screen.container.querySelector('label')?.getAttribute('for')).toBe('host')
   })
 
-  test('marks optional fields with an (optional) tag', () => {
-    const screen = render(Field, {
+  test('marks optional fields with an (optional) tag', async () => {
+    const screen = await render(Field, {
       props: { name: 'label', label: 'Label', optional: true, children: inputSnippet }
     })
     expect(screen.container.querySelector('.optional-tag')?.textContent).toContain('optional')
   })
 
-  test('renders the hint with an id for aria-describedby', () => {
-    const screen = render(Field, {
+  test('renders the hint with an id for aria-describedby', async () => {
+    const screen = await render(Field, {
       props: { name: 'host', label: 'Host', hint: 'github.com', children: inputSnippet }
     })
     const hint = screen.container.querySelector('.hint')
@@ -29,8 +31,8 @@ describe('Field', () => {
     expect(hint?.textContent).toBe('github.com')
   })
 
-  test('shows the error above the input, with has-error and an error id', () => {
-    const screen = render(Field, {
+  test('shows the error above the input, with has-error and an error id', async () => {
+    const screen = await render(Field, {
       props: { name: 'host', label: 'Host', error: 'Enter a host', children: inputSnippet }
     })
     const field = screen.container.querySelector('.field')!
@@ -47,8 +49,8 @@ describe('Field', () => {
     )
   })
 
-  test.each(['busy', 'ok', 'bad'] as const)('renders the %s below state', (state) => {
-    const screen = render(Field, {
+  test.each(['busy', 'ok', 'bad'] as const)('renders the %s below state', async (state) => {
+    const screen = await render(Field, {
       props: {
         name: 'host',
         label: 'Host',

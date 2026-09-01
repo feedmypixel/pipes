@@ -10,28 +10,28 @@ const base = {
 }
 
 describe('TopAlerts', () => {
-  test('failure alarm is assertive and pluralises the branch count', () => {
-    const one = render(TopAlerts, { props: { ...base, mainFailing: 1 } })
+  test('failure alarm is assertive and pluralises the branch count', async () => {
+    const one = await render(TopAlerts, { props: { ...base, mainFailing: 1 } })
     const alarm = one.container.querySelector('.alarm')
     expect(alarm?.getAttribute('role')).toBe('alert')
     expect(alarm?.textContent).toContain('1 default branch failing')
 
-    const many = render(TopAlerts, { props: { ...base, mainFailing: 3 } })
+    const many = await render(TopAlerts, { props: { ...base, mainFailing: 3 } })
     expect(many.container.querySelector('.alarm')?.textContent).toContain(
       '3 default branches failing'
     )
   })
 
-  test('all-clear is a polite status, only once ready and nothing failing', () => {
-    const ready = render(TopAlerts, { props: { ...base, mainFailing: 0, ready: true } })
+  test('all-clear is a polite status, only once ready and nothing failing', async () => {
+    const ready = await render(TopAlerts, { props: { ...base, mainFailing: 0, ready: true } })
     expect(ready.container.querySelector('.all-clear')?.getAttribute('role')).toBe('status')
 
-    const notReady = render(TopAlerts, { props: { ...base, ready: false } })
+    const notReady = await render(TopAlerts, { props: { ...base, ready: false } })
     expect(notReady.container.querySelector('.all-clear')).toBeNull()
   })
 
-  test('rate-limited accounts announce politely and never alongside all-clear', () => {
-    const screen = render(TopAlerts, {
+  test('rate-limited accounts announce politely and never alongside all-clear', async () => {
+    const screen = await render(TopAlerts, {
       props: {
         ...base,
         rateLimited: [{ id: 'gh', label: 'GitHub', resumesAt: 9_999_999_999 }]
@@ -42,8 +42,8 @@ describe('TopAlerts', () => {
     expect(strip?.textContent).toContain('GitHub rate limited')
   })
 
-  test('connection issues render as a settings shortcut button', () => {
-    const screen = render(TopAlerts, {
+  test('connection issues render as a settings shortcut button', async () => {
+    const screen = await render(TopAlerts, {
       props: { ...base, connectionIssues: [{ id: 'gh', label: 'GitHub', error: 'bad token' }] }
     })
     const button = screen.container.querySelector('button.issue')
