@@ -2,13 +2,13 @@ import { render } from 'vitest-browser-svelte'
 import FormSummary from './FormSummary.svelte'
 
 describe('FormSummary', () => {
-  test('renders nothing when there are no errors', () => {
-    const screen = render(FormSummary, { props: { errors: [] } })
+  test('renders nothing when there are no errors', async () => {
+    const screen = await render(FormSummary, { props: { errors: [] } })
     expect(screen.container.querySelector('.form-summary')).toBeNull()
   })
 
   test('announces the problems with an in-page anchor per field', async () => {
-    const screen = render(FormSummary, {
+    const screen = await render(FormSummary, {
       props: {
         errors: [
           { name: 'host', message: 'Enter a host' },

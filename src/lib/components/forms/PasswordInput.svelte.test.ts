@@ -3,7 +3,9 @@ import Fixture from './field-fixture.svelte'
 
 describe('PasswordInput', () => {
   test('hides the value by default and reveals it via the Show toggle', async () => {
-    const screen = render(Fixture, { props: { name: 'token', label: 'Token', password: true } })
+    const screen = await render(Fixture, {
+      props: { name: 'token', label: 'Token', password: true }
+    })
     const input = screen.container.querySelector('input')!
     expect(input.type).toBe('password')
 
@@ -12,8 +14,10 @@ describe('PasswordInput', () => {
     await expect.element(screen.getByRole('button', { name: 'Hide' })).toBeVisible()
   })
 
-  test('inherits the field id and aria wiring', () => {
-    const screen = render(Fixture, { props: { name: 'token', label: 'Token', password: true } })
+  test('inherits the field id and aria wiring', async () => {
+    const screen = await render(Fixture, {
+      props: { name: 'token', label: 'Token', password: true }
+    })
     expect(screen.container.querySelector('input')?.id).toBe('token')
   })
 })

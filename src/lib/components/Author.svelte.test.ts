@@ -10,8 +10,8 @@ const full: AuthorType = {
 }
 
 describe('Author', () => {
-  test('links to the profile, names the person, shows login + avatar', () => {
-    const screen = render(Author, { props: { author: full } })
+  test('links to the profile, names the person, shows login + avatar', async () => {
+    const screen = await render(Author, { props: { author: full } })
     const link = screen.container.querySelector('a.author') as HTMLAnchorElement
     expect(link.getAttribute('href')).toBe('https://github.com/octocat')
     expect(link.getAttribute('aria-label')).toContain('The Octocat')
@@ -21,20 +21,20 @@ describe('Author', () => {
     )
   })
 
-  test('falls back to initials when there is no avatar', () => {
-    const screen = render(Author, { props: { author: { login: 'dev', name: 'Dev Eloper' } } })
+  test('falls back to initials when there is no avatar', async () => {
+    const screen = await render(Author, { props: { author: { login: 'dev', name: 'Dev Eloper' } } })
     expect(screen.container.querySelector('img')).toBeNull()
     expect(screen.container.querySelector('.ini')?.textContent).toBe('DE')
   })
 
-  test('renders a non-link when there is no profile url', () => {
-    const screen = render(Author, { props: { author: { login: 'dev' } } })
+  test('renders a non-link when there is no profile url', async () => {
+    const screen = await render(Author, { props: { author: { login: 'dev' } } })
     expect(screen.container.querySelector('a.author')).toBeNull()
     expect(screen.container.querySelector('span.author')).not.toBeNull()
   })
 
-  test('renders nothing for an empty author', () => {
-    const screen = render(Author, { props: { author: undefined } })
+  test('renders nothing for an empty author', async () => {
+    const screen = await render(Author, { props: { author: undefined } })
     expect(screen.container.querySelector('.author')).toBeNull()
   })
 })

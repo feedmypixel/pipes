@@ -11,22 +11,22 @@ const base = {
 }
 
 describe('Stepper', () => {
-  test('shows the value and unit', () => {
-    const screen = render(Stepper, { props: { ...base, value: 2 } })
+  test('shows the value and unit', async () => {
+    const screen = await render(Stepper, { props: { ...base, value: 2 } })
     expect(screen.container.textContent).toContain('2')
     expect(screen.container.textContent).toContain('min')
   })
 
-  test('increments by step', () => {
+  test('increments by step', async () => {
     const onchange = vi.fn()
-    const screen = render(Stepper, { props: { ...base, value: 1, onchange } })
+    const screen = await render(Stepper, { props: { ...base, value: 1, onchange } })
     screen.container.querySelector<HTMLButtonElement>('[aria-label="More often"]')!.click()
     expect(onchange).toHaveBeenCalledWith(1.5)
   })
 
-  test('decrement clamps at min', () => {
+  test('decrement clamps at min', async () => {
     const onchange = vi.fn()
-    const screen = render(Stepper, { props: { ...base, value: 0.5, onchange } })
+    const screen = await render(Stepper, { props: { ...base, value: 0.5, onchange } })
     screen.container.querySelector<HTMLButtonElement>('[aria-label="Less often"]')!.click()
     expect(onchange).toHaveBeenCalledWith(0.5)
   })
