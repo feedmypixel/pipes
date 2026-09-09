@@ -210,7 +210,7 @@ pipes@feedmypixel.com.
 
 ## Licence
 
-MIT — see [`LICENSE`](LICENSE). Fork it, learn from it, build on it.
+Proprietary — all rights reserved. See [`LICENSE`](LICENSE). The source is public for reference
+only; it is not open source and grants no right to copy, modify, or redistribute it.
 
-The licence covers the **code**. The **Pipes name, logo and store listings** stay feedMyPixel's, so
-a fork needs its own name and mark rather than presenting itself as Pipes.
+The **Pipes name, logo and store listings** are feedMyPixel's too.
