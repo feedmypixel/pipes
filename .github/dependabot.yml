@@ -57,7 +57,7 @@ updates:
 
     schedule:
       interval: cron
-      cronjob: '0 9 1 * *'
+      cronjob: '0 9 22 * *'
       timezone: 'Europe/London'
 
     versioning-strategy: increase
@@ -77,5 +77,5 @@ updates:
     directory: /
     schedule:
       interval: cron
-      cronjob: '0 9 1 * *'
+      cronjob: '0 9 22 * *'
       timezone: 'Europe/London'
