@@ -43,8 +43,8 @@ importers:
         specifier: 4.1.11
         version: 4.1.11(@vitest/browser@4.1.11)(vitest@4.1.11)
       commit-and-tag-version:
-        specifier: 13.1.2
-        version: 13.1.2(conventional-commits-filter@6.0.1)(conventional-commits-parser@7.1.2)
+        specifier: 13.2.1
+        version: 13.2.1(conventional-commits-filter@6.0.1)(conventional-commits-parser@7.1.2)
       eslint:
         specifier: 10.11.0
         version: 10.11.0(supports-color@10.2.2)
@@ -159,6 +159,10 @@ packages:
         optional: true
       conventional-commits-parser:
         optional: true
+
+  '@conventional-changelog/template@1.2.1':
+    resolution: {integrity: sha512-TzlTVpKPjaqW6qOYjQcYUDuGsLCNsvFHVBXkYGTAnf5V37jCWrE5haKNXzz0WZUtVHjrpV76L1buANjwXMfT8w==}
+    engines: {node: '>=22'}
 
   '@conventional-changelog/template@1.4.0':
     resolution: {integrity: sha512-aalGyl7dbB5PArRebDIX43ZvBlXrYm9uWzGJ26t+4SzJVPsOuvfILGGbw5X4yX7i50YEmJ8zvbiWnqH/AAnZqg==}
@@ -531,8 +535,8 @@ packages:
   '@mdn/browser-compat-data@8.1.0':
     resolution: {integrity: sha512-BNlUjp+9O6gtIHPVZEGFb5rgtuWW8weR+mSKfLOevxbfoZv5DRe3N4ZTEpXiIm5wfR7+kqHu8malCCgP6USrlg==}
 
-  '@nodable/entities@2.2.0':
-    resolution: {integrity: sha512-9uGyhaQavEUMC8AIddIjau4NsnsXhou+j5sBAGojCM1oxmQpVKTWR/9JxABD6UAv12vpIms55fPZKFQEhG6uBg==}
+  '@nodable/entities@3.0.0':
+    resolution: {integrity: sha512-8L9xFeTYKhm49xfIypoe2W5wV1m/3Z58kT+7kR9A8OyFxcPduI4VmxaUMQyKYrRjUoLLSXv6EKKID5Tvj9cUVw==}
 
   '@nodelib/fs.scandir@2.1.5':
     resolution: {integrity: sha512-vq24Bq3ym5HEQm2NKCr3yXDwjc7vTsEThRDnkp2DK9p1uqLR+DHurm/NOTo0KG7HYHU7eppKZj3MyqYuMBf62g==}
@@ -929,8 +933,8 @@ packages:
     resolution: {integrity: sha512-4Dj6M28JB+oAH8kFkTLUo+a2jwOFkuqb3yucU0CANcRRUbxS0cP0nZYCGjcc3BNXwRIsUVmDGgzawme7zvJHvg==}
     engines: {node: '>=12'}
 
-  anynum@1.0.0:
-    resolution: {integrity: sha512-xjR9/zBVnUOP6ztMIIgShjsxui80nQUQH+5xJnvrYLs+90bF25/KJqaAi8mk+B4RDtX1Nspi6fmp4YTEts8SfA==}
+  anynum@1.0.1:
+    resolution: {integrity: sha512-N6//FLET/tXYNM/F6ABca1oH6fWB+KlTt909Le28WMDBk8oaT4vY17DCrwg2MvmuqUKt3Ni4N5dGJ/EoBgcO6A==}
 
   argparse@2.0.1:
     resolution: {integrity: sha512-8+9WqebbFzpX9OR+Wa6O29asIogeRMzcGtAINdpMHHyAg10f05aSFVBbcEqGf/PXw1EjAZ+q2/bEBg3DvurK3Q==}
@@ -1037,6 +1041,10 @@ packages:
     resolution: {integrity: sha512-7NzBL0rN6fMUW+f7A6Io4h40qQlG+xGmtMxfbnH/K7TAtt8JQWVQK+6g0UXKMeVJoyV5EkkNsErQ8pVD3bLHbA==}
     engines: {node: ^12.17.0 || ^14.13 || >=16.0.0}
 
+  chalk@6.0.0:
+    resolution: {integrity: sha512-2uNTXIuTTxk7ciZgAU1BQcgnchcG0xXnrs6jzkQfj9SsRa9M2s5zE8WT96hS6KmG4MzWHSrvH43DF1m4XRkrFg==}
+    engines: {node: '>=22'}
+
   cheerio-select@2.1.0:
     resolution: {integrity: sha512-9v9kG0LvzrlcungtnJtpGNxY+fzECQKhK4EGJX2vByejiMX84MFNQw4UxPJl3bFbTMw+Dfs37XaIkCwTZfLh4g==}
 
@@ -1091,8 +1099,8 @@ packages:
     resolution: {integrity: sha512-KRs7WVDKg86PWiuAqhDrAQnTXZKraVcCc6vFdL14qrZ/DcWwuRo7VoiYXalXO7S5GKpqYiVEwCbgFDfxNHKJBQ==}
     engines: {node: ^12.20.0 || >=14}
 
-  commit-and-tag-version@13.1.2:
-    resolution: {integrity: sha512-NEBJycEVXM6XExM7k9WunQAIMccFAHv3/ZtmA2s4L0VI0P6srUwrbCoNbE+Exo2B86agc9/NVty4m3PAxGPgTA==}
+  commit-and-tag-version@13.2.1:
+    resolution: {integrity: sha512-E9PldGnNugkmHvMrbuAVnMJQo8jLtpKah9KSLN8ktrH/95co5qpm1LKBlSZb6R/vN+NwoT44gVmPTNnSlq5keg==}
     engines: {node: '>=22'}
     hasBin: true
 
@@ -1462,8 +1470,8 @@ packages:
   fast-xml-builder@1.2.0:
     resolution: {integrity: sha512-00aAWieqff+ZJhsXA4g1g7M8k+7AYoMUUHF+/zFb5U6Uv/P0Vl4QZo84/IcufzYalLuEj9928bXN9PbbFzMF0Q==}
 
-  fast-xml-parser@5.9.2:
-    resolution: {integrity: sha512-DYPkXnVSJHAGAkSBeVYhEo/seIpz2SLr9OQcX7m6lXaX3gvoB+DCKzFdZIEhZGI3I1DUhObBAUOT/v2xfoXz/w==}
+  fast-xml-parser@5.11.1:
+    resolution: {integrity: sha512-TBw6K/fxoQGGjCmZDw9w/ZwP3uDcnTM4YH/g+PFRWr8sbe5idXtxNN6vITh4+1ruCZaho6uBFurElsA7F0zzgw==}
     hasBin: true
 
   fastest-levenshtein@1.0.16:
@@ -1750,8 +1758,8 @@ packages:
   is-reference@3.0.3:
     resolution: {integrity: sha512-ixkJoqQvAP88E6wLydLGGqCJsrFUnqoH6HnaczB8XmDH1oaWU+xxdptvikTgaEhtZ53Ky6YXiBuUI2WXLMCwjw==}
 
-  is-unsafe@1.0.1:
-    resolution: {integrity: sha512-CLK2+VdgERgD96EYm5lUQssZYlRg2tkZnbsxZoacmSiRxiFJ4Nk4SzjCl+Ur+v3kXIY9dTIdb3IH22y1mZ56LA==}
+  is-unsafe@2.0.2:
+    resolution: {integrity: sha512-HgbIHPBH0KHHCcjLfGsCvhtPTVxjaAZlXjwdz7/GQC40SjSe4sfQsar8J5VFo8JOSbarkpV0OLG95bbaNd9aAQ==}
 
   is-utf8@0.2.1:
     resolution: {integrity: sha512-rMYPYvCzsXywIsldgLaSoPlw5PfoB/ssr7hY4pLfcodrA5M/eArza1a9VmTiNIBNMjOGr1Ow9mTyU2o69U6U9Q==}
@@ -2156,6 +2164,10 @@ packages:
     resolution: {integrity: sha512-cbrerZV+6rvdQrrD+iGMcZFEiiSrbv9Tfdkvnusy6y0x0GKBXREFg/Y65GhIfm0tnLntThhzCnfKwp1WRjeCyQ==}
     engines: {node: '>=14.0.0'}
 
+  path-expression-matcher@1.6.2:
+    resolution: {integrity: sha512-enSlaiat05iasnzmgNxRj8reFdj3puY2QpNgP1aPIaVfT6nn9ICuPoFlKHk8EN22HcwewshO+mN2DGbkCEOtqQ==}
+    engines: {node: '>=14.0.0'}
+
   path-key@3.1.1:
     resolution: {integrity: sha512-ojmeN0qd+y0jszEtoY48r0Peq5dwMEkIlCOu6Q5f41lfkswXuKtYrhgoTpLnyIcHm24Uhqx+5Tqm2InSwLhE6Q==}
     engines: {node: '>=8'}
@@ -2519,8 +2531,8 @@ packages:
     resolution: {integrity: sha512-1tB5mhVo7U+ETBKNf92xT4hrQa3pm0MZ0PQvuDnWgAAGHDsfp4lPSpiS6psrSiet87wyGPh9ft6wmhOMQ0hDiw==}
     engines: {node: '>=14.16'}
 
-  strnum@2.4.0:
-    resolution: {integrity: sha512-sHrVyWWdq28RbhjuJdZsA1SnGRJV6NiXbk6AXBxDOsgAcA+lmpUZCYjOdLBxkXMwis6RRe7dlZt4VlIWFVzkmg==}
+  strnum@2.4.2:
+    resolution: {integrity: sha512-rDG3Ah4TV0k1hWvLSzkZtMmLN9+eS+h3knq4MP6A42Y3Yh5qGNnOUs1jJkoSr8FG5dsL28c7KgkIBzSEykqtuw==}
 
   stubborn-fs@2.0.0:
     resolution: {integrity: sha512-Y0AvSwDw8y+nlSNFXMm2g6L51rBGdAQT20J3YSOqxC53Lo3bjWRtr2BKcfYoAf352WYpsZSTURrA0tqhfgudPA==}
@@ -2873,6 +2885,10 @@ packages:
     resolution: {integrity: sha512-k8KO9hrMyNk6tUWqUfkTEZbezRRpONVOzUTnc97VnCvyj6Tf9lyUR9EDAIeiVLv56jsMcoXEwjW8Kv5yPY52lw==}
     engines: {node: '>=16.0.0'}
 
+  xml-naming@0.3.0:
+    resolution: {integrity: sha512-ghig2TBE/H11aOVgmahA3MhimvkBr6JIYknH/Dhdk10nXwdbIqBJsbfMxpvFPG8bAw77gN29aQWvKpmVoPlvPQ==}
+    engines: {node: '>=16.0.0'}
+
   xml2js@0.6.2:
     resolution: {integrity: sha512-T4rieHaC1EXcES0Kxxj4JWgaUQHDk+qwHcYOCFHfiwKz7tOVPLq7Hjq9dM1WCMhylqMEfP7hMcOIChvotiZegA==}
     engines: {node: '>=4.0.0'}
@@ -2963,6 +2979,8 @@ snapshots:
     optionalDependencies:
       conventional-commits-filter: 6.0.1
       conventional-commits-parser: 7.1.2
+
+  '@conventional-changelog/template@1.2.1': {}
 
   '@conventional-changelog/template@1.4.0': {}
 
@@ -3280,7 +3298,7 @@ snapshots:
 
   '@mdn/browser-compat-data@8.1.0': {}
 
-  '@nodable/entities@2.2.0': {}
+  '@nodable/entities@3.0.0': {}
 
   '@nodelib/fs.scandir@2.1.5':
     dependencies:
@@ -3697,7 +3715,7 @@ snapshots:
 
   ansi-styles@6.2.3: {}
 
-  anynum@1.0.0: {}
+  anynum@1.0.1: {}
 
   argparse@2.0.1: {}
 
@@ -3791,6 +3809,8 @@ snapshots:
 
   chalk@5.6.2: {}
 
+  chalk@6.0.0: {}
+
   cheerio-select@2.1.0:
     dependencies:
       boolbase: 1.0.0
@@ -3856,10 +3876,11 @@ snapshots:
 
   commander@9.5.0: {}
 
-  commit-and-tag-version@13.1.2(conventional-commits-filter@6.0.1)(conventional-commits-parser@7.1.2):
+  commit-and-tag-version@13.2.1(conventional-commits-filter@6.0.1)(conventional-commits-parser@7.1.2):
     dependencies:
       '@conventional-changelog/git-client': 3.1.0(conventional-commits-filter@6.0.1)(conventional-commits-parser@7.1.2)
-      chalk: 5.6.2
+      '@conventional-changelog/template': 1.2.1
+      chalk: 6.0.0
       conventional-changelog: 8.1.0(conventional-commits-filter@6.0.1)
       conventional-changelog-config-spec: 2.1.0
       conventional-changelog-conventionalcommits: 10.2.1
@@ -3867,7 +3888,7 @@ snapshots:
       detect-indent: 7.0.2
       detect-newline: 3.1.0
       dotgitignore: 2.1.0
-      fast-xml-parser: 5.9.2
+      fast-xml-parser: 5.11.1
       figures: 3.2.0
       find-up: 5.0.0
       semver: 7.8.5
@@ -4269,14 +4290,14 @@ snapshots:
       path-expression-matcher: 1.5.0
       xml-naming: 0.1.0
 
-  fast-xml-parser@5.9.2:
+  fast-xml-parser@5.11.1:
     dependencies:
-      '@nodable/entities': 2.2.0
+      '@nodable/entities': 3.0.0
       fast-xml-builder: 1.2.0
-      is-unsafe: 1.0.1
-      path-expression-matcher: 1.5.0
-      strnum: 2.4.0
-      xml-naming: 0.1.0
+      is-unsafe: 2.0.2
+      path-expression-matcher: 1.6.2
+      strnum: 2.4.2
+      xml-naming: 0.3.0
 
   fastest-levenshtein@1.0.16: {}
 
@@ -4515,7 +4536,7 @@ snapshots:
     dependencies:
       '@types/estree': 1.0.9
 
-  is-unsafe@1.0.1: {}
+  is-unsafe@2.0.2: {}
 
   is-utf8@0.2.1: {}
 
@@ -4900,6 +4921,8 @@ snapshots:
 
   path-expression-matcher@1.5.0: {}
 
+  path-expression-matcher@1.6.2: {}
+
   path-key@3.1.1: {}
 
   pathe@2.0.3: {}
@@ -5248,9 +5271,9 @@ snapshots:
 
   strip-json-comments@5.0.3: {}
 
-  strnum@2.4.0:
+  strnum@2.4.2:
     dependencies:
-      anynum: 1.0.0
+      anynum: 1.0.1
 
   stubborn-fs@2.0.0:
     dependencies:
@@ -5609,6 +5632,8 @@ snapshots:
   xdg-basedir@5.1.0: {}
 
   xml-naming@0.1.0: {}
+
+  xml-naming@0.3.0: {}
 
   xml2js@0.6.2:
     dependencies:
