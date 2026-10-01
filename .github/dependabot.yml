@@ -47,6 +47,12 @@ updates:
       types:
         patterns:
           - '@types/*'
+      runtime:
+        dependency-type: production
+        update-types: ['minor', 'patch']
+      dev:
+        dependency-type: development
+        update-types: ['minor', 'patch']
 
     # Let releases settle before bumping; majors get the longest soak.
     cooldown:
