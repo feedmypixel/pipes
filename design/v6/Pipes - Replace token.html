@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Pipes — Replace token</title>
+<style>
+/* ── Pipes tokens (verbatim from src/lib/styles/tokens.css) ── */
+.th{--font-sans:-apple-system,blinkmacsystemfont,'Segoe UI',system-ui,sans-serif;--font-mono:ui-monospace,'SF Mono','JetBrains Mono',menlo,consolas,monospace;--radius:4px;--radius-pill:999px;--space-3xs:.125rem;--space-2xs:.25rem;--space-xs:.375rem;--space-sm:.5rem;--space-md:.625rem;--space-lg:.75rem;--space-xl:.875rem;--space-2xl:1rem;--space-3xl:1.25rem;--space-4xl:1.5rem;--space-5xl:2rem;--font-size-2xs:.625rem;--font-size-xs:.6875rem;--font-size-sm:.75rem;--font-size-base:.8125rem;--font-size-md:.875rem;--font-size-lg:.9375rem;--font-size-2xl:1.3125rem;--leading-none:1;--leading-tight:1.2;--leading-snug:1.35;--leading-normal:1.45;--leading-relaxed:1.55;--weight-regular:400;--weight-medium:500;--weight-semibold:600;--weight-bold:650;--weight-heavy:700;--status-ink:#fff;}
+.th[data-theme="light"]{color-scheme:light;--bg:#fff;--canvas:#eef1f7;--surface:#fff;--surface-2:#f4f6fb;--hover:#eaeef6;--border:#e3e8f1;--border-2:#d0d7e4;--text:#0f1620;--text-2:#545e6e;--text-3:#939dad;--brand:#3194fc;--brand-ink:#fff;--brand-soft:oklch(95% .04 256deg);--link:oklch(55% .17 256deg);--success:oklch(64% .15 152deg);--success-bg:oklch(95% .04 152deg);--success-line:oklch(86% .09 152deg);--failed:oklch(60% .2 27deg);--failed-bg:oklch(95% .04 27deg);--failed-line:oklch(86% .1 27deg);--running:oklch(66% .17 256deg);--pending:oklch(72% .14 80deg);--pending-bg:oklch(95% .05 85deg);--pending-line:oklch(86% .1 85deg);--neutral:oklch(60% .025 256deg);--alarm-ink:oklch(52% .2 27deg);--appbar:var(--surface-2);--appbar-text:var(--text);--appbar-muted:var(--text-3);--shadow:0 1px 0 rgb(15 22 32/4%),0 1px 3px rgb(15 22 32/10%);--shadow-lg:0 8px 28px rgb(15 22 32/16%);--toast-success-fill:color-mix(in oklab,var(--success) 14%,var(--surface));--toast-success-edge:color-mix(in oklab,var(--success) 30%,var(--surface));}
+.th[data-theme="dark"]{color-scheme:dark;--bg:#0b0f17;--canvas:#070a10;--surface:#121826;--surface-2:#161d2c;--hover:#1b2333;--border:#242d3e;--border-2:#2f3a4d;--text:#e7ecf3;--text-2:#98a3b4;--text-3:#687284;--brand:#5aa8ff;--brand-ink:#06152b;--brand-soft:oklch(30% .07 256deg);--link:oklch(78% .13 256deg);--success:oklch(76% .16 152deg);--success-bg:oklch(30% .06 152deg);--success-line:oklch(43% .08 152deg);--failed:oklch(70% .19 27deg);--failed-bg:oklch(30% .09 27deg);--failed-line:oklch(44% .11 27deg);--running:oklch(74% .15 256deg);--pending:oklch(80% .13 85deg);--pending-bg:oklch(33% .06 85deg);--pending-line:oklch(46% .09 85deg);--neutral:oklch(72% .025 256deg);--alarm-ink:oklch(82% .13 27deg);--appbar:#0d1219;--appbar-text:#f4f6fb;--appbar-muted:#9aa3b2;--shadow:0 0 0 1px rgb(0 0 0/20%),0 2px 6px rgb(0 0 0/40%);--shadow-lg:0 12px 36px rgb(0 0 0/55%);--toast-success-fill:var(--success-bg);--toast-success-edge:var(--success-line);}
+
+/* ── doc chrome ── */
+*{box-sizing:border-box}
+body{margin:0;background:#0c0e12;color:#e7ecf3;font-family:-apple-system,blinkmacsystemfont,'Segoe UI',system-ui,sans-serif;-webkit-font-smoothing:antialiased;padding:48px 32px 80px}
+a{color:#7fb6ff}a:hover{color:#a9cdff}
+.wrap{max-width:1180px;margin:0 auto}
+.h-eyebrow{font:600 12px/1 ui-monospace,'SF Mono',menlo,monospace;letter-spacing:.12em;text-transform:uppercase;color:#5fa0ff;margin:0 0 12px}
+h1{font-size:30px;letter-spacing:-.02em;margin:0 0 14px;font-weight:700}
+.lede{color:#9aa3b2;font-size:15px;line-height:1.6;max-width:720px;margin:0;text-wrap:pretty}
+.lede b{color:#e7ecf3;font-weight:600}
+.section{margin-top:56px}
+.section>h2{font-size:18px;letter-spacing:-.01em;margin:0 0 6px}
+.section>p{color:#9aa3b2;font-size:14px;line-height:1.55;margin:0 0 22px;max-width:760px;text-wrap:pretty}
+.section>p code,.note code,.try code{font:600 12px/1 ui-monospace,'SF Mono',menlo,monospace;background:#1b1f27;padding:2px 5px;border-radius:4px;color:#cdd6e2}
+.cap{display:flex;align-items:center;gap:8px;font:600 11px/1 ui-monospace,'SF Mono',menlo,monospace;color:#7f8a99}
+.cap .sw{width:9px;height:9px;border-radius:2px}
+.cap .sw.l{background:#fff;border:1px solid #444}.cap .sw.d{background:#0b0f17;border:1px solid #2f3a4d}
+.proto{display:grid;grid-template-columns:340px minmax(0,1fr);gap:24px;align-items:start}
+.proto+.proto{margin-top:28px}
+.col{display:flex;flex-direction:column;gap:10px;min-width:0}
+.pair{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px}
+.state{margin-top:34px}
+.state>h3{font-size:14px;margin:0 0 4px}
+.state>p{margin:0 0 14px;color:#9aa3b2;font-size:13px;line-height:1.5;max-width:760px}
+.try{margin:0 0 18px;padding:12px 14px;border:1px solid #20242c;border-radius:8px;background:#11141a;color:#9aa3b2;font-size:13px;line-height:1.7}
+.try b{color:#e7ecf3}
+.notes{margin-top:8px;display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px}
+.note{border:1px solid #20242c;border-radius:8px;background:#11141a;padding:15px 17px}
+.note h4{margin:0 0 7px;font-size:13px}
+.note p,.note li{margin:0;font-size:12.5px;line-height:1.55;color:#9aa3b2}
+.note ul{margin:0;padding-left:16px;display:grid;gap:4px}
+.note b{color:#e7ecf3;font-weight:600}
+.pgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:20px}
+@media (max-width:960px){.proto{grid-template-columns:minmax(0,1fr)}.pair{grid-template-columns:minmax(0,1fr)}}
+
+/* ── frames ── */
+.th{font-family:var(--font-sans);color:var(--text)}
+.dev{width:100%;max-width:340px;border-radius:10px;overflow:hidden;box-shadow:var(--shadow-lg);border:1px solid #20242c;background:var(--bg)}
+.optf{position:relative;background:var(--canvas);border-radius:10px;border:1px solid #20242c;padding:20px;font-size:var(--font-size-md);overflow:hidden}
+
+/* ── side panel (mirrors sidepanel App + TopAlerts) ── */
+.bar{display:flex;align-items:center;gap:var(--space-sm);padding:var(--space-sm) var(--space-md);background:var(--appbar);color:var(--appbar-text);border-bottom:1px solid var(--border)}
+.bar .tick{width:18px;height:18px;flex:none}
+.wordmark{font-weight:var(--weight-heavy);font-size:var(--font-size-md)}
+.live{margin-left:auto;display:inline-flex;align-items:center;gap:var(--space-xs);font:var(--weight-medium) var(--font-size-2xs)/var(--leading-none) var(--font-mono);color:var(--appbar-muted)}
+.live .pulse{width:8px;height:8px;border-radius:50%;background:var(--success)}
+.issue,.alarm,.all-clear{display:flex;align-items:center;gap:var(--space-md);padding:var(--space-md) var(--space-xl);font-size:var(--font-size-base)}
+.issue>svg,.all-clear>svg{flex:none;width:15px;height:15px}
+/* today: whole strip is one button, amber ink */
+.issue.today{width:100%;border:0;border-bottom:1px solid var(--pending-line);background:var(--pending-bg);color:var(--pending);font-weight:var(--weight-semibold);text-align:left;cursor:pointer;font-family:inherit}
+/* new: strip is a status region; the action is its own control */
+.issue.new{flex-wrap:wrap;row-gap:var(--space-2xs);border-bottom:1px solid var(--pending-line);background:var(--pending-bg);color:var(--text);font-weight:var(--weight-semibold)}
+.issue.new>svg{color:var(--pending)}
+.issue.new .issue-text{flex:1 1 auto;min-width:0}
+.issue-link{flex:none;margin-left:auto;padding:var(--space-2xs) 0;border:0;background:transparent;color:var(--text);font:var(--weight-bold) var(--font-size-base)/var(--leading-none) var(--font-sans);text-decoration:underline;text-underline-offset:2px;cursor:pointer}
+.issue-link:hover{text-decoration-thickness:2px}
+.issue-link:focus-visible,.text-btn:focus-visible,.button:focus-visible,.icon-button:focus-visible,.password-toggle:focus-visible{outline:2px solid var(--brand);outline-offset:2px;border-radius:2px}
+.all-clear{background:var(--success-bg);color:var(--success);border-bottom:1px solid var(--success-line);font-weight:var(--weight-semibold)}
+.alarm{background:var(--failed-bg);color:var(--alarm-ink);border-bottom:1px solid var(--failed-line);font-weight:var(--weight-semibold)}
+.plist{padding:var(--space-2xs) 0}
+.prepo{display:flex;align-items:center;gap:var(--space-sm);padding:var(--space-sm) var(--space-md)}
+.prepo .st{width:16px;height:16px;border-radius:50%;flex:none;display:grid;place-items:center}
+.prepo .st svg{width:10px;height:10px}
+.prepo .nm{font:var(--weight-semibold) var(--font-size-base)/1 var(--font-sans);color:var(--text)}
+.prepo .br{margin-left:auto;font:var(--weight-medium) var(--font-size-2xs)/1 var(--font-mono);color:var(--text-3)}
+.prepo.stale .nm,.prepo.stale .st{opacity:.55}
+.pacct{display:flex;align-items:center;gap:var(--space-sm);padding:var(--space-md) var(--space-md) var(--space-xs);font:var(--weight-bold) var(--font-size-xs)/1 var(--font-sans);color:var(--text-2)}
+
+/* ── Options card (mirrors options/App.svelte) ── */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden}
+.card>h2{display:flex;align-items:center;gap:var(--space-md);margin:0;padding:var(--space-2xl) var(--space-3xl);border-bottom:1px solid var(--border);font-size:var(--font-size-base);font-weight:var(--weight-heavy)}
+.card>h2 svg{width:16px;height:16px;color:var(--text-2)}
+.connection-list{margin:0;padding:0;list-style:none}
+.connection{border-bottom:1px solid var(--border)}
+.connection:last-child{border-bottom:0}
+.connection.failing{box-shadow:inset 2px 0 0 var(--failed)}
+.connection.flash{animation:flash 1.4s ease-out}
+@keyframes flash{0%{background:var(--brand-soft)}100%{background:transparent}}
+@media (prefers-reduced-motion:reduce){.connection.flash{animation:none}}
+.conn-row{display:flex;flex-wrap:wrap;align-items:center;gap:var(--space-lg);padding:var(--space-xl) var(--space-3xl)}
+.dot{width:9px;height:9px;border-radius:50%;flex:none}
+.dot.ok{background:var(--success)}.dot.bad{background:var(--failed)}
+.connection-main{min-width:0;flex:1 1 140px}
+.connection-label{display:block;font-weight:var(--weight-bold);font-size:var(--font-size-md)}
+.connection-host{font:var(--weight-medium) var(--font-size-sm)/var(--leading-snug) var(--font-mono);color:var(--text-3)}
+.conn-actions{display:flex;align-items:center;gap:var(--space-lg);margin-left:auto}
+.token-state{display:inline-flex;align-items:center;gap:var(--space-xs);font-size:var(--font-size-sm);font-weight:var(--weight-semibold);white-space:nowrap}
+.token-state>svg{width:14px;height:14px}
+.token-state.ok{color:var(--success)}
+.token-state.bad{color:var(--alarm-ink)}
+.conn-note{margin:calc(var(--space-xs) * -1) 0 0;padding:0 var(--space-3xl) var(--space-xl) calc(var(--space-3xl) + 9px + var(--space-lg));font-size:var(--font-size-sm);line-height:var(--leading-normal);color:var(--text-2);text-wrap:pretty}
+.conn-note b{color:var(--text);font-weight:var(--weight-semibold)}
+.text-btn{padding:var(--space-2xs) 0;border:0;background:transparent;color:var(--link);font:var(--weight-semibold) var(--font-size-sm)/var(--leading-none) var(--font-sans);cursor:pointer;white-space:nowrap}
+.text-btn:hover{text-decoration:underline;text-underline-offset:2px}
+.icon-button.fix{border:1px solid var(--failed-line);background:var(--failed-bg);color:var(--alarm-ink)}
+.icon-button.fix:hover{background:color-mix(in oklab,var(--failed-bg) 85%,var(--failed));border-color:var(--failed);color:var(--alarm-ink)}
+.conn-actions .icon-button+.icon-button{margin-left:calc(var(--space-lg) * -1 + var(--space-2xs))}
+.fix-btn{display:inline-flex;align-items:center;height:26px;padding:0 var(--space-md);border:1px solid var(--failed-line);border-radius:var(--radius);background:var(--failed-bg);color:var(--alarm-ink);font:var(--weight-semibold) var(--font-size-sm)/var(--leading-none) var(--font-sans);cursor:pointer;white-space:nowrap}
+.fix-btn:hover{background:color-mix(in oklab,var(--failed-bg) 85%,var(--failed));border-color:var(--failed)}
+.fix-btn:focus-visible{outline:2px solid var(--brand);outline-offset:2px}
+.icon-button{display:grid;place-items:center;width:30px;height:30px;border:0;border-radius:var(--radius);background:transparent;color:var(--text-2);cursor:pointer}
+.icon-button:hover{background:var(--hover);color:var(--text)}
+.icon-button svg{width:15px;height:15px}
+.mono{font-family:var(--font-mono);font-size:.95em}
+
+/* inline edit region */
+.replace{margin:0;padding:var(--space-2xl) var(--space-3xl) var(--space-3xl);border-top:1px solid var(--border);background:var(--surface-2)}
+/* Button (Button.svelte) */
+.button{display:inline-flex;align-items:center;gap:var(--space-sm);padding:var(--space-md) var(--space-2xl);border:1px solid transparent;border-radius:var(--radius);font:var(--weight-bold) var(--font-size-base)/var(--leading-none) var(--font-sans);cursor:pointer;white-space:nowrap}
+.button svg{width:14px;height:14px;flex:none}
+.button.primary{background:var(--brand);color:var(--brand-ink)}
+.button.primary:hover{background:color-mix(in oklab,var(--brand) 88%,black)}
+.button.secondary{background:var(--surface);color:var(--text);border-color:var(--border-2)}
+.button.secondary:hover{background:var(--hover)}
+.button[disabled]{opacity:.6;cursor:default}
+.button.submitting{position:relative;color:transparent}
+.button.submitting svg{visibility:hidden}
+.button.submitting::after{content:"";position:absolute;inset:0;margin:auto;width:14px;height:14px;border:2px solid color-mix(in srgb,var(--brand-ink) 70%,transparent);border-right-color:transparent;border-radius:50%;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+@media (prefers-reduced-motion:reduce){.button.submitting::after{animation:none}}
+.button-group{display:flex;flex-wrap:wrap;gap:var(--space-md);align-items:center}
+.button-group .text-btn{margin-left:var(--space-2xs);font-size:var(--font-size-base)}
+/* Banner.svelte */
+.form-message{display:flex;align-items:flex-start;gap:var(--space-md);margin-bottom:var(--space-2xl);padding:var(--space-lg) var(--space-xl);border:1px solid;border-radius:var(--radius);font-size:var(--font-size-base);line-height:var(--leading-normal)}
+.form-message>svg{width:15px;height:15px;flex:none;margin-top:2px}.form-message .mi{margin-top:1px}
+.form-message.err{background:var(--failed-bg);border-color:var(--failed-line);color:var(--failed)}
+.form-message a{color:inherit;font-weight:var(--weight-semibold)}
+/* FormSummary.svelte */
+.form-summary{margin-bottom:var(--space-3xl);padding:var(--space-xl) var(--space-2xl);border:1px solid var(--failed-line);border-radius:var(--radius);background:var(--failed-bg)}
+.form-summary h4{margin:0 0 var(--space-sm);font-size:var(--font-size-base);font-weight:var(--weight-heavy);color:var(--failed)}
+.form-summary ul{display:grid;gap:var(--space-xs);margin:0;padding:0;list-style:none}
+.form-summary a{color:var(--failed);font-size:var(--font-size-base);text-decoration:underline}
+/* Field.svelte */
+.field{display:grid;gap:var(--space-xs);margin-bottom:var(--space-2xl)}
+.field label{font-size:var(--font-size-base);font-weight:var(--weight-bold);color:var(--text)}
+.field .hint{margin:0;font-size:var(--font-size-xs);line-height:var(--leading-normal);color:var(--text-3)}
+.field .hint b{color:var(--text-2);font-weight:var(--weight-semibold)}
+.field-error{margin:0;font-size:var(--font-size-sm);line-height:var(--leading-normal);color:var(--failed)}
+.below{margin:0;font-size:var(--font-size-xs);line-height:var(--leading-normal)}
+.below.busy{color:var(--text-3)}.below.ok{color:var(--text-2)}.below.bad{color:var(--failed)}
+/* Input + PasswordInput */
+.password-wrap{position:relative;display:flex}
+.password-wrap input{flex:1;width:100%;padding:var(--space-md) 60px var(--space-md) var(--space-lg);border:1px solid var(--border-2);border-radius:var(--radius);background:var(--bg);color:var(--text);font:var(--weight-medium) var(--font-size-sm)/var(--leading-tight) var(--font-mono);transition:border-color .12s,box-shadow .12s}
+.password-wrap input:focus-visible{outline:0;border-color:var(--brand);box-shadow:0 0 0 3px color-mix(in srgb,var(--brand) 28%,transparent)}
+.password-wrap input[aria-invalid="true"]{border-color:var(--failed)}
+.password-wrap input[aria-invalid="true"]:focus-visible{box-shadow:0 0 0 3px color-mix(in srgb,var(--failed) 28%,transparent)}
+.password-toggle{position:absolute;right:var(--space-xs);top:50%;transform:translateY(-50%);padding:var(--space-xs) var(--space-sm);border:0;background:transparent;color:var(--link);font:var(--weight-semibold) var(--font-size-sm)/var(--leading-none) var(--font-sans);cursor:pointer}
+.password-toggle:hover{text-decoration:underline}
+/* token help (options App) */
+.token-help{margin-top:var(--space-2xs);font-size:var(--font-size-sm);color:var(--text-2)}
+.token-help summary{display:flex;align-items:center;gap:var(--space-2xs);cursor:pointer;color:var(--text-3);font-size:var(--font-size-xs);list-style:none}
+.token-help summary::-webkit-details-marker{display:none}
+.token-help summary svg{width:14px;height:14px;transition:transform .12s}
+.token-help[open] summary svg{transform:rotate(90deg)}
+.token-help summary span{text-decoration:underline;text-underline-offset:2px}
+.token-help ul{margin:var(--space-sm) 0 0;padding:var(--space-md) var(--space-lg) var(--space-md) var(--space-4xl);background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);line-height:var(--leading-normal)}
+.token-help b{color:var(--text);font-weight:var(--weight-semibold)}
+/* toast (Toast.svelte, success) */
+.toast{position:absolute;right:16px;bottom:16px;display:flex;align-items:flex-start;gap:11px;width:min(320px,calc(100% - 32px));padding:12px 13px;border:1px solid var(--toast-success-edge);border-left:3px solid var(--success);border-radius:0 var(--radius) var(--radius) 0;background:var(--toast-success-fill);box-shadow:var(--shadow-lg);animation:tin .22s cubic-bezier(.2,.7,.3,1) both}
+.toast.static{position:static;margin-top:14px;margin-left:auto}
+.toast>svg{width:18px;height:18px;flex:none}
+.toast-title{font-size:var(--font-size-base);font-weight:var(--weight-bold);color:var(--text)}
+.toast-msg{font-size:var(--font-size-sm);color:var(--text-2);margin-top:2px}
+@keyframes tin{from{opacity:0;transform:translateY(8px)}}
+@media (prefers-reduced-motion:reduce){.toast{animation:none}}
+/* message icons (MessageIcon v2, StatusIcon geometry) */
+.mi{display:inline-grid;place-items:center;flex:none;width:var(--size);height:var(--size);border-radius:50%;background:var(--circle)}
+.mi svg{width:var(--symbol);height:var(--symbol);fill:none;stroke:var(--ink);color:var(--ink);stroke-width:3;stroke-linecap:round;stroke-linejoin:round}
+.mi.w{background:none}.mi.w svg{width:100%;height:100%}
+.icset{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px}
+.ic{display:grid;gap:8px;align-content:start;padding:14px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius)}
+.ic .sz{display:flex;align-items:center;gap:10px;min-height:30px}
+.ic b{font-size:var(--font-size-base);font-weight:var(--weight-bold)}
+.ic .u{font-size:var(--font-size-xs);line-height:var(--leading-normal);color:var(--text-2)}
+.ref{display:flex;align-items:center;gap:10px;margin-bottom:14px;font-size:var(--font-size-xs);color:var(--text-2)}
+.st20{display:grid;place-items:center;width:20px;height:20px;border-radius:50%;flex:none}
+.st20 svg{width:13px;height:13px;fill:none;stroke:#fff;stroke-width:3;stroke-linecap:round;stroke-linejoin:round}
+</style>
+</head>
+<body>
+<div class="wrap">
+<p class="h-eyebrow">Pipes · options › connections</p>
+<h1>Replace token</h1>
+<p class="lede">An expired PAT currently means delete + re-add, which drops every watched repo for that connection. This adds an <b>in-place “Replace token”</b> on the connection row. The account id stays the same, so watched repos, labels and cached repo lists survive. Below: a working prototype (panel → options), every state in light and dark, and the build notes.</p>
+
+<div class="section">
+<h2>Prototype</h2>
+<p>The <b>work</b> connection’s token is failing. Click <b>Replace token</b> in the panel banner to jump to that row in Options with the edit already open and the field focused. Replace it and the banner clears.</p>
+<div class="try">Tokens to try: <b>anything</b> → valid · contains <code>bad</code> → HTTP 401 · contains <code>other</code> → belongs to a different account · <b>empty</b> → FormSummary. <kbd>Esc</kbd> cancels. <a href="#" id="reset">Reset prototype</a></div>
+<div class="proto"><div class="col"><div class="cap"><span class="sw l"></span>side panel · light</div><div class="th dev" data-theme="light" data-frame="pL"></div></div><div class="col"><div class="cap"><span class="sw l"></span>options · light</div><div class="th optf" data-theme="light" data-frame="oL"></div></div></div>
+<div class="proto"><div class="col"><div class="cap"><span class="sw d"></span>side panel · dark</div><div class="th dev" data-theme="dark" data-frame="pD"></div></div><div class="col"><div class="cap"><span class="sw d"></span>options · dark</div><div class="th optf" data-theme="dark" data-frame="oD"></div></div></div>
+</div>
+
+<div class="section">
+<h2>1 · The trigger on a connection row</h2>
+<p>Replace token is a <b>key icon button</b> next to delete, the same 30px size as the bin, with the label “Replace token for {label}” and the house <code>use:tooltip</code> (hover or focus; hover it here). On a healthy row it’s as quiet as the bin. When the token is failing, the row changes in four places at once: red dot, red inset edge (same treatment as a failing repo head in the panel), <b>token rejected</b> in place of the tick, and a one-line note saying what broke and what’s paused. The key itself stays neutral in both states.</p>
+<div class="pair" data-gallery="rows"></div>
+</div>
+
+<div class="section">
+<h2>2 · Inline edit</h2>
+<p>The row expands in place (one row open at a time). The form follows the existing Add-a-connection rules: Validate writes to the field’s <code>below</code> line; Save runs the same validation and reports server failures in a Banner at the top; client errors use FormSummary + field error. Nothing is disabled except Save while in flight.</p>
+<div class="state"><h3>Open, empty</h3><p>Focus lands in the token field. Hint names the account the token must sign in as and states that watched repos are kept.</p><div class="pair" data-gallery="empty"></div></div>
+<div class="state"><h3>Save with no token</h3><p>FormSummary links to the field; field error sits above the input. Same copy as the add form.</p><div class="pair" data-gallery="summary"></div></div>
+<div class="state"><h3>Validating</h3><div class="pair" data-gallery="busy"></div></div>
+<div class="state"><h3>Validated</h3><div class="pair" data-gallery="valid"></div></div>
+<div class="state"><h3>Rejected by the host</h3><p>After Save. Validate alone shows only the <code>below</code> line.</p><div class="pair" data-gallery="rejected"></div></div>
+<div class="state"><h3>Different account</h3><p>The token works but signs in as someone else. Blocked, because the watched repos belong to the original account. The banner offers the useful next step: add it as a new connection (prefills the add form with host + token).</p><div class="pair" data-gallery="mismatch"></div></div>
+<div class="state"><h3>Saved</h3><p>Row collapses, tick reads <b>token replaced</b> until the next page load, focus returns to the row’s trigger, and a success toast confirms what came back.</p><div class="pair" data-gallery="replaced"></div></div>
+</div>
+
+<div class="section">
+<h2>3 · Panel banner</h2>
+<p>Today the whole strip is one button that opens Settings. A link can’t live inside a button, so for auth failures (401/403) the strip becomes a status region with its own <b>Replace token</b> control on the right; it wraps under the message at narrow widths. Other connection problems (network, 5xx) keep today’s whole-strip “open settings” behaviour. Message copy is unchanged. The outline triangle becomes the solid warning triangle from the new message icon set (section 4).</p>
+<div class="pgrid">
+<div class="col"><div class="cap"><span class="sw l"></span>today · light</div><div class="th dev" data-theme="light" data-gpanel="today"></div></div>
+<div class="col"><div class="cap"><span class="sw l"></span>new · auth failure · light</div><div class="th dev" data-theme="light" data-gpanel="new"></div></div>
+<div class="col"><div class="cap"><span class="sw d"></span>new · auth failure · dark</div><div class="th dev" data-theme="dark" data-gpanel="new"></div></div>
+<div class="col"><div class="cap"><span class="sw d"></span>new · network error (unchanged behaviour) · dark</div><div class="th dev" data-theme="dark" data-gpanel="net"></div></div>
+</div>
+</div>
+
+<div class="section">
+<h2>4 · Message icons</h2>
+<p>Options and the banners used outline Lucide glyphs while the panel uses solid status circles. This set brings them in line: same geometry as <code>StatusIcon</code> (solid fill, white glyph at 66% of the size, 3px round strokes). Warning keeps a triangle so it doesn’t rely on colour alone. Shown at 30 / 20 / 16px.</p>
+<div class="pair" id="icons"></div>
+</div>
+<div class="section">
+<h2>Build notes</h2>
+<div class="notes">
+<div class="note"><h4>Keep the account id</h4><p>Replace writes <code>token</code> (and <code>user</code>) onto the existing <code>Account</code> in place. <code>watchedRepos[].accountId</code> stays valid, so nothing is lost. On success: clear <code>failedRepos[id]</code>, run <code>loadRepos(account)</code>, and ask the worker to poll now so the panel banner clears without waiting a cycle.</p></div>
+<div class="note"><h4>Same-account check</h4><p>Needs <code>Account.user</code>, captured from <code>validateToken().user</code> at add time. Accounts saved before this ship have no <code>user</code>: skip the check, hide the “Must sign in as” hint, and record <code>user</code> on the first successful replace.</p></div>
+<div class="note"><h4>Deep link from the panel</h4><p>Open or focus <code>options/index.html#replace=&lt;accountId&gt;</code>. On load (and on <code>hashchange</code> if the tab was already open): open that row’s edit, scroll it into view with <code>window.scrollTo</code>, focus the field, run the 1.4s highlight (none under reduced motion), then clear the hash.</p></div>
+<div class="note"><h4>Copy</h4><ul><li>Trigger: <b>Replace token</b></li><li>Row: <b>token rejected</b> · “GitHub returned HTTP 401. 4 watched repos are paused until you replace the token.”</li><li>Field: <b>New personal access token</b></li><li>Save: <b>Save token</b> / <b>Saving token…</b></li><li>Mismatch: “It signs in as @x, not @y.”</li><li>Toast: <b>Token replaced</b> · “work is watching 4 repos again”</li></ul></div>
+<div class="note"><h4>Keyboard + AT</h4><ul><li>Trigger has <code>aria-expanded</code> + <code>aria-controls</code> → the form.</li><li>Form has <code>aria-label="Replace token for work"</code>.</li><li><kbd>Esc</kbd> inside the form = Cancel; focus returns to the trigger after Cancel or Save.</li><li><code>below</code> is <code>aria-live="polite"</code>; Banner err and FormSummary are <code>role="alert"</code>.</li><li>Panel action is a real <code>&lt;button&gt;</code> named “Replace token for work”.</li></ul></div>
+<div class="note"><h4>Contrast (AA)</h4><ul><li>New failing-row text uses <code>--alarm-ink</code> (light ≈ 5.5:1), not <code>--failed</code>.</li><li>Panel banner: amber <code>--pending</code> text on <code>--pending-bg</code> is ≈ 2:1 in light. The new strip uses <code>--text</code> for copy and action, with the icon in <code>--pending</code>.</li><li>Existing, out of scope but worth a ticket: <code>--failed</code> on <code>--failed-bg</code> (field error, Banner, FormSummary) and <code>--success</code> “token saved” are under 4.5:1 in light.</li></ul></div>
+</div>
+</div>
+</div>
+
+<script>
+const sv=(p,extra='')=>`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"${extra}>${p}</svg>`;
+const I={
+check:sv('<path d="M20 6 9 17l-5-5"/>'),
+xs:sv('<path d="M18 6 6 18"/><path d="m6 6 12 12"/>'),
+trash:sv('<path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>'),
+tri:sv('<path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4"/><path d="M12 17h.01"/>'),
+key:sv('<path d="M2.586 17.414A2 2 0 0 0 2 18.828V21a1 1 0 0 0 1 1h3a1 1 0 0 0 1-1v-1a1 1 0 0 1 1-1h1a1 1 0 0 0 1-1v-1a1 1 0 0 1 1-1h.172a2 2 0 0 0 1.414-.586l.814-.814a6.5 6.5 0 1 0-4-4z"/><circle cx="16.5" cy="7.5" r=".5" fill="currentColor"/>'),
+bang:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" aria-hidden="true"><path d="M12 4.5v10"/><path d="M12 19.5h.01"/></svg>',
+unplug:sv('<path d="m19 5 3-3"/><path d="m2 22 3-3"/><path d="M6.3 20.3a2.4 2.4 0 0 0 3.4 0L12 18l-6-6-2.3 2.3a2.4 2.4 0 0 0 0 3.4Z"/><path d="M7.5 13.5 10 11"/><path d="M10.5 16.5 13 14"/><path d="m12 6 6 6 2.3-2.3a2.4 2.4 0 0 0 0-3.4l-2.6-2.6a2.4 2.4 0 0 0-3.4 0Z"/>'),
+plug:sv('<path d="M12 22v-5"/><path d="M9 8V2"/><path d="M15 8V2"/><path d="M18 8v5a4 4 0 0 1-4 4h-4a4 4 0 0 1-4-4V8Z"/>'),
+badge:sv('<path d="M3.85 8.62a4 4 0 0 1 4.78-4.77 4 4 0 0 1 6.74 0 4 4 0 0 1 4.78 4.78 4 4 0 0 1 0 6.74 4 4 0 0 1-4.77 4.78 4 4 0 0 1-6.75 0 4 4 0 0 1-4.78-4.77 4 4 0 0 1 0-6.76Z"/><path d="m9 12 2 2 4-4"/>'),
+chev:sv('<path d="m9 18 6-6-6-6"/>'),
+x:'<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3.4" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg>',
+ok:'<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>',
+};
+const MI={
+ success:{c:'var(--success)',g:'<path d="M4.5 12.5l4.5 4.5L20 6"/>',n:'Success',u:'Banner ok, success toast'},
+ error:{c:'var(--failed)',g:'<path d="M6 6l12 12M18 6L6 18"/>',n:'Error',u:'Banner err, error toast'},
+ warning:{n:'Warning',u:'Panel connection banner, permission note'},
+ info:{c:'var(--brand)',ink:'var(--brand-ink)',g:'<path d="M12 11v7"/><path d="M12 6.5h.01"/>',n:'Info',u:'Info toast'},
+ 'token-ok':{c:'var(--success)',g:'<circle cx="7.5" cy="12" r="3.5"/><path d="M11 12h9.5M17.5 12v3.5"/>',n:'Token saved',u:'Connection row token state'},
+ 'token-bad':{c:'var(--failed)',g:'<circle cx="7.5" cy="12" r="3.5"/><path d="M11 12h9.5M17.5 12v3.5"/>',n:'Token rejected',u:'Connection row token state'},
+ lock:{c:'var(--neutral)',g:'<rect x="5" y="11" width="14" height="9.5" rx="2" fill="currentColor"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/>',n:'Lock',u:'Security note (tokens stay on this device)'},
+};
+const WARN='<svg viewBox="0 0 24 24"><path d="M12 3.6 21.6 20.2H2.4Z" fill="var(--pending)" stroke="var(--pending)" stroke-width="3" stroke-linejoin="round"/><path d="M12 9.6v4.6" stroke="var(--status-ink)" stroke-width="2.6" stroke-linecap="round"/><path d="M12 17.4h.01" stroke="var(--status-ink)" stroke-width="2.9" stroke-linecap="round"/></svg>';
+function mi(k,s=16){
+ if(k==='warning')return `<span class="mi w" style="--size:${s}px" aria-hidden="true">${WARN}</span>`;
+ const v=MI[k];return `<span class="mi" style="--size:${s}px;--circle:${v.c};--ink:${v.ink||'var(--status-ink)'};--symbol:${Math.round(s*.66)}px" aria-hidden="true"><svg viewBox="0 0 24 24">${v.g}</svg></span>`;
+}
+const MSG_ERR_OLD='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4L20.5 19H3.5Z" fill="var(--failed)" stroke="var(--failed)" stroke-width="2.2" stroke-linejoin="round"/><rect x="10.85" y="9" width="2.3" height="5.4" rx="1.15" fill="var(--status-ink)"/><circle cx="12" cy="16.7" r="1.2" fill="var(--status-ink)"/></svg>';
+const MSG_OK_OLD='<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="11" fill="var(--success)"/><path d="M7 12.5l3.2 3.2L17 8.5" fill="none" stroke="var(--status-ink)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+const MSG_ERR=mi('error',16),MSG_OK=mi('success',18);
+const TICK='<svg class="tick" viewBox="0 0 128 128"><circle cx="64" cy="64" r="60" fill="#1aa05a"/><path d="M39 66 57 83 89 45" fill="none" stroke="#fff" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+const esc=s=>String(s).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;');
+
+const conns=()=>[
+ {id:'work',label:'work',host:'github.com',user:'@feedmypixel',provider:'GitHub',watched:4,status:'auth'},
+ {id:'gl',label:'gitlab',host:'gitlab.com',user:'@feedmypixel',provider:'GitLab',watched:2,status:'ok'}];
+const fresh=()=>({editing:null,token:'',below:null,banner:null,summary:false,fieldErr:null,saving:false,replaced:null,toast:null});
+
+/* ── frames registry ── */
+const F={},SH={};
+function shared(theme){return SH[theme]||(SH[theme]={conns:conns()});}
+function mkOpt(key,el,data,s){F[key]={key,el,data,s,kind:'opt'};}
+function init(){
+ [['L','light'],['D','dark']].forEach(([k,t])=>{
+  const d=shared(t);d.conns=conns();
+  mkOpt('o'+k,document.querySelector(`[data-frame="o${k}"]`),d,fresh());
+  F['p'+k]={key:'p'+k,el:document.querySelector(`[data-frame="p${k}"]`),data:d,kind:'panel',opt:'o'+k};
+ });
+}
+
+/* ── side panel ── */
+function panelHTML(data,variant,optKey){
+ const bad=data.conns.filter(c=>c.status==='auth');
+ let banners='';
+ if(variant==='today') banners=`<button class="issue today" title="Open settings to reconnect">${I.tri}<span>work connection problem: HTTP 401</span></button>`;
+ else if(variant==='net') banners=`<button class="issue today" style="color:var(--text)" title="Open settings to reconnect">${mi('warning',16)}<span>work connection problem: network error</span></button>`;
+ else banners=bad.map(c=>`<div class="issue new" role="status">${mi('warning',16)}<span class="issue-text">${c.label} connection problem: HTTP 401</span><button class="issue-link" data-act="jump" data-id="${c.id}" data-opt="${optKey||''}" aria-label="Replace token for ${c.label}">Replace token</button></div>`).join('');
+ const stale=bad.some(c=>c.id==='work')||variant==='today'||variant==='net';
+ const top=banners||`<div class="all-clear" role="status">${I.check}<span>All default branches passing</span></div>`;
+ const st=(c,ic)=>`<span class="st" style="background:var(--${c})">${ic}</span>`;
+ return `<div class="bar">${TICK}<span class="wordmark">Pipes</span><span class="live"><span class="pulse"></span>live · 10s</span></div>${top}
+ <div class="plist"><div class="pacct">feedmypixel</div>
+ <div class="prepo${stale?' stale':''}">${st('success',I.ok)}<span class="nm">status-ui</span><span class="br">${stale?'main · 3h':'main · now'}</span></div>
+ <div class="prepo${stale?' stale':''}">${st('success',I.ok)}<span class="nm">status-api</span><span class="br">${stale?'main · 3h':'main · now'}</span></div>
+ <div class="pacct">gitlab · feedmypixel</div>
+ <div class="prepo">${st('failed',I.x)}<span class="nm">infra</span><span class="br">main · 4m</span></div></div>`;
+}
+
+/* ── options ── */
+function rowHTML(f,c){
+ const s=f.s,ed=s.editing===c.id,bad=c.status==='auth',id=`${f.key}-${c.id}`;
+ const state=bad?`<span class="token-state bad">${mi('token-bad',16)} token rejected</span>`:`<span class="token-state ok">${mi('token-ok',16)} ${s.replaced===c.id?'token replaced':'token saved'}</span>`;
+ const aria=`data-act="open" data-id="${c.id}" id="${id}-trig" aria-expanded="${ed}" aria-controls="${id}-form" aria-label="Replace token for ${c.label}" data-tip="Replace token"`;
+ const trig=ed?'':`<button class="icon-button" ${aria}>${I.key}</button>`;
+ const note=bad&&!ed?`<p class="conn-note">${c.provider} returned <b>HTTP 401</b>. ${c.watched} watched repos are paused until you replace the token.</p>`:'';
+ return `<li class="connection${bad?' failing':''}" id="${id}">
+ <div class="conn-row"><span class="dot ${bad?'bad':'ok'}" aria-hidden="true"></span>
+ <span class="connection-main"><span class="connection-label">${c.label}</span><span class="connection-host">${c.host}</span></span>
+ <span class="conn-actions">${state}${trig}<button class="icon-button" aria-label="Remove ${c.label} connection" data-tip="Remove">${I.trash}</button></span></div>
+ ${note}${ed?formHTML(f,c):''}</li>`;
+}
+function formHTML(f,c){
+ const s=f.s,id=`${f.key}-${c.id}`,err=s.fieldErr;
+ const banner=s.banner?`<div class="form-message err" role="alert">${MSG_ERR}<span>${s.banner}</span></div>`:'';
+ const summary=s.summary?`<div class="form-summary" role="alert"><h4>There’s a problem</h4><ul><li><a href="#${id}-token" data-act="sumlink">Enter a token</a></li></ul></div>`:'';
+ const desc=[`${id}-hint`,err?`${id}-err`:''].filter(Boolean).join(' ');
+ return `<form class="replace" id="${id}-form" aria-label="Replace token for ${c.label}" data-id="${c.id}" novalidate>
+ ${banner}${summary}
+ <div class="field${err?' has-error':''}">
+ <label for="${id}-token">New personal access token</label>
+ <div class="hint" id="${id}-hint"><p class="hint">Must sign in as <b class="mono">${c.user}</b> on ${c.host}. Watched repos and settings are kept.</p>
+ <details class="token-help"><summary>${I.chev}<span>What permissions does my token need?</span></summary><ul><li><b>GitHub</b>: fine-grained with <b>Actions: read</b> + <b>Pull requests: read</b>.</li><li><b>GitLab</b>: PAT with <b>read_api</b>.</li></ul></details></div>
+ ${err?`<p class="field-error" id="${id}-err">${err}</p>`:''}
+ <div class="password-wrap"><input id="${id}-token" type="${s.show?'text':'password'}" autocomplete="new-password" spellcheck="false" value="${esc(s.token)}" aria-describedby="${desc}"${err?' aria-invalid="true"':''}/><button class="password-toggle" type="button" data-act="show">${s.show?'Hide':'Show'}</button></div>
+ ${s.below?`<p class="below ${s.below.state}" aria-live="polite">${s.below.text}</p>`:'<p class="below" aria-live="polite"></p>'}
+ </div>
+ <div class="button-group">
+ <button class="button primary${s.saving?' submitting':''}" type="submit" data-act="save"${s.saving?' disabled aria-busy="true"':''}>${I.key} ${s.saving?'Saving token…':'Save token'}</button>
+ <button class="button secondary" type="button" data-act="validate">${I.badge} Validate</button>
+ <button class="text-btn" type="button" data-act="cancel">Cancel</button>
+ </div></form>`;
+}
+function optHTML(f){
+ const s=f.s;
+ const toast=s.toast?`<div class="toast${s.toastStatic?' static':''}" role="status">${MSG_OK}<div><div class="toast-title">Token replaced</div><div class="toast-msg">${s.toast}</div></div></div>`:'';
+ return `<section class="card"><h2>${I.plug} Connections</h2><ul class="connection-list">${f.data.conns.map(c=>rowHTML(f,c)).join('')}</ul></section>${toast}`;
+}
+
+function render(key,focus){
+ const f=F[key];
+ if(f.kind==='panel'){f.el.innerHTML=panelHTML(f.data,'new',f.opt);return;}
+ f.el.innerHTML=optHTML(f);
+ if(focus){const el=f.el.querySelector(focus);el&&el.focus();}
+}
+function renderTheme(theme){Object.values(F).filter(f=>f.data===shared(theme)&&f.el&&!f.gallery).forEach(f=>render(f.key));}
+function themeOf(f){return f.el.closest('[data-theme]').dataset.theme;}
+
+/* ── simulated provider ── */
+function check(tok){return new Promise(r=>setTimeout(()=>{
+ if(/other/i.test(tok))r({ok:false,kind:'mismatch',user:'@alex-k'});
+ else if(/bad/i.test(tok))r({ok:false,kind:'401'});
+ else r({ok:true});},800));}
+
+async function validate(f,c){
+ const s=f.s,id=`${f.key}-${c.id}`;
+ if(!s.token.trim()){s.fieldErr='Enter a token';s.below=null;render(f.key,`#${id}-token`);return;}
+ s.below={state:'busy',text:'Validating…'};render(f.key);
+ const r=await check(s.token);
+ if(s.editing!==c.id)return;
+ s.below=r.ok?{state:'ok',text:`Signed in as <span class="mono">${c.user}</span>`}:r.kind==='mismatch'?{state:'bad',text:`Signed in as <span class="mono">${r.user}</span>, not <span class="mono">${c.user}</span>`}:{state:'bad',text:'Could not validate, check the token and its permissions'};
+ render(f.key);
+}
+async function save(f,c){
+ const s=f.s,id=`${f.key}-${c.id}`;
+ s.banner=null;
+ if(!s.token.trim()){s.summary=true;s.fieldErr='Enter a token';s.below=null;render(f.key,`#${id}-token`);return;}
+ s.summary=false;s.fieldErr=null;s.saving=true;s.below={state:'busy',text:'Validating…'};render(f.key);
+ const r=await check(s.token);
+ if(s.editing!==c.id)return;
+ s.saving=false;
+ if(r.ok){
+  c.status='ok';Object.assign(s,{editing:null,token:'',below:null,show:false,replaced:c.id,toast:`${c.label} is watching ${c.watched} repos again`});
+  renderTheme(themeOf(f));f.el.querySelector(`#${id}-trig`)?.focus();
+  clearTimeout(s.tt);s.tt=setTimeout(()=>{s.toast=null;f.el.querySelector('.toast')?.remove();},4000);
+  return;
+ }
+ if(r.kind==='mismatch'){
+  s.below={state:'bad',text:`Signed in as <span class="mono">${r.user}</span>, not <span class="mono">${c.user}</span>`};
+  s.banner=`<b>Couldn’t replace token.</b> It signs in as <span class="mono">${r.user}</span>, not <span class="mono">${c.user}</span>. <a href="#" data-act="addnew">Add it as a new connection instead</a>`;
+ }else{
+  s.below={state:'bad',text:'Could not validate, check the token and its permissions'};
+  s.banner=`<b>Couldn’t replace token.</b> ${c.provider} returned HTTP 401, the token may be expired or missing a permission`;
+ }
+ render(f.key,`#${id}-token`);
+}
+function openEdit(f,id){
+ const s=f.s;Object.assign(s,{editing:id,token:'',below:null,banner:null,summary:false,fieldErr:null,saving:false,show:false});
+ render(f.key,`#${f.key}-${id}-token`);
+}
+function closeEdit(f){
+ const id=f.s.editing;if(!id)return;
+ Object.assign(f.s,{editing:null,token:'',below:null,banner:null,summary:false,fieldErr:null,saving:false,show:false});
+ render(f.key,`#${f.key}-${id}-trig`);
+}
+
+/* ── use:tooltip port (src/lib/tooltip.ts, same styles + placement) ── */
+let tipEl=null,tipNode=null;
+function tipShow(node){
+ if(tipNode===node)return;tipHide();tipNode=node;
+ const b=document.createElement('div');b.textContent=node.dataset.tip;b.setAttribute('role','tooltip');
+ const th=node.closest('.th');
+ Object.assign(b.style,{position:'fixed',zIndex:'2147483647',pointerEvents:'none',maxWidth:'18rem',padding:'var(--space-xs) var(--space-md)',background:'var(--surface-2)',color:'var(--text)',border:'1px solid var(--border-2)',borderRadius:'var(--radius)',boxShadow:'var(--shadow)',fontFamily:'var(--font-sans)',fontSize:'var(--font-size-2xs)',fontWeight:'500',lineHeight:'1.35',opacity:'0',transition:'opacity .12s'});
+ th.appendChild(b);tipEl=b;
+ const t=node.getBoundingClientRect(),bx=b.getBoundingClientRect(),G=8,E=4;
+ b.style.top=(t.bottom+G+bx.height<=innerHeight-E?t.bottom+G:Math.max(E,t.top-bx.height-G))+'px';
+ b.style.left=Math.min(Math.max(E,t.left+t.width/2-bx.width/2),innerWidth-bx.width-E)+'px';
+ requestAnimationFrame(()=>{if(tipEl===b)b.style.opacity='1';});
+}
+function tipHide(){tipEl?.remove();tipEl=null;tipNode=null;}
+document.addEventListener('mouseover',e=>{const n=e.target.closest('[data-tip]');n?tipShow(n):tipHide();});
+document.addEventListener('focusin',e=>{const n=e.target.closest('[data-tip]');n?tipShow(n):tipHide();});
+document.addEventListener('focusout',tipHide);
+window.addEventListener('scroll',tipHide,true);
+document.addEventListener('click',()=>tipHide(),true);
+
+/* ── events ── */
+const frameOf=el=>{const n=el.closest('[data-frame],[data-gkey]');return n&&F[n.dataset.frame||n.dataset.gkey];};
+document.addEventListener('click',e=>{
+ if(e.target.id==='reset'){e.preventDefault();init();Object.keys(F).forEach(k=>!F[k].gallery&&render(k));return;}
+ const b=e.target.closest('[data-act]');if(!b)return;
+ const f=frameOf(b);if(!f)return;
+ const act=b.dataset.act;
+ if(act==='jump'){
+  const of=F[b.dataset.opt];if(!of)return;
+  openEdit(of,b.dataset.id);
+  const li=of.el.querySelector(`#${of.key}-${b.dataset.id}`);
+  li.classList.remove('flash');void li.offsetWidth;li.classList.add('flash');
+  const y=of.el.getBoundingClientRect().top+window.scrollY-24;
+  if(Math.abs(of.el.getBoundingClientRect().top)>window.innerHeight*.6)window.scrollTo({top:y,behavior:'smooth'});
+  return;}
+ if(f.kind!=='opt')return;
+ const c=f.data.conns.find(x=>x.id===(b.dataset.id||b.closest('form')?.dataset.id));
+ if(act==='open'){f.s.replaced=null;openEdit(f,c.id);}
+ else if(act==='cancel')closeEdit(f);
+ else if(act==='show'){f.s.show=!f.s.show;const inp=b.parentElement.querySelector('input');inp.type=f.s.show?'text':'password';b.textContent=f.s.show?'Hide':'Show';}
+ else if(act==='validate')validate(f,c);
+ else if(act==='save'){e.preventDefault();if(!f.s.saving)save(f,c);}
+ else if(act==='sumlink'){e.preventDefault();f.el.querySelector(b.getAttribute('href'))?.focus();}
+ else if(act==='addnew'){e.preventDefault();}
+});
+document.addEventListener('submit',e=>{e.preventDefault();const f=frameOf(e.target);if(!f||f.s.saving)return;save(f,f.data.conns.find(x=>x.id===e.target.dataset.id));});
+document.addEventListener('input',e=>{
+ const f=frameOf(e.target);if(!f||f.kind!=='opt'||!e.target.matches('.password-wrap input'))return;
+ f.s.token=e.target.value;
+ if(f.s.fieldErr&&f.s.token.trim()){f.s.fieldErr=null;const fld=e.target.closest('.field');fld.classList.remove('has-error');fld.querySelector('.field-error')?.remove();e.target.removeAttribute('aria-invalid');e.target.setAttribute('aria-describedby',e.target.getAttribute('aria-describedby').split(' ')[0]);}
+});
+document.addEventListener('keydown',e=>{if(e.key!=='Escape')return;const form=e.target.closest&&e.target.closest('.replace');if(!form)return;const f=frameOf(form);f&&closeEdit(f);});
+
+/* ── galleries (static presets, still interactive) ── */
+const TOK='ghp_8fK2mQ7xLw0pZ3vN9cR4tY6bJ1hD5sA';
+const P={
+ rows:()=>({}),
+ empty:()=>({editing:'work'}),
+ summary:()=>({editing:'work',summary:true,fieldErr:'Enter a token'}),
+ busy:()=>({editing:'work',token:TOK,below:{state:'busy',text:'Validating…'}}),
+ valid:()=>({editing:'work',token:TOK,below:{state:'ok',text:'Signed in as <span class="mono">@feedmypixel</span>'}}),
+ rejected:()=>({editing:'work',token:TOK,below:{state:'bad',text:'Could not validate, check the token and its permissions'},banner:'<b>Couldn’t replace token.</b> GitHub returned HTTP 401, the token may be expired or missing a permission'}),
+ mismatch:()=>({editing:'work',token:TOK,below:{state:'bad',text:'Signed in as <span class="mono">@alex-k</span>, not <span class="mono">@feedmypixel</span>'},banner:'<b>Couldn’t replace token.</b> It signs in as <span class="mono">@alex-k</span>, not <span class="mono">@feedmypixel</span>. <a href="#" data-act="addnew">Add it as a new connection instead</a>'}),
+ replaced:()=>({replaced:'work',toast:'work is watching 4 repos again',toastStatic:true,ok:true}),
+};
+let gi=0;
+document.querySelectorAll('[data-gallery]').forEach(g=>{
+ const name=g.dataset.gallery;
+ g.innerHTML=['light','dark'].map(t=>`<div class="col"><div class="cap"><span class="sw ${t[0]}"></span>${t}</div><div class="th optf" data-theme="${t}" data-gkey="g${gi}${t[0]}"></div></div>`).join('');
+ ['light','dark'].forEach(t=>{
+  const key=`g${gi}${t[0]}`,p=P[name](),d={conns:conns()};
+  if(p.ok)d.conns[0].status='ok';
+  F[key]={key,kind:'opt',gallery:true,el:g.querySelector(`[data-gkey="${key}"]`),data:d,s:Object.assign(fresh(),p)};
+  render(key);
+ });
+ gi++;
+});
+document.querySelectorAll('[data-gpanel]').forEach(el=>{el.innerHTML=panelHTML({conns:conns()},el.dataset.gpanel,null);});
+
+const PANEL_REF=[['success','<path d="M4.5 12.5l4.5 4.5L20 6"/>'],['failed','<path d="M6 6l12 12M18 6L6 18"/>'],['running','<path d="M12 3a9 9 0 1 1-9 9"/>'],['pending','<path d="M9 6v12M15 6v12"/>']];
+document.getElementById('icons').innerHTML=['light','dark'].map(t=>`<div class="col"><div class="cap"><span class="sw ${t[0]}"></span>${t}</div><div class="th optf" data-theme="${t}">
+<div class="ref">Panel status icons, for reference ${PANEL_REF.map(([c,g])=>`<span class="st20" style="background:var(--${c})"><svg viewBox="0 0 24 24">${g}</svg></span>`).join('')}</div>
+<div class="icset">${Object.entries(MI).map(([k,v])=>`<div class="ic"><div class="sz">${mi(k,30)}${mi(k,20)}${mi(k,16)}</div><b>${v.n}</b><span class="u">${v.u}</span></div>`).join('')}</div></div></div>`).join('');
+init();['pL','oL','pD','oD'].forEach(k=>render(k));
+</script>
+</body>
+</html>
