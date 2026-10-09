@@ -4,6 +4,7 @@ import {
   visibleChanges,
   defaultVisible,
   hasVisibleRows,
+  noPipelinesVisible,
   failingCount,
   filterGroups,
   ALL_BRANCH_STATES,
@@ -272,4 +273,28 @@ test('counts only default-branch failures', () => {
   }
   const repos = [repo('o/a', 'r1'), repo('o/b', 'r2'), repo('o/c', 'r3')]
   expect(countDefaultBranchFailures(repos, snapshots)).toBe(2)
+})
+
+test('noPipelinesVisible: a polled repo with no pipeline yet shows under the full status set', () => {
+  const view = groupByOwner([repo('o/r', 'o/r')], { 'o/r': snapshot(null) })[0].repos[0]
+  expect(noPipelinesVisible(view, ALL_BRANCH_STATES)).toBe(true)
+  expect(noPipelinesVisible(view, PROBLEM_STATES)).toBe(false)
+})
+
+test('noPipelinesVisible: false before the first poll and once a pipeline exists', () => {
+  const unpolled = groupByOwner([repo('o/r', 'o/r')], {})[0].repos[0]
+  const withPipeline = groupByOwner([repo('o/r', 'o/r')], {
+    'o/r': snapshot(mainPipe('success'))
+  })[0].repos[0]
+  expect(noPipelinesVisible(unpolled, ALL_BRANCH_STATES)).toBe(false)
+  expect(noPipelinesVisible(withPipeline, ALL_BRANCH_STATES)).toBe(false)
+})
+
+test('filterGroups: keeps a watched repo with no pipelines yet, in both All and Mine', () => {
+  const groups = groupByOwner([repo('o/r', 'o/r')], { 'o/r': snapshot(null) })
+  expect(filterGroups(groups, ALL_BRANCH_STATES)[0].repos.map((view) => view.repo.id)).toEqual([
+    'o/r'
+  ])
+  expect(filterGroups(groups, ALL_BRANCH_STATES, true)[0].repos).toHaveLength(1)
+  expect(filterGroups(groups, PROBLEM_STATES)).toEqual([])
 })

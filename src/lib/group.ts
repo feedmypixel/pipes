@@ -15,6 +15,8 @@ export interface RepoView {
   providerId?: ProviderId
   /** Default-branch headline (pinned), or null if never seen. */
   default: Pipeline | null
+  /** A poll has stored this repo's status — tells "no pipelines yet" apart from "not fetched yet". */
+  polled: boolean
   /** Open PRs/MRs, newest number first. */
   changes: Change[]
   /** Authenticated login for this repo's account, for the "mine" scope filter. Undefined until
@@ -60,6 +62,7 @@ export function groupByOwner(
       displayName,
       providerId: providerByAccount.get(repo.accountId),
       default: snapshot.default,
+      polled: repo.id in snapshots,
       changes: [...snapshot.changes].sort((a, b) => b.number - a.number),
       viewerLogin: viewerLogins[repo.accountId]
     }
@@ -167,13 +170,24 @@ export function failingCount(
   )
 }
 
+/** Has no status to match, so any narrowed status filter hides it. */
+export function noPipelinesVisible(view: RepoView, allowed: ReadonlySet<PipelineStatus>): boolean {
+  return (
+    view.polled && view.default === null && BRANCH_STATE_ORDER.every((state) => allowed.has(state))
+  )
+}
+
 /** A repo has rows to show when its default branch or any PR/MR passes the filter. */
 export function hasVisibleRows(
   view: RepoView,
   allowed: ReadonlySet<PipelineStatus>,
   mineOnly = false
 ): boolean {
-  return defaultVisible(view, allowed) || visibleChanges(view, allowed, mineOnly).length > 0
+  return (
+    defaultVisible(view, allowed) ||
+    noPipelinesVisible(view, allowed) ||
+    visibleChanges(view, allowed, mineOnly).length > 0
+  )
 }
 
 /** Drop repos with no rows under the current filter, then drop emptied owner groups. */
