@@ -373,6 +373,20 @@ test('a repo whose account is missing is skipped and keeps its snapshot', async 
   expect((snap().default as { status: string }).status).toBe('success')
 })
 
+test('a never-fetched repo whose fetch fails stores no snapshot', async () => {
+  seed()
+  h.provider.listPipelines.mockRejectedValue(new Error('network down'))
+  await poll()
+  expect((h.store.snapshots as Record<string, unknown> | undefined)?.['o/r']).toBeUndefined()
+})
+
+test('a never-fetched repo on an unhealthy account stores no snapshot', async () => {
+  h.provider.validateToken.mockResolvedValue({ ok: false, error: 'bad token' })
+  seed()
+  await poll()
+  expect((h.store.snapshots as Record<string, unknown> | undefined)?.['o/r']).toBeUndefined()
+})
+
 test('a low rate-limit reading pauses the account until its reset', async () => {
   seed()
   h.provider.listPipelines.mockResolvedValue({

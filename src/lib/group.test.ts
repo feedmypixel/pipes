@@ -290,6 +290,13 @@ test('noPipelinesVisible: false before the first poll and once a pipeline exists
   expect(noPipelinesVisible(withPipeline, ALL_BRANCH_STATES)).toBe(false)
 })
 
+test('noPipelinesVisible: false when open PRs carry pipelines even though main has none', () => {
+  const view = groupByOwner([repo('o/r', 'o/r')], {
+    'o/r': snapshot(null, [change(1, 'success')])
+  })[0].repos[0]
+  expect(noPipelinesVisible(view, ALL_BRANCH_STATES)).toBe(false)
+})
+
 test('filterGroups: keeps a watched repo with no pipelines yet, in both All and Mine', () => {
   const groups = groupByOwner([repo('o/r', 'o/r')], { 'o/r': snapshot(null) })
   expect(filterGroups(groups, ALL_BRANCH_STATES)[0].repos.map((view) => view.repo.id)).toEqual([

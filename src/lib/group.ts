@@ -173,7 +173,10 @@ export function failingCount(
 /** Has no status to match, so any narrowed status filter hides it. */
 export function noPipelinesVisible(view: RepoView, allowed: ReadonlySet<PipelineStatus>): boolean {
   return (
-    view.polled && view.default === null && BRANCH_STATE_ORDER.every((state) => allowed.has(state))
+    view.polled &&
+    view.default === null &&
+    view.changes.length === 0 &&
+    BRANCH_STATE_ORDER.every((state) => allowed.has(state))
   )
 }
 
