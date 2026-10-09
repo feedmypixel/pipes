@@ -94,7 +94,8 @@ async function diffChange(
 }
 
 interface RepoPollResult {
-  snapshot: RepoSnapshot
+  /** Undefined until this repo has been fetched successfully, so the panel can't mistake a failed first fetch for "no pipelines". */
+  snapshot: RepoSnapshot | undefined
   etag: string | null
   changeEtag: string | null
   rateLimit: RateLimit | null
@@ -128,7 +129,8 @@ async function pollRepo(
   etag: string | undefined,
   changeEtag: string | undefined
 ): Promise<RepoPollResult> {
-  const prev = prevSnapshots[repo.id] ?? EMPTY_SNAPSHOT
+  const stored = prevSnapshots[repo.id]
+  const prev = stored ?? EMPTY_SNAPSHOT
   try {
     const provider = getProvider(account.provider)
 
@@ -213,7 +215,7 @@ async function pollRepo(
   } catch (err) {
     if (err instanceof RateLimitError) {
       return {
-        snapshot: prev,
+        snapshot: stored,
         etag: etag ?? null,
         changeEtag: changeEtag ?? null,
         rateLimit: null,
@@ -221,7 +223,7 @@ async function pollRepo(
       }
     }
     log.warn(`Poll failed for ${repo.name}: ${(err as Error).message}`)
-    return { snapshot: prev, etag: etag ?? null, changeEtag: changeEtag ?? null, rateLimit: null }
+    return { snapshot: stored, etag: etag ?? null, changeEtag: changeEtag ?? null, rateLimit: null }
   }
 }
 
@@ -332,7 +334,7 @@ async function runPollCycle(force: boolean): Promise<void> {
 
   const results = await mapLimit(watchedRepos, POLL_CONCURRENCY, async (repo) => {
     const account = accountById.get(repo.accountId)
-    const keep = prevSnapshots[repo.id] ?? EMPTY_SNAPSHOT
+    const keep = prevSnapshots[repo.id]
     const accountPaused = account
       ? Math.max(pausedUntil[account.id] ?? 0, healthPaused[account.id] ?? 0)
       : 0
@@ -383,7 +385,9 @@ async function runPollCycle(force: boolean): Promise<void> {
     rateLimit,
     pausedUntil: repoPaused
   } of results) {
-    snapshots[repo.id] = snapshot
+    if (snapshot) {
+      snapshots[repo.id] = snapshot
+    }
     if (etag) {
       nextEtags[repo.id] = etag
     }

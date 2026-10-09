@@ -3,7 +3,7 @@
   import ExternalLink from '@lucide/svelte/icons/external-link'
   import GitPullRequest from '@lucide/svelte/icons/git-pull-request'
   import type { RepoView } from '../group'
-  import { visibleChanges, defaultVisible, failingCount } from '../group'
+  import { visibleChanges, defaultVisible, noPipelinesVisible, failingCount } from '../group'
   import type { PipelineStatus } from '../../providers/types'
   import { tooltip } from '../tooltip'
   import Row from './Row.svelte'
@@ -26,6 +26,7 @@
   // Open PRs/MRs collapse into the drawer; the default branch is always shown.
   const changes = $derived(visibleChanges(view, allowed, mineOnly))
   const showDefault = $derived(defaultVisible(view, allowed))
+  const showNoPipelines = $derived(noPipelinesVisible(view, allowed))
   const hasChanges = $derived(changes.length > 0)
   const failing = $derived(failingCount(view, allowed, mineOnly))
 
@@ -82,6 +83,8 @@
 
   {#if view.default && showDefault}
     <Row pipeline={view.default} />
+  {:else if showNoPipelines}
+    <p class="no-pipelines">No pipelines yet</p>
   {/if}
   {#if !collapsed}
     {#each changes as change (change.number)}
@@ -166,6 +169,13 @@
     height: 24px;
     border-radius: var(--radius-pill);
     color: var(--text-3);
+  }
+  .no-pipelines {
+    margin: 0;
+    padding: var(--space-md) var(--space-xl) var(--space-md) var(--space-3xl);
+    border-bottom: 1px solid var(--border);
+    color: var(--text-3);
+    font-size: var(--font-size-base);
   }
   .repo-link:hover {
     background: var(--hover);

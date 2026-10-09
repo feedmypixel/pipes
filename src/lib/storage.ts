@@ -130,7 +130,8 @@ export async function setMany(values: Partial<StorageShape>): Promise<void> {
 //      pipeline no longer masks the real MR pipeline.
 // v12: the join also rescues merged-results MRs (whose pipeline runs at a merge commit, not the
 //      head sha) by falling back to the MR-ref pipeline over a skipped branch pipeline.
-const SCHEMA_VERSION = 12
+// v13: snapshots are stored only after a successful fetch (empty ones now mean "no pipelines").
+const SCHEMA_VERSION = 13
 
 /**
  * Drop derived caches whose shape or derivation changed across a release (e.g. snapshots went from

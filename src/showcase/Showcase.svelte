@@ -154,6 +154,7 @@
       },
       displayName,
       default: defaultPipe,
+      polled: true,
       changes
     }
   }
