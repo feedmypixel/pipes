@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [1.6.0](https://github.com/feedmypixel/pipes/compare/v1.5.1...v1.6.0) (2026-10-09)
+
+### Features
+
+- replace a connection's token in place ([#171](https://github.com/feedmypixel/pipes/issues/171)) ([7b0f414](https://github.com/feedmypixel/pipes/commit/7b0f414e8936a71dbaf03b552bb651fbdca0b213))
+
+### Bug Fixes
+
+- show watched repos that have no pipelines yet ([#170](https://github.com/feedmypixel/pipes/issues/170)) ([d07eab0](https://github.com/feedmypixel/pipes/commit/d07eab0ed2a6024fb0a3a6d40b5abc7cc8e92012))
+
 ## [1.5.1](https://github.com/feedmypixel/pipes/compare/v1.5.0...v1.5.1) (2026-08-23)
 
 ### Bug Fixes
