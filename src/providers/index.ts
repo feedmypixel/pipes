@@ -9,6 +9,10 @@ export function getProvider(id: ProviderId): Provider {
   return PROVIDERS[id]
 }
 
+export function providerName(id: ProviderId): string {
+  return id === 'github' ? 'GitHub' : 'GitLab'
+}
+
 /** Turn user input ("github.com", "https://x/", a path) into a bare origin, or '' if invalid. */
 export function normaliseHost(input: string): string {
   const trimmed = input.trim()

@@ -33,6 +33,8 @@ export interface AccountHealth {
   error?: string
   /** Authenticated login (GitHub `user.login` / GitLab `username`), for the "mine" scope filter. */
   user?: string
+  /** HTTP status of the failed token check, when the provider answered. */
+  status?: number
 }
 
 export interface StorageShape {

@@ -18,6 +18,7 @@
   import Stepper from '../lib/components/forms/Stepper.svelte'
   import Toggle from '../lib/components/forms/Toggle.svelte'
   import Banner from '../lib/components/Banner.svelte'
+  import MessageIcon from '../lib/components/forms/MessageIcon.svelte'
   import ToastHost from '../lib/components/ToastHost.svelte'
   import Toast from '../lib/components/Toast.svelte'
   import { toastSuccess, toastError, toastInfo, toastUndo } from '../lib/toasts.svelte'
@@ -307,28 +308,57 @@
     <p class="eyebrow">TopAlerts (side-panel / popup top messages)</p>
     <div class="stack">
       <div class="surface-frame">
-        <TopAlerts connectionIssues={[]} mainFailing={0} ready={true} onOpenSettings={() => {}} />
-      </div>
-      <div class="surface-frame">
-        <TopAlerts connectionIssues={[]} mainFailing={2} ready={true} onOpenSettings={() => {}} />
-      </div>
-      <div class="surface-frame">
-        <TopAlerts connectionIssues={[]} mainFailing={1} ready={true} onOpenSettings={() => {}} />
-      </div>
-      <div class="surface-frame">
         <TopAlerts
-          connectionIssues={[{ id: 'a', label: 'work', error: 'token invalid or expired' }]}
+          connectionIssues={[]}
           mainFailing={0}
-          ready={false}
+          ready={true}
           onOpenSettings={() => {}}
+          onReplaceToken={() => {}}
         />
       </div>
       <div class="surface-frame">
         <TopAlerts
-          connectionIssues={[{ id: 'a', label: 'work', error: 'token invalid or expired' }]}
+          connectionIssues={[]}
           mainFailing={2}
           ready={true}
           onOpenSettings={() => {}}
+          onReplaceToken={() => {}}
+        />
+      </div>
+      <div class="surface-frame">
+        <TopAlerts
+          connectionIssues={[]}
+          mainFailing={1}
+          ready={true}
+          onOpenSettings={() => {}}
+          onReplaceToken={() => {}}
+        />
+      </div>
+      <div class="surface-frame">
+        <TopAlerts
+          connectionIssues={[
+            {
+              id: 'a',
+              label: 'work',
+              error: 'HTTP 401 Unauthorized on https://api.github.com/user',
+              tokenFailure: true
+            }
+          ]}
+          mainFailing={0}
+          ready={false}
+          onOpenSettings={() => {}}
+          onReplaceToken={() => {}}
+        />
+      </div>
+      <div class="surface-frame">
+        <TopAlerts
+          connectionIssues={[
+            { id: 'a', label: 'work', error: 'Request timed out', tokenFailure: false }
+          ]}
+          mainFailing={2}
+          ready={true}
+          onOpenSettings={() => {}}
+          onReplaceToken={() => {}}
         />
       </div>
       <div class="surface-frame">
@@ -340,6 +370,7 @@
           mainFailing={0}
           ready={false}
           onOpenSettings={() => {}}
+          onReplaceToken={() => {}}
         />
       </div>
     </div>
@@ -493,6 +524,15 @@
     <div class="stack">
       <Banner variant="ok">Connection added.</Banner>
       <Banner variant="err">Could not reach host. Check the origin and try again.</Banner>
+    </div>
+  </section>
+
+  <section>
+    <p class="eyebrow">Message icons</p>
+    <div class="inline">
+      {#each ['success', 'error', 'warning', 'info', 'token-ok', 'token-bad', 'lock'] as const as variant (variant)}
+        <MessageIcon {variant} size={30} />
+      {/each}
     </div>
   </section>
 

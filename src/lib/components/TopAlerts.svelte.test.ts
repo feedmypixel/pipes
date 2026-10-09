@@ -6,7 +6,8 @@ const base = {
   rateLimited: [],
   mainFailing: 0,
   ready: true,
-  onOpenSettings: () => {}
+  onOpenSettings: () => {},
+  onReplaceToken: () => {}
 }
 
 describe('TopAlerts', () => {
@@ -43,10 +44,37 @@ describe('TopAlerts', () => {
   })
 
   test('connection issues render as a settings shortcut button', async () => {
+    let opened = 0
     const screen = await render(TopAlerts, {
-      props: { ...base, connectionIssues: [{ id: 'gh', label: 'GitHub', error: 'bad token' }] }
+      props: {
+        ...base,
+        onOpenSettings: () => opened++,
+        connectionIssues: [
+          { id: 'gh', label: 'GitHub', error: 'network down', tokenFailure: false }
+        ]
+      }
     })
-    const button = screen.container.querySelector('button.issue')
-    expect(button?.textContent).toContain('GitHub connection problem: bad token')
+    const button = screen.container.querySelector('button.issue') as HTMLButtonElement
+    expect(button.textContent).toContain('GitHub connection problem: network down')
+    expect(screen.container.querySelector('.issue-link')).toBeNull()
+    button.click()
+    expect(opened).toBe(1)
+  })
+
+  test('a rejected token is a status strip with its own Replace token action', async () => {
+    const replaced: string[] = []
+    const screen = await render(TopAlerts, {
+      props: {
+        ...base,
+        onReplaceToken: (id: string) => replaced.push(id),
+        connectionIssues: [{ id: 'gh', label: 'work', error: 'HTTP 401', tokenFailure: true }]
+      }
+    })
+    const strip = screen.container.querySelector('.issue')
+    expect(strip?.tagName).toBe('DIV')
+    expect(strip?.getAttribute('role')).toBe('status')
+    expect(strip?.textContent).toContain('work connection problem: HTTP 401')
+    await screen.getByRole('button', { name: 'Replace token for work' }).click()
+    expect(replaced).toEqual(['gh'])
   })
 })

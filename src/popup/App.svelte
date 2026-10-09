@@ -8,6 +8,7 @@
   import UpdatedFooter from '../lib/components/UpdatedFooter.svelte'
   import { useDashboard } from '../lib/dashboard.svelte'
   import browser from '../lib/browser'
+  import { openReplaceToken } from '../lib/options-link'
   import { openDashboard } from '../lib/platform'
 
   const dash = useDashboard()
@@ -62,6 +63,7 @@
     mainFailing={dash.mainFailing}
     ready={dash.configured && dash.watchedRepos.length > 0}
     onOpenSettings={openOptions}
+    onReplaceToken={openReplaceToken}
   />
 
   {#if !dash.configured}

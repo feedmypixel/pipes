@@ -27,6 +27,8 @@ export interface Account {
   host: string
   /** Personal access token. GitLab: read_api. GitHub: read-only (Actions + repo metadata). */
   token: string
+  /** Login the token signed in as; a replacement token must match it. Absent on legacy accounts. */
+  user?: string
 }
 
 export interface Repo {
@@ -78,6 +80,8 @@ export interface ValidationResult {
   user?: string
   /** Human-readable reason, when not ok. */
   error?: string
+  /** HTTP status of the failed check, when the provider answered. */
+  status?: number
 }
 
 /** Result of a conditional pipeline fetch. */

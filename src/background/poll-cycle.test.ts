@@ -325,6 +325,19 @@ test('overlapping poll() calls coalesce into a single cycle', async () => {
   expect(h.provider.listPipelines).toHaveBeenCalledTimes(1)
 })
 
+test('a forced poll requested mid-cycle runs a fresh forced cycle afterwards', async () => {
+  seed({ lastHealthAt: Date.now() })
+  await Promise.all([poll(), poll(true)])
+  expect(h.provider.validateToken).toHaveBeenCalledTimes(1)
+  expect(h.provider.listPipelines).toHaveBeenCalledTimes(2)
+})
+
+test('forced polls requested during one cycle share the follow-up cycle', async () => {
+  seed({ lastHealthAt: Date.now() })
+  await Promise.all([poll(), poll(true), poll(true)])
+  expect(h.provider.listPipelines).toHaveBeenCalledTimes(2)
+})
+
 test('a paused account is skipped and keeps its snapshot', async () => {
   const future = Math.floor(Date.now() / 1000) + 600
   seed({
@@ -361,6 +374,24 @@ test('an unhealthy account is skipped, keeps its snapshot, and records the healt
   expect(h.provider.listPipelines).not.toHaveBeenCalled()
   expect((h.store.accountHealth as Record<string, { ok: boolean }>).a1.ok).toBe(false)
   expect((snap().default as { status: string }).status).toBe('success')
+})
+
+test('a token replaced while its old one is being checked keeps the fresh health', async () => {
+  seed()
+  h.provider.validateToken.mockImplementation(async () => {
+    h.store.accounts = [{ ...account, token: 'new' }]
+    h.store.accountHealth = { a1: { ok: true, user: 'u' } }
+    return { ok: false, error: 'HTTP 401', status: 401 }
+  })
+  await poll()
+  expect(h.store.accountHealth).toEqual({ a1: { ok: true, user: 'u' } })
+})
+
+test('a rejected token records its HTTP status in account health', async () => {
+  h.provider.validateToken.mockResolvedValue({ ok: false, error: 'HTTP 401', status: 401 })
+  seed()
+  await poll()
+  expect(h.store.accountHealth).toEqual({ a1: { ok: false, error: 'HTTP 401', status: 401 } })
 })
 
 test('a repo whose account is missing is skipped and keeps its snapshot', async () => {

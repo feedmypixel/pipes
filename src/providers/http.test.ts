@@ -1,4 +1,4 @@
-import { parseRateLimit, fetchJson, RateLimitError, httpUrl } from './http'
+import { parseRateLimit, fetchJson, RateLimitError, HttpError, httpUrl } from './http'
 
 const NAMES = { remaining: 'x-ratelimit-remaining', reset: 'x-ratelimit-reset' }
 
@@ -74,6 +74,20 @@ test('fetchJson: non-ok throws', async () => {
   globalThis.fetch = (async () => new Response('nope', { status: 500 })) as typeof fetch
   try {
     await expect(fetchJson('https://example.test', {})).rejects.toThrow()
+  } finally {
+    globalThis.fetch = original
+  }
+})
+
+test('fetchJson: non-ok throws an HttpError carrying the status', async () => {
+  const original = globalThis.fetch
+  globalThis.fetch = (async () =>
+    new Response('nope', { status: 401, statusText: 'Unauthorized' })) as typeof fetch
+  try {
+    const error = await fetchJson('https://example.test', {}).catch((thrown) => thrown)
+    expect(error).toBeInstanceOf(HttpError)
+    expect(error.status).toBe(401)
+    expect(error.message).toBe('HTTP 401 Unauthorized on https://example.test')
   } finally {
     globalThis.fetch = original
   }

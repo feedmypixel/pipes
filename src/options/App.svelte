@@ -1,6 +1,6 @@
 <script lang="ts">
+  import { tick } from 'svelte'
   import Plug from '@lucide/svelte/icons/plug'
-  import Trash2 from '@lucide/svelte/icons/trash-2'
   import Check from '@lucide/svelte/icons/check'
   import Search from '@lucide/svelte/icons/search'
   import X from '@lucide/svelte/icons/x'
@@ -8,8 +8,8 @@
   import BadgeCheck from '@lucide/svelte/icons/badge-check'
   import GitBranch from '@lucide/svelte/icons/git-branch'
   import * as storage from '../lib/storage'
-  import type { Settings } from '../lib/storage'
-  import { getProvider, normaliseHost, saasProvider } from '../providers'
+  import type { AccountHealth, Settings } from '../lib/storage'
+  import { getProvider, normaliseHost, providerName, saasProvider } from '../providers'
   import browser from '../lib/browser'
   import type { Account, ProviderId, Repo } from '../providers/types'
   import { MIN_POLL_MINUTES, SAAS_HOST } from '../lib/config'
@@ -21,7 +21,7 @@
   import FormSummary from '../lib/components/forms/FormSummary.svelte'
   import Stepper from '../lib/components/forms/Stepper.svelte'
   import Toggle from '../lib/components/forms/Toggle.svelte'
-  import ChevronRight from '@lucide/svelte/icons/chevron-right'
+  import MessageIcon from '../lib/components/forms/MessageIcon.svelte'
   import Banner from '../lib/components/Banner.svelte'
   import Button from '../lib/components/Button.svelte'
   import PermissionNote from '../lib/components/PermissionNote.svelte'
@@ -36,6 +36,10 @@
     accountLabel,
     type HostChoice
   } from './account-form'
+  import ConnectionRow from './ConnectionRow.svelte'
+  import TokenHelp from './TokenHelp.svelte'
+  import { repoCount } from './replace-token'
+  import { replaceTarget } from '../lib/options-link'
 
   let accounts = $state<Account[]>([])
   let watchedRepos = $state<Repo[]>([])
@@ -47,7 +51,7 @@
   let token = $state('')
   let errors = $state<{ host?: string; token?: string }>({})
   let availability = $state<{ state: 'busy' | 'ok' | 'bad'; text: string } | null>(null)
-  let detected = $state<ProviderId | null>(null)
+  let detected = $state<{ provider: ProviderId; user?: string } | null>(null)
   let submitting = $state(false)
   let addResult = $state<{ variant: 'ok' | 'err'; text: string } | null>(null)
 
@@ -56,15 +60,23 @@
   let failedRepos = $state<Record<string, boolean>>({})
   let search = $state('')
 
+  let accountHealth = $state<Record<string, AccountHealth>>({})
+  let replacingId = $state<string | null>(null)
+  let flashId = $state<string | null>(null)
+  let replacedIds = $state<Record<string, boolean>>({})
+
   $effect(() => {
     storage.get('accounts').then((value) => {
       accounts = value
       // Render cached repos immediately, then refresh each connection in the background.
       value.forEach((account) => loadRepos(account))
+      openReplaceFromHash()
     })
     storage.get('watchedRepos').then((value) => (watchedRepos = value))
     storage.get('availableRepos').then((value) => (reposByAccount = value))
     storage.get('settings').then((value) => (settings = value))
+    storage.get('accountHealth').then((value) => (accountHealth = value))
+    return storage.subscribe('accountHealth', (value) => (accountHealth = value))
   })
 
   // Success banners are confirmations, not state — let them fade after a few seconds.
@@ -135,12 +147,11 @@
     for (const id of candidates) {
       const result = await getProvider(id).validateToken(tempAccount(id))
       if (result.ok) {
-        detected = id
-        const name = id === 'github' ? 'GitHub' : 'GitLab'
+        detected = { provider: id, user: result.user }
         availability = { state: 'ok', text: `Signed in as ${result.user}` }
         addResult = {
           variant: 'ok',
-          text: `Signed in as ${result.user} on ${name}, add the connection below`
+          text: `Signed in as ${result.user} on ${providerName(id)}, add the connection below`
         }
         return true
       }
@@ -171,10 +182,11 @@
     const origin = normaliseHost(host)
     const account: Account = {
       id: crypto.randomUUID(),
-      provider: detected,
+      provider: detected.provider,
       label: accountLabel(label, origin),
       host: origin,
-      token
+      token,
+      user: detected.user
     }
     accounts = [...accounts, account]
     await storage.set('accounts', accounts)
@@ -209,6 +221,56 @@
       await storage.set('watchedRepos', watchedRepos)
       await storage.set('availableRepos', reposByAccount)
     })
+  }
+
+  async function openReplaceFromHash() {
+    const id = replaceTarget(window.location.hash)
+    if (id === null) {
+      return
+    }
+    history.replaceState(null, '', window.location.pathname + window.location.search)
+    if (!accounts.some((account) => account.id === id)) {
+      return
+    }
+    replacingId = id
+    flashId = null
+    await tick()
+    flashId = id
+    document.getElementById(`connection-${id}`)?.scrollIntoView({ block: 'center' })
+  }
+
+  async function replaceToken(account: Account, newToken: string, user: string | undefined) {
+    const updated = { ...account, token: newToken, user: user ?? account.user }
+    const nextAccounts = accounts.map((existing) =>
+      existing.id === account.id ? updated : existing
+    )
+    await storage.set('accounts', nextAccounts)
+    accounts = nextAccounts
+    // Optimistic: the token just validated; the forced poll below confirms it.
+    accountHealth = { ...accountHealth, [account.id]: { ok: true, user: updated.user } }
+    await storage.set('accountHealth', accountHealth)
+    replacingId = null
+    replacedIds[account.id] = true
+    const watchedCount = watchedRepos.filter((repo) => repo.accountId === account.id).length
+    toastSuccess('Token replaced', `${account.label} is watching ${repoCount(watchedCount)} again`)
+    loadRepos(updated)
+    browser.runtime.sendMessage({ type: 'poll-now', force: true })
+  }
+
+  async function addAsNewConnection(account: Account, newToken: string) {
+    replacingId = null
+    const saas = saasProvider(account.host)
+    hostChoice = saas ?? 'self'
+    host = account.host
+    token = newToken
+    label = ''
+    errors = {}
+    availability = null
+    detected = null
+    addResult = null
+    await tick()
+    document.getElementById('add-connection')?.scrollIntoView({ block: 'start' })
+    document.getElementById('label')?.focus({ preventScroll: true })
   }
 
   async function loadRepos(account: Account) {
@@ -297,28 +359,26 @@
       {#if accounts.length > 0}
         <ul class="connection-list">
           {#each accounts as account (account.id)}
-            <li class="connection">
-              <span class="dot ok" aria-hidden="true"></span>
-              <span class="connection-main">
-                <span class="connection-label">{account.label}</span>
-                <span class="connection-host">{account.host}</span>
-              </span>
-              <span class="token-state ok"><Check size={14} /> token saved</span>
-              <button
-                class="icon-button"
-                title="Remove"
-                aria-label="Remove connection"
-                onclick={() => removeAccount(account)}
-              >
-                <Trash2 size={15} />
-              </button>
-            </li>
+            <ConnectionRow
+              {account}
+              health={accountHealth[account.id]}
+              watchedCount={watchedRepos.filter((repo) => repo.accountId === account.id).length}
+              open={replacingId === account.id}
+              replaced={replacedIds[account.id] ?? false}
+              flash={flashId === account.id}
+              onOpen={() => (replacingId = account.id)}
+              onClose={() => (replacingId = null)}
+              onReplace={(newToken, user) => replaceToken(account, newToken, user)}
+              onAddAsNew={(newToken) => addAsNewConnection(account, newToken)}
+              onRemove={() => removeAccount(account)}
+              onFlashEnd={() => (flashId = null)}
+            />
           {/each}
         </ul>
       {/if}
 
       <div class="card-body">
-        <h3>Add a connection</h3>
+        <h3 id="add-connection">Add a connection</h3>
         {#if addResult}
           <Banner variant={addResult.variant}>{addResult.text}</Banner>
         {/if}
@@ -351,19 +411,7 @@
             </Field>
           {/if}
           {#snippet tokenHint()}
-            <details class="token-help">
-              <summary>
-                <ChevronRight class="chevron" size={14} />
-                <span>What permissions does my token need?</span>
-              </summary>
-              <ul>
-                <li>
-                  <b>GitHub</b>: fine-grained with <b>Actions: read</b> +
-                  <b>Pull requests: read</b>.
-                </li>
-                <li><b>GitLab</b>: PAT with <b>read_api</b>.</li>
-              </ul>
-            </details>
+            <TokenHelp />
           {/snippet}
           <Field
             name="token"
@@ -510,7 +558,7 @@
     </section>
 
     <p class="security">
-      <Check size={18} />
+      <MessageIcon variant="lock" size={18} />
       <span
         >Tokens are stored <b>locally on this device</b>, used read-only, and never synced or
         logged.</span
@@ -518,6 +566,8 @@
     </p>
   </main>
 </div>
+
+<svelte:window onhashchange={openReplaceFromHash} />
 
 <ToastHost />
 
@@ -583,45 +633,6 @@
     padding: 0;
     list-style: none;
   }
-  .connection {
-    display: flex;
-    align-items: center;
-    gap: var(--space-lg);
-    padding: var(--space-xl) var(--space-3xl);
-    border-bottom: 1px solid var(--border);
-  }
-  .dot {
-    width: 9px;
-    height: 9px;
-    border-radius: 50%;
-    flex: none;
-  }
-  .dot.ok {
-    background: var(--success);
-  }
-  .connection-main {
-    min-width: 0;
-  }
-  .connection-label {
-    display: block;
-    font-weight: var(--weight-bold);
-    font-size: var(--font-size-md);
-  }
-  .connection-host {
-    font: var(--weight-medium) var(--font-size-sm) / var(--leading-snug) var(--font-mono);
-    color: var(--text-3);
-  }
-  .token-state {
-    display: inline-flex;
-    align-items: center;
-    gap: var(--space-xs);
-    margin-left: auto;
-    font-size: var(--font-size-sm);
-    font-weight: var(--weight-semibold);
-  }
-  .token-state.ok {
-    color: var(--success);
-  }
   .icon-button {
     display: grid;
     place-items: center;
@@ -638,55 +649,6 @@
     color: var(--text);
   }
 
-  .token-help {
-    margin-top: var(--space-sm);
-    font-size: var(--font-size-sm);
-    color: var(--text-2);
-  }
-  .token-help summary {
-    display: flex;
-    align-items: center;
-    gap: var(--space-2xs);
-    cursor: pointer;
-    color: var(--text-3);
-    font-size: var(--font-size-xs);
-    list-style: none;
-  }
-  .token-help summary::-webkit-details-marker {
-    display: none;
-  }
-  .token-help summary :global(.chevron) {
-    flex: none;
-    transition: transform 0.12s;
-  }
-  .token-help[open] summary :global(.chevron) {
-    transform: rotate(90deg);
-  }
-  @media (prefers-reduced-motion: reduce) {
-    .token-help summary :global(.chevron) {
-      transition: none;
-    }
-  }
-  .token-help summary span {
-    text-decoration: underline;
-    text-underline-offset: 2px;
-  }
-  .token-help ul {
-    margin: var(--space-sm) 0 0;
-    padding: var(--space-md) var(--space-lg) var(--space-md) var(--space-4xl);
-    background: var(--surface-2);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    list-style: disc;
-    line-height: var(--leading-normal);
-  }
-  .token-help li + li {
-    margin-top: var(--space-xs);
-  }
-  .token-help b {
-    color: var(--text);
-    font-weight: var(--weight-semibold);
-  }
   .note-row {
     margin-top: var(--space-lg);
   }
@@ -908,9 +870,7 @@
     line-height: var(--leading-relaxed);
     color: var(--text-2);
   }
-  .security :global(svg) {
-    flex: none;
-    color: var(--success);
+  .security :global(.message-icon) {
     margin-top: 1px;
   }
   .security b {

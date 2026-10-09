@@ -267,7 +267,7 @@ test('validateToken returns the user on success', async () => {
 test('validateToken reports an invalid token (401) as not ok', async () => {
   const restore = stubFetch(new Response('no', { status: 401 }))
   try {
-    expect((await github.validateToken(account)).ok).toBe(false)
+    expect(await github.validateToken(account)).toMatchObject({ ok: false, status: 401 })
   } finally {
     restore()
   }

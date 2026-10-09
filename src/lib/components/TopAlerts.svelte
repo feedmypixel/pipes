@@ -1,21 +1,23 @@
 <script lang="ts">
-  import TriangleAlert from '@lucide/svelte/icons/triangle-alert'
   import Clock from '@lucide/svelte/icons/clock'
   import Check from '@lucide/svelte/icons/check'
+  import MessageIcon from './forms/MessageIcon.svelte'
 
   let {
     connectionIssues,
     rateLimited = [],
     mainFailing,
     ready,
-    onOpenSettings
+    onOpenSettings,
+    onReplaceToken
   }: {
-    connectionIssues: { id: string; label: string; error?: string }[]
+    connectionIssues: { id: string; label: string; error?: string; tokenFailure: boolean }[]
     /** Accounts the provider rate-limited; `resumesAt` is epoch seconds. */
     rateLimited?: { id: string; label: string; resumesAt: number }[]
     mainFailing: number
     ready: boolean
     onOpenSettings: () => void
+    onReplaceToken: (accountId: string) => void
   } = $props()
 
   function resumesIn(resumesAt: number): string {
@@ -25,10 +27,21 @@
 </script>
 
 {#each connectionIssues as issue (issue.id)}
-  <button class="issue" onclick={onOpenSettings} title="Open settings to reconnect">
-    <TriangleAlert size={15} />
-    <span>{issue.label} connection problem{issue.error ? `: ${issue.error}` : ''}</span>
-  </button>
+  {@const message = `${issue.label} connection problem${issue.error ? `: ${issue.error}` : ''}`}
+  {#if issue.tokenFailure}
+    <div class="issue" role="status">
+      <span class="issue-message"><MessageIcon variant="warning" /><span>{message}</span></span>
+      <button
+        class="issue-link"
+        aria-label="Replace token for {issue.label}"
+        onclick={() => onReplaceToken(issue.id)}>Replace token</button
+      >
+    </div>
+  {:else}
+    <button class="issue" onclick={onOpenSettings} title="Open settings to reconnect">
+      <span class="issue-message"><MessageIcon variant="warning" /><span>{message}</span></span>
+    </button>
+  {/if}
 {/each}
 
 {#each rateLimited as account (account.id)}
@@ -75,14 +88,40 @@
     font-weight: var(--weight-semibold);
   }
   .issue {
+    flex-wrap: wrap;
+    row-gap: var(--space-2xs);
     width: 100%;
     border: 0;
     border-bottom: 1px solid var(--pending-line);
     background: var(--pending-bg);
-    color: var(--pending);
+    color: var(--text);
     font-weight: var(--weight-semibold);
     text-align: left;
+  }
+  button.issue {
     cursor: pointer;
+  }
+  .issue-message {
+    flex: 1 1 auto;
+    min-width: 0;
+    display: flex;
+    align-items: center;
+    gap: var(--space-md);
+  }
+  .issue-link {
+    flex: none;
+    margin-left: auto;
+    padding: var(--space-2xs) 0;
+    border: 0;
+    background: transparent;
+    color: var(--text);
+    font: var(--weight-bold) var(--font-size-base) / var(--leading-none) var(--font-sans);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+    cursor: pointer;
+  }
+  .issue-link:hover {
+    text-decoration-thickness: 2px;
   }
   .alarm {
     background: var(--alarm-strip);

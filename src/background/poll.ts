@@ -3,7 +3,7 @@ import { TERMINAL_STATUSES } from '../providers/types'
 import type { Account, Change, Pipeline, PipelineStatus, Repo } from '../providers/types'
 import { RateLimitError, type RateLimit } from '../providers/http'
 import * as storage from '../lib/storage'
-import type { RepoSnapshot, Snapshots, StorageShape } from '../lib/storage'
+import type { AccountHealth, RepoSnapshot, Snapshots, StorageShape } from '../lib/storage'
 import { mapLimit } from '../lib/async'
 import { HEALTH_REFRESH_MS } from '../lib/config'
 import { isMine } from '../lib/group'
@@ -247,13 +247,24 @@ const RATE_LIMIT_FLOOR = 50
 // Single-flight: overlapping triggers (alarm + poll-now + startup) coalesce onto one cycle
 // so they can't race on chrome.storage.
 let inFlight: Promise<void> | null = null
+let forcedAfterInFlight: Promise<void> | null = null
 
 /**
- * `force` (manual Refresh) bypasses the health throttle for an immediate re-check. ETags are
- * always sent: a 304 is cheap and GitHub caches /actions/runs ~60s, so skipping the ETag would
- * cost a full payload for no fresher data.
+ * `force` (manual Refresh, replaced token) bypasses the health throttle for an immediate
+ * re-check. A forced request during a cycle queues one fresh forced cycle after it, since the
+ * running cycle read storage before the request. ETags are always sent: a 304 is cheap and
+ * GitHub caches /actions/runs ~60s, so skipping the ETag would cost a full payload for no
+ * fresher data.
  */
 export function poll(force = false): Promise<void> {
+  if (inFlight && force) {
+    const runForced = () => {
+      forcedAfterInFlight = null
+      return poll(true)
+    }
+    forcedAfterInFlight ??= inFlight.then(runForced, runForced)
+    return forcedAfterInFlight
+  }
   if (inFlight) {
     return inFlight
   }
@@ -261,6 +272,23 @@ export function poll(force = false): Promise<void> {
     inFlight = null
   })
   return inFlight
+}
+
+/** A token replaced in Options mid-check keeps its fresh health; this result judged the old token. */
+async function keepHealthOfReplacedTokens(
+  checkedAccounts: Account[],
+  health: Record<string, AccountHealth>
+): Promise<void> {
+  const [latestAccounts, latestHealth] = await Promise.all([
+    storage.get('accounts'),
+    storage.get('accountHealth')
+  ])
+  for (const checked of checkedAccounts) {
+    const latest = latestAccounts.find((account) => account.id === checked.id)
+    if (latest && latest.token !== checked.token && latestHealth[checked.id]) {
+      health[checked.id] = latestHealth[checked.id]
+    }
+  }
 }
 
 async function runPollCycle(force: boolean): Promise<void> {
@@ -307,7 +335,7 @@ async function runPollCycle(force: boolean): Promise<void> {
           const result = await getProvider(account.provider).validateToken(account)
           health[account.id] = result.ok
             ? { ok: true, user: result.user }
-            : { ok: false, error: result.error }
+            : { ok: false, error: result.error, status: result.status }
         } catch (err) {
           if (err instanceof RateLimitError) {
             healthPaused[account.id] = err.resetAt
@@ -319,6 +347,7 @@ async function runPollCycle(force: boolean): Promise<void> {
         }
       })
     )
+    await keepHealthOfReplacedTokens(accounts, health)
     await storage.set('accountHealth', health)
     await storage.set('lastHealthAt', Date.now())
   }

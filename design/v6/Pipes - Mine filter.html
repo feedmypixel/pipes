@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Pipes — "Mine" scope filter</title>
+<style>
+/* ── Pipes tokens (verbatim from src/lib/styles/tokens.css) ───────────── */
+:root{
+  color-scheme: light;
+  --bg:#fff; --canvas:#eef1f7; --surface:#fff; --surface-2:#f4f6fb; --hover:#eaeef6;
+  --border:#e3e8f1; --border-2:#d0d7e4; --text:#0f1620; --text-2:#545e6e; --text-3:#939dad;
+  --brand:#3194fc; --brand-ink:#fff; --link:oklch(55% 0.17 256deg);
+  --success:oklch(64% 0.15 152deg); --failed:oklch(60% 0.2 27deg); --running:oklch(66% 0.17 256deg);
+  --pending:oklch(72% 0.14 80deg); --neutral:oklch(60% 0.025 256deg); --status-ink:#fff;
+  --font-sans:-apple-system,blinkmacsystemfont,'Segoe UI',system-ui,sans-serif;
+  --font-mono:ui-monospace,'SF Mono','JetBrains Mono',menlo,consolas,monospace;
+  --radius:4px; --radius-pill:999px;
+  --space-3xs:.125rem; --space-2xs:.25rem; --space-xs:.375rem; --space-sm:.5rem;
+  --space-md:.625rem; --space-lg:.75rem; --space-xl:.875rem; --space-2xl:1rem; --space-3xl:1.25rem;
+  --space-4xl:1.5rem; --space-5xl:2rem;
+  --font-size-2xs:.625rem; --font-size-xs:.6875rem; --font-size-sm:.75rem; --font-size-base:.8125rem;
+  --font-size-md:.875rem; --font-size-lg:.9375rem; --font-size-2xl:1.3125rem;
+  --leading-none:1; --leading-snug:1.35; --leading-normal:1.45;
+  --weight-regular:400; --weight-medium:500; --weight-semibold:600; --weight-bold:650; --weight-heavy:700;
+  --appbar:var(--surface-2); --appbar-text:var(--text); --appbar-muted:var(--text-3);
+  --control-on:var(--hover); --control-on-ink:var(--text); --control-on-edge:var(--border-2);
+  --shadow:0 1px 0 rgb(15 22 32/4%),0 1px 3px rgb(15 22 32/10%);
+  --shadow-lg:0 8px 28px rgb(15 22 32/16%);
+}
+[data-theme="dark"]{
+  color-scheme: dark;
+  --bg:#0b0f17; --canvas:#070a10; --surface:#121826; --surface-2:#161d2c; --hover:#1b2333;
+  --border:#242d3e; --border-2:#2f3a4d; --text:#e7ecf3; --text-2:#9aa6b6; --text-3:#5d6b7e;
+  --brand:#3194fc; --brand-ink:#06152b; --link:oklch(72% 0.15 256deg);
+  --success:oklch(72% 0.16 152deg); --failed:oklch(68% 0.2 27deg); --running:oklch(72% 0.16 256deg);
+  --pending:oklch(78% 0.14 85deg); --neutral:oklch(64% 0.025 256deg);
+  --appbar:var(--surface-2); --control-on:var(--hover); --control-on-ink:var(--text); --control-on-edge:var(--border-2);
+}
+
+/* ── doc chrome (not part of the deliverable) ─────────────────────────── */
+*{box-sizing:border-box;}
+body{margin:0;background:#0c0e12;color:#e7ecf3;font-family:var(--font-sans);
+  -webkit-font-smoothing:antialiased;padding:48px 40px 80px;}
+.wrap{max-width:1120px;margin:0 auto;}
+.h-eyebrow{font:var(--weight-semibold) 12px/1 var(--font-mono);letter-spacing:.12em;
+  text-transform:uppercase;color:#5fa0ff;margin:0 0 12px;}
+h1{font-size:30px;letter-spacing:-.02em;margin:0 0 14px;font-weight:700;}
+.lede{color:#9aa3b2;font-size:15px;line-height:1.6;max-width:680px;margin:0 0 8px;}
+.lede b{color:#e7ecf3;font-weight:600;}
+.rec{display:inline-flex;align-items:center;gap:8px;margin-top:18px;padding:8px 14px;border-radius:999px;
+  background:rgba(49,148,252,.14);border:1px solid rgba(49,148,252,.4);color:#9cc4ff;
+  font:600 13px/1 var(--font-sans);}
+.rec b{color:#fff;}
+.section{margin-top:52px;}
+.section > h2{font-size:18px;letter-spacing:-.01em;margin:0 0 6px;}
+.section > p{color:#9aa3b2;font-size:14px;line-height:1.55;margin:0 0 22px;max-width:720px;}
+.row2{display:flex;gap:28px;flex-wrap:wrap;align-items:flex-start;}
+.col{display:flex;flex-direction:column;gap:10px;}
+.cap{display:flex;align-items:center;gap:8px;font:600 11px/1 var(--font-mono);color:#7f8a99;}
+.cap .sw{width:9px;height:9px;border-radius:2px;}
+.cap .sw.l{background:#fff;border:1px solid #444;}
+.cap .sw.d{background:#0b0f17;border:1px solid #2f3a4d;}
+
+/* device frame holding the real cluster */
+.dev{width:340px;border-radius:10px;overflow:hidden;box-shadow:var(--shadow-lg);border:1px solid #20242c;}
+.dev[data-theme]{background:var(--bg);}
+
+/* ── REAL CLUSTER (mirrors App.svelte) ───────────────────────────────── */
+.bar{position:sticky;top:0;display:flex;align-items:center;gap:var(--space-sm);
+  padding:var(--space-sm) var(--space-md);background:var(--appbar);color:var(--appbar-text);
+  border-bottom:1px solid var(--border);}
+.bar .tick{width:18px;height:18px;flex:none;}
+.wordmark{font-weight:var(--weight-heavy);font-size:var(--font-size-md);}
+.live{margin-left:auto;display:inline-flex;align-items:center;gap:var(--space-xs);
+  font:var(--weight-medium) var(--font-size-2xs)/var(--leading-none) var(--font-mono);color:var(--appbar-muted);}
+.live .pulse{width:8px;height:8px;border-radius:50%;background:var(--success);}
+.bar .ib{display:grid;place-items:center;width:26px;height:26px;border:0;border-radius:var(--radius);
+  background:transparent;color:var(--appbar-muted);cursor:pointer;}
+.bar .ib:hover{background:var(--hover);color:var(--text);}
+
+.controls{display:flex;gap:var(--space-sm);padding:var(--space-md) var(--space-md) var(--space-xs);}
+.search{display:flex;align-items:center;gap:var(--space-sm);flex:1;height:2rem;box-sizing:border-box;
+  padding:0 var(--space-md);border:1px solid var(--border-2);border-radius:var(--radius);background:var(--bg);}
+.search svg{color:var(--text-3);flex:none;}
+.search input{flex:1;min-width:0;border:0;background:transparent;outline:0;color:var(--text);
+  font:var(--weight-medium) var(--font-size-base)/var(--leading-none) var(--font-sans);}
+
+.filters{display:flex;align-items:flex-start;gap:var(--space-sm);
+  padding:var(--space-xs) var(--space-md) var(--space-md);border-bottom:1px solid var(--border);}
+.pills{display:flex;flex-wrap:wrap;align-items:center;gap:calc(var(--space-3xs) + .0625rem);}
+.chip{padding:var(--space-3xs) var(--space-md);border:1px solid var(--border);border-radius:var(--radius);
+  background:transparent;color:var(--text-3);font:var(--weight-regular) var(--font-size-sm)/var(--leading-none) var(--font-sans);
+  text-transform:capitalize;cursor:pointer;}
+.chip:hover{color:var(--text-2);border-color:var(--border-2);}
+.chip.on{background:var(--control-on);color:var(--control-on-ink);border-color:var(--control-on-edge);
+  font-weight:var(--weight-medium);}
+.toggle-all{align-self:center;margin-left:var(--space-2xs);padding:0 0 0 var(--space-sm);border:0;
+  border-left:1px solid var(--border);background:transparent;color:var(--link);
+  font:var(--weight-medium) var(--font-size-sm)/var(--leading-none) var(--font-sans);cursor:pointer;white-space:nowrap;}
+.toggle-all:hover{text-decoration:underline;text-underline-offset:2px;}
+
+/* ── THE NEW CONTROL · segmented scope [ All | Mine ] ────────────────── */
+.scope{display:inline-flex;align-items:center;flex:none;border:1px solid var(--border);
+  border-radius:var(--radius);overflow:hidden;background:var(--bg);}
+.scope .seg{display:inline-flex;align-items:center;gap:var(--space-2xs);
+  padding:var(--space-3xs) var(--space-sm);border:0;background:transparent;color:var(--text-3);cursor:pointer;
+  font:var(--weight-regular) var(--font-size-sm)/var(--leading-none) var(--font-sans);}
+.scope .seg + .seg{border-left:1px solid var(--border);}
+.scope .seg svg{width:13px;height:13px;flex:none;}
+.scope .seg:hover{color:var(--text-2);}
+.scope .seg[aria-pressed="true"]{background:var(--control-on);color:var(--control-on-ink);font-weight:var(--weight-medium);}
+.scope .seg:focus-visible{outline:2px solid var(--brand);outline-offset:-2px;border-radius:2px;}
+/* divider between scope and the status set, echoing toggle-all */
+.scope-wrap{display:inline-flex;align-items:center;gap:var(--space-sm);flex:none;
+  padding-right:var(--space-sm);border-right:1px solid var(--border);}
+
+/* repo list mock */
+.list{padding:var(--space-2xs) 0;}
+.repo{display:flex;align-items:center;gap:var(--space-sm);padding:var(--space-sm) var(--space-md);}
+.repo .st{width:16px;height:16px;border-radius:50%;flex:none;display:grid;place-items:center;}
+.repo .st svg{width:10px;height:10px;}
+.repo .nm{font:var(--weight-semibold) var(--font-size-base)/1 var(--font-sans);color:var(--text);}
+.repo .br{margin-left:auto;font:var(--weight-medium) var(--font-size-2xs)/1 var(--font-mono);color:var(--text-3);}
+.repo.head{box-shadow:inset 2px 0 0 var(--failed);background:color-mix(in oklab,var(--failed) 8%,var(--bg));}
+.sub{display:flex;align-items:center;gap:var(--space-sm);padding:var(--space-xs) var(--space-md) var(--space-xs) var(--space-3xl);}
+.sub .st{width:14px;height:14px;border-radius:50%;flex:none;display:grid;place-items:center;}
+.sub .st svg{width:9px;height:9px;}
+.sub .rf{font:var(--weight-medium) var(--font-size-xs)/1 var(--font-mono);color:var(--text-2);}
+.sub .tag{font:var(--weight-bold) 9px/1 var(--font-mono);padding:2px 5px;border-radius:4px;
+  background:var(--surface-2);color:var(--text-2);border:1px solid var(--border);}
+.acct{display:flex;align-items:center;gap:var(--space-sm);padding:var(--space-md) var(--space-md) var(--space-xs);}
+.acct .o{font:var(--weight-bold) var(--font-size-xs)/1 var(--font-sans);color:var(--text-2);}
+.acct .c{margin-left:auto;font:var(--weight-medium) 10px/1 var(--font-mono);color:var(--text-3);
+  border:1px solid var(--border);border-radius:999px;padding:2px 7px;}
+.hiddennote{padding:var(--space-xs) var(--space-md) var(--space-md) var(--space-3xl);
+  font:var(--weight-regular) var(--font-size-xs)/1.4 var(--font-sans);color:var(--text-3);}
+
+/* annotation list */
+.notes{margin-top:26px;display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:14px;}
+.note{border:1px solid #20242c;border-radius:8px;background:#11141a;padding:15px 17px;}
+.note h4{margin:0 0 7px;font-size:13px;display:flex;align-items:center;gap:8px;}
+.note h4 .d{width:8px;height:8px;border-radius:50%;}
+.note p{margin:0;font-size:12.5px;line-height:1.55;color:#9aa3b2;}
+.note code{font:600 11.5px/1 var(--font-mono);background:#1b1f27;padding:2px 5px;border-radius:4px;color:#cdd6e2;}
+
+/* compact alt comparison */
+.alts{display:grid;grid-template-columns:1fr 1fr 1fr;gap:18px;margin-top:8px;}
+.alt{border:1px solid #20242c;border-radius:10px;background:#0f1218;overflow:hidden;}
+.alt.win{border-color:rgba(49,148,252,.5);box-shadow:0 0 0 1px rgba(49,148,252,.5);}
+.alt .ahd{padding:13px 16px 0;}
+.alt .atag{font:600 10px/1 var(--font-mono);letter-spacing:.06em;text-transform:uppercase;color:#7f8a99;}
+.alt.win .atag{color:#5fa0ff;}
+.alt h3{margin:6px 0 4px;font-size:14px;}
+.alt .averdict{font-size:12px;color:#9aa3b2;line-height:1.5;padding:0 16px 14px;}
+.alt . visual{padding:16px;}
+.miniwrap{padding:16px;display:flex;justify-content:center;background:var(--bg);}
+.mini[data-theme]{background:transparent;}
+.verdict-row{display:flex;gap:6px;margin:8px 0 0;}
+.vbadge{font:600 10px/1 var(--font-mono);padding:3px 7px;border-radius:4px;}
+.vbadge.up{background:rgba(63,176,90,.18);color:#6fce86;}
+.vbadge.down{background:rgba(224,68,58,.16);color:#f08f88;}
+@media (max-width:880px){.alts{grid-template-columns:1fr;}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <p class="h-eyebrow">Pipes · filter cluster</p>
+  <h1>The “Mine” scope filter</h1>
+  <p class="lede">A new <b>binary scope axis</b> (everyone ↔ just me) for the side panel / popup filter row.
+    It must read as <b>distinct from the multi-select status chips</b>, survive wrapping at ~320px, and use
+    only existing tokens. Below: the recommendation in the real cluster (light + dark), the A/B/C comparison,
+    and the build spec.</p>
+  <div class="rec">Recommendation: <b>Treatment A — segmented control, leading the filters row, label “All | Mine”.</b></div>
+
+  <!-- RECOMMENDED, IN CONTEXT -->
+  <div class="section">
+    <h2>Recommended — in the real cluster</h2>
+    <p>The segment sits at the <b>head of the <code>.filters</code> row</b> with a right-hand divider (mirroring how
+      <code>toggle-all</code> uses a left divider). A segmented control is inherently a <b>pick-one</b> shape — joined,
+      no gaps — so it never reads as an eighth status pill. A leading <code>user-round</code> glyph signals the
+      authorship axis. Click the segments; resize the window to see wrap behaviour.</p>
+    <div class="row2">
+      <div class="col">
+        <div class="cap"><span class="sw l"></span>light · 340px</div>
+        <div class="dev" data-theme="light" id="devLight"></div>
+      </div>
+      <div class="col">
+        <div class="cap"><span class="sw d"></span>dark · 340px</div>
+        <div class="dev" data-theme="dark" id="devDark"></div>
+      </div>
+    </div>
+
+    <div class="notes">
+      <div class="note"><h4><span class="d" style="background:var(--control-on-edge)"></span>Selected fill</h4>
+        <p>Active segment uses <code>--control-on</code> / <code>--control-on-ink</code> / <code>--control-on-edge</code> — the
+          exact filled-control tokens the status chips and sort use. No new colour.</p></div>
+      <div class="note"><h4><span class="d" style="background:var(--brand)"></span>Focus</h4>
+        <p><code>focus-visible</code> ring is <code>--brand</code> (Pixel&nbsp;Blue), inset so it reads inside the joined
+          control. Arrow-key roving + <kbd>Enter</kbd>/<kbd>Space</kbd>; <code>role="group"</code>, each segment
+          <code>aria-pressed</code>.</p></div>
+      <div class="note"><h4><span class="d" style="background:var(--text-3)"></span>Wrapping</h4>
+        <p>The control is <code>flex:none</code> and anchors top-left; the status <code>.pills</code> wrap as a unit after the
+          divider. Scope never splits, status never crowds it.</p></div>
+      <div class="note"><h4><span class="d" style="background:var(--neutral)"></span>Motion / AA</h4>
+        <p>No transition needed (instant state). Contrast on fill ≥ AA in both schemes; hit target ≥ 24px tall via
+          <code>--space-3xs</code> padding matching the chips.</p></div>
+    </div>
+  </div>
+
+  <!-- A/B/C COMPARISON -->
+  <div class="section">
+    <h2>Why A over B and C</h2>
+    <p>All three were mocked in the cluster. A wins on the brief’s central requirement — reading as a different axis —
+      while staying compact.</p>
+    <div class="alts">
+      <div class="alt win">
+        <div class="ahd"><span class="atag">★ A · chosen</span><h3>Segmented [ All | Mine ]</h3></div>
+        <div class="miniwrap" data-theme="dark"><div class="mini" id="miniA"></div></div>
+        <div class="averdict">
+          <div class="verdict-row"><span class="vbadge up">distinct axis</span><span class="vbadge up">compact</span><span class="vbadge up">wrap-safe</span></div>
+          Joined pick-one shape can’t be mistaken for a status pill. Both states are explicit and labelled.
+        </div>
+      </div>
+      <div class="alt">
+        <div class="ahd"><span class="atag">B · alt</span><h3>Single “Mine” toggle</h3></div>
+        <div class="miniwrap" data-theme="dark"><div class="mini" id="miniB"></div></div>
+        <div class="averdict">
+          <div class="verdict-row"><span class="vbadge up">smallest</span><span class="vbadge down">reads as 8th status</span></div>
+          Most compact, but even with an icon + divider it risks looking like another status chip — the exact thing the brief warns against. “All” is implicit (off).
+        </div>
+      </div>
+      <div class="alt">
+        <div class="ahd"><span class="atag">C · alt</span><h3>Own thin row</h3></div>
+        <div class="miniwrap" data-theme="dark"><div class="mini" id="miniC"></div></div>
+        <div class="averdict">
+          <div class="verdict-row"><span class="vbadge up">clearest separation</span><span class="vbadge down">+1 row of height</span></div>
+          Unambiguous, but spends scarce vertical space in a dense panel for a two-state control. Overkill here.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- DECISIONS -->
+  <div class="section">
+    <h2>The four decisions</h2>
+    <div class="notes">
+      <div class="note"><h4>1 · Treatment</h4><p><b>A — segmented control</b>, leading the <code>.filters</code> row, divided from the status pills.</p></div>
+      <div class="note"><h4>2 · Label</h4><p><b>“All | Mine”.</b> “Mine” is the one word true for both PRs and MRs. “My PRs” breaks on GitLab; “Owned by me” / “Just mine” wrap. Off-state names the other half explicitly: “All”.</p></div>
+      <div class="note"><h4>3 · Count</h4><p><b>Silent on the control.</b> At 320px a count crowds the row and fights the status chips. Reassurance already lives in the list (and the owner-group count). Optional: a muted <code>Mine · 3</code> only if width allows — shown as a variant below.</p></div>
+      <div class="note"><h4>4 · Empty</h4><p><b>Leave as-is.</b> Filter on + you own nothing → <code>main</code> shows alone, which is correct: “is main broken?” isn’t author-scoped. A quiet one-line <code>no open PRs of yours</code> is optional, not needed.</p></div>
+    </div>
+  </div>
+
+  <!-- OPTIONAL COUNT VARIANT -->
+  <div class="section">
+    <h2>Optional — count variant</h2>
+    <p>If you do want the hidden-count affordance, keep it on the active segment as a muted suffix, not a separate badge.
+      Shown here only when “Mine” is active and width allows.</p>
+    <div class="row2">
+      <div class="col"><div class="cap"><span class="sw d"></span>dark · count on</div>
+        <div class="dev" data-theme="dark" id="devCount"></div></div>
+    </div>
+  </div>
+</div>
+
+<script>
+const ICON_USER = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>';
+const ICON_SEARCH = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>';
+const ICON_REFRESH = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 0 1 15-6.7L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-15 6.7L3 16"/><path d="M3 21v-5h5"/></svg>';
+const ICON_GEAR = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.6 1.7 1.7 0 0 0-1.9.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.9 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1A1.7 1.7 0 0 0 4.7 8.6a1.7 1.7 0 0 0-.3-1.9l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.9.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.9-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.9V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>';
+const TICK = '<svg class="tick" viewBox="0 0 128 128"><circle cx="64" cy="64" r="60" fill="#1aa05a"/><path d="M39 66 57 83 89 45" fill="none" stroke="#fff" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+const STATES = ['failed','running','pending','success','canceled','skipped','unknown'];
+const ON = new Set(['failed','running','pending','success']);
+function stIcon(s){
+  if(s==='success') return '<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>';
+  return '<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3.4" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg>';
+}
+function scope(scopeVal, count){
+  const mineLabel = count!=null ? `Mine <span style="opacity:.7;font-weight:var(--weight-regular)">· ${count}</span>` : 'Mine';
+  return `<div class="scope-wrap">
+    <div class="scope" role="group" aria-label="Show whose PRs and MRs">
+      <button class="seg" aria-pressed="${scopeVal==='all'}" data-scope="all">All</button>
+      <button class="seg" aria-pressed="${scopeVal==='mine'}" data-scope="mine">${ICON_USER}<span>${mineLabel.replace('Mine','Mine')}</span></button>
+    </div>
+  </div>`;
+}
+function pills(){
+  return `<div class="pills" role="group" aria-label="Show branch states">
+    ${STATES.map(s=>`<button class="chip${ON.has(s)?' on':''}" aria-pressed="${ON.has(s)}">${s}</button>`).join('')}
+    <button class="toggle-all">Clear all</button>
+  </div>`;
+}
+function listMock(scopeVal){
+  const mine = scopeVal==='mine';
+  return `<div class="list">
+    <div class="acct"><span class="o">feedmypixel</span><span class="c">3</span></div>
+    <div class="repo head"><span class="st" style="background:var(--failed)">${stIcon('failed')}</span><span class="nm">status-ui</span><span class="br">main · now</span></div>
+    <div class="sub"><span class="st" style="background:var(--failed)">${stIcon('failed')}</span><span class="tag">PR #152</span><span class="rf">cap retry budget</span></div>
+    ${mine?'':'<div class="sub"><span class="st" style="background:var(--running)">'+stIcon('running')+'</span><span class="tag">PR #149</span><span class="rf">teammate: bump deps</span></div>'}
+    <div class="repo"><span class="st" style="background:var(--success)">${stIcon('success')}</span><span class="nm">status-api</span><span class="br">main · 36m</span></div>
+    ${mine?'<div class="hiddennote">3 PRs by others hidden</div>':'<div class="sub"><span class="st" style="background:var(--success)">'+stIcon('success')+'</span><span class="tag">PR #88</span><span class="rf">teammate: docs pass</span></div>'}
+  </div>`;
+}
+function cluster(scopeVal, count){
+  return `<div class="bar">
+      ${TICK}<span class="wordmark">Pipes</span>
+      <span class="live"><span class="pulse"></span>live · 10s</span>
+      <button class="ib">${ICON_REFRESH}</button><button class="ib">${ICON_GEAR}</button>
+    </div>
+    <div class="controls"><span class="search">${ICON_SEARCH}<input placeholder="Filter repositories…" aria-label="Filter repositories"/></span></div>
+    <div class="filters">${scope(scopeVal,count)}${pills()}</div>
+    ${listMock(scopeVal)}`;
+}
+
+const state = { light:'mine', dark:'mine', count:'mine' };
+function render(){
+  document.getElementById('devLight').innerHTML = cluster(state.light,null);
+  document.getElementById('devDark').innerHTML  = cluster(state.dark,null);
+  document.getElementById('devCount').innerHTML = cluster(state.count, state.count==='mine'?3:null);
+  wire('devLight','light'); wire('devDark','dark'); wire('devCount','count');
+}
+function wire(id,key){
+  document.getElementById(id).querySelectorAll('.scope .seg').forEach(b=>{
+    b.addEventListener('click',()=>{ state[key]=b.dataset.scope; render(); });
+  });
+}
+// mini comparison renders (static, dark)
+function mini(kind){
+  if(kind==='A') return `<div class="filters" style="padding:10px 0;border:0">${scope('mine',null)}<div class="pills">${STATES.slice(0,3).map(s=>`<button class="chip${ON.has(s)?' on':''}">${s}</button>`).join('')}</div></div>`;
+  if(kind==='B') return `<div class="filters" style="padding:10px 0;border:0"><div class="pills"><button class="chip on" style="display:inline-flex;align-items:center;gap:4px">${ICON_USER.replace('viewBox','width="13" height="13" viewBox')}Mine</button><span style="border-left:1px solid var(--border);height:18px;margin:0 4px"></span>${STATES.slice(0,3).map(s=>`<button class="chip${ON.has(s)?' on':''}">${s}</button>`).join('')}</div></div>`;
+  return `<div style="padding:10px 0">${scope('mine',null).replace('scope-wrap','scope-wrap" style="border:0;padding:0')}<div style="height:8px"></div><div class="pills">${STATES.slice(0,4).map(s=>`<button class="chip${ON.has(s)?' on':''}">${s}</button>`).join('')}</div></div>`;
+}
+document.getElementById('miniA').innerHTML = mini('A');
+document.getElementById('miniB').innerHTML = mini('B');
+document.getElementById('miniC').innerHTML = mini('C');
+render();
+</script>
+</body>
+</html>

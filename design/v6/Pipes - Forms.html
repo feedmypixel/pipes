@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Pipes — Forms &amp; Notifications</title>
+<link rel="stylesheet" href="assets/pipes.css"/>
+<link rel="stylesheet" href="assets/forms.css"/>
+</head>
+<body>
+
+<header class="masthead">
+  <div class="wrap">
+    <div class="masthead-top">
+      <span class="masthead-logo" id="hero-logo"></span>
+      <div>
+        <h1>Forms &amp; notifications</h1>
+        <div class="tag">Pipes v2 · companion to the main design handoff</div>
+      </div>
+    </div>
+    <p class="lede">
+      The pieces v1 didn’t cover: <strong>form states</strong> (error, summary, async availability) and
+      <strong>in-app notifications</strong> (toasts, undo, inline banners). Same system — tokens from
+      <code>pipes.css</code>, OKLCH status palette, Pixel&nbsp;Blue for identity only, system font, Lucide.
+      Every piece is shown light + dark. Forms follow the portal <code>forms.md</code> spec exactly.
+    </p>
+    <div class="meta-row">
+      <span class="meta-chip"><b>Field order</b> label → hint → error → input → below</span>
+      <span class="meta-chip"><b>Required</b> implicit · (optional) tag</span>
+      <span class="meta-chip"><b>Submit</b> never disabled</span>
+      <span class="meta-chip"><b>Toasts</b> options surface · bottom-right</span>
+    </div>
+  </div>
+</header>
+
+<!-- FIELD STATES -->
+<section class="block">
+  <div class="wrap">
+    <div class="block-head">
+      <p class="eyebrow">Forms · 01</p>
+      <h2>Field — anatomy &amp; states</h2>
+      <p>One <code>&lt;Field&gt;</code> renders label, optional hint, conditional error, the input, and an
+        optional <code>below</code> line — in that fixed order. Error text sits <strong>above the input</strong>
+        (so a screen reader hits it before the control), in the failed colour, normal weight, no icon.</p>
+    </div>
+    <div id="f-anatomy"></div>
+  </div>
+</section>
+
+<!-- PASSWORD + ASYNC -->
+<section class="block">
+  <div class="wrap">
+    <div class="block-head">
+      <p class="eyebrow">Forms · 02</p>
+      <h2>Password &amp; the <code>below</code> async line</h2>
+      <p><code>&lt;PasswordInput&gt;</code> adds a Show / Hide toggle. The <code>below</code> line is reserved
+        for live availability checks (token validation, provider detection): <code>aria-live="polite"</code>,
+        text-only, coloured by state. Hide it entirely when “available” adds nothing.</p>
+    </div>
+    <div id="f-async"></div>
+  </div>
+</section>
+
+<!-- FORM SUMMARY -->
+<section class="block">
+  <div class="wrap">
+    <div class="block-head">
+      <p class="eyebrow">Forms · 03</p>
+      <h2>FormSummary</h2>
+      <p>A top-of-form panel with <code>role="alert"</code> so it’s announced on render. Lists client-validation
+        errors; each links to the failing field’s id. Renders nothing when there are no errors.</p>
+    </div>
+    <div id="f-summary"></div>
+  </div>
+</section>
+
+<!-- INLINE BANNER -->
+<section class="block">
+  <div class="wrap">
+    <div class="block-head">
+      <p class="eyebrow">Forms · 04</p>
+      <h2>Inline banner — <code>form-message</code></h2>
+      <p>A message in document flow (not floating) at the top of a section or form. The server message
+        (<code>$message</code>) always renders here, at the very top of the form — above FormSummary.</p>
+    </div>
+    <div id="f-banner"></div>
+  </div>
+</section>
+
+<!-- ADD CONNECTION COMPOSITE -->
+<section class="block">
+  <div class="wrap">
+    <div class="block-head">
+      <p class="eyebrow">Forms · 05</p>
+      <h2>Add a connection — every state on one form</h2>
+      <p>The real add-connection form showing server banner + FormSummary + a field in error + a healthy
+        async <code>below</code> together. Provider is auto-detected from the host — no provider picker.</p>
+    </div>
+    <div id="f-addconn"></div>
+  </div>
+</section>
+
+<!-- SUBMIT BUTTONS -->
+<section class="block">
+  <div class="wrap">
+    <div class="block-head">
+      <p class="eyebrow">Forms · 06</p>
+      <h2>Submit buttons</h2>
+      <p>A submit button is <strong>always pressable</strong>. Pressing an incomplete or invalid form is how
+        a user <em>invokes</em> validation — errors render in the summary and inline, focus moves to the first
+        one. We <strong>never</strong> disable submit until valid, and never grey it out waiting for input:
+        a disabled button is a dead end with no explanation, and a user should never be left at one.</p>
+      <p>The <strong>only</strong> time it’s disabled is <strong>after it’s been pressed</strong> — while the
+        submit is in flight — so a second click can’t fire. It shows a spinner and a “…” label, then resolves
+        to a result (banner / toast / next screen).</p>
+    </div>
+    <div id="f-submit"></div>
+  </div>
+</section>
+
+<!-- TOASTS -->
+<section class="block">
+  <div class="wrap">
+    <div class="block-head">
+      <p class="eyebrow">Notifications · 07</p>
+      <h2>Toasts</h2>
+      <p>Corner-anchored, auto-dismissing. Anatomy: status icon + message + optional action + dismiss, with a
+        coloured left edge. Three variants — success, error, info/neutral — on <code>--shadow-lg</code>.
+        Enter/exit motion respects <code>prefers-reduced-motion</code>. (Try the dismiss / action buttons.)</p>
+    </div>
+    <div id="f-toasts"></div>
+  </div>
+</section>
+
+<!-- STACKING + UNDO -->
+<section class="block">
+  <div class="wrap">
+    <div class="block-head">
+      <p class="eyebrow">Notifications · 08</p>
+      <h2>Anchoring, stacking &amp; the undo toast</h2>
+      <p>Toasts anchor bottom-right on the <strong>options</strong> surface and stack newest-on-top. The
+        <strong>undo toast</strong> is the destructive-action pattern — “Connection removed · Undo” —
+        dismissing with a subtle fade (no countdown bar), ~5s lifetime.</p>
+    </div>
+    <div id="f-anchor"></div>
+  </div>
+</section>
+
+<!-- SIDE PANEL LIVE -->
+<section class="block">
+  <div class="wrap">
+    <div class="block-head">
+      <p class="eyebrow">Side panel · 09</p>
+      <h2>Active-poll “live · 10s” indicator</h2>
+      <p>While the side panel is open Pipes polls faster (10s vs the 1-min idle interval). A small pulsing dot
+        + label communicates the live cadence without nagging.</p>
+    </div>
+    <div id="f-live"></div>
+  </div>
+</section>
+
+<!-- USAGE RULE + TOKENS -->
+<section class="block">
+  <div class="wrap">
+    <div class="block-head">
+      <p class="eyebrow">Reference · 10</p>
+      <h2>When to use what · new tokens</h2>
+    </div>
+    <div class="note-cards" style="margin-bottom:24px">
+      <div class="note-card good">
+        <h4><span class="tick">●</span> Inline banner</h4>
+        <p>The <strong>outcome of the thing in front of you</strong> — a submit result, a validation failure,
+          a section-level state. Stays put, in flow, until resolved. Use for: add-connection success/failure,
+          token-expired on a connection, “no repositories match”.</p>
+      </div>
+      <div class="note-card good">
+        <h4><span class="tick">●</span> Toast</h4>
+        <p>A <strong>transient confirmation of an action that already succeeded</strong>, where the user’s
+          attention has moved on. Auto-dismisses. Use for: settings saved, refresh triggered, and the
+          <strong>undo</strong> pattern on delete. Never put a blocking error or required choice in a toast.</p>
+      </div>
+    </div>
+    <div class="callout">
+      <div class="co-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:19px;height:19px"><path d="M4 7h16M4 12h16M4 17h10"/></svg></div>
+      <div>
+        <h3>New tokens (everything else is reused)</h3>
+        <p>Status, surfaces, shadows, radii all reuse v1. Notifications need just a couple of additions:</p>
+        <ul>
+          <li><code>--toast-z</code> — stack context above surface chrome. Suggest <strong>2147483000</strong> (extension overlay range).</li>
+          <li><code>--toast-gap</code> — vertical offset between stacked toasts. <strong>10px</strong>.</li>
+          <li><code>--toast-width</code> — <strong>320px</strong> (toast) · inset <strong>16px</strong> from the anchored corner.</li>
+          <li>Elevation reuses <code>--shadow-lg</code>; left-edge accent reuses <code>--success</code> / <code>--failed</code> / <code>--brand</code>.</li>
+        </ul>
+      </div>
+    </div>
+    <p style="margin-top:20px;font-size:12.5px;color:var(--d-ink-2);line-height:1.6">
+      <strong>Token names:</strong> this doc’s CSS uses <code>--p-*</code> internally; the app’s names drop the
+      prefix — <code>--p-failed</code> → <code>--failed</code>, <code>--p-failed-bg</code> → <code>--failed-bg</code>,
+      <code>--p-brand</code> → <code>--brand</code>, etc. Build against the app’s tokens.
+    </p>
+  </div>
+</section>
+
+<footer class="doc-foot">
+  <div class="wrap">
+    Pipes v2 · forms &amp; notifications · companion to the main design handoff. Forms per portal
+    <code>forms.md</code>. Hand to Claude Code alongside the v1 package.
+  </div>
+</footer>
+
+<script src="assets/logos.js"></script>
+<script src="assets/data.js"></script>
+<script src="assets/components.js"></script>
+<script src="assets/forms.js"></script>
+<script>document.getElementById('hero-logo').innerHTML = window.logoSVG('tick', 64);</script>
+</body>
+</html>

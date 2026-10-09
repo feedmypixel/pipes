@@ -188,8 +188,10 @@ function install() {
     runtime: {
       sendMessage: async () => undefined,
       openOptionsPage: log('openOptionsPage'),
+      getURL: (path: string) => `/${path}`,
       onMessage: { addListener: () => {}, removeListener: () => {} }
     },
+    extension: { getViews: () => [] },
     windows: { getCurrent: async () => ({ id: 1 }) },
     sidePanel: { open: log('sidePanel.open') },
     tabs: { create: async ({ url }: { url: string }) => window.open(url, '_blank') },
@@ -234,7 +236,8 @@ function mockFetch() {
       ])
     }
     if (hasToken && /^https:\/\/api\.github\.com\/user(\?|$)/.test(url)) {
-      return json({ login: 'octo-org' })
+      const otherAccount = headers.get('authorization')?.includes('other')
+      return json({ login: otherAccount ? 'alex-k' : 'octo-org' })
     }
     if (hasToken && /^https:\/\/gitlab\.com\/api\/v4\/projects/.test(url)) {
       return json([

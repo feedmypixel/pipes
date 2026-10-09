@@ -1,5 +1,6 @@
 import { defineManifest } from '@crxjs/vite-plugin'
 import { version } from '../package.json'
+import { OPTIONS_PAGE } from './lib/config'
 
 const isFirefox = process.env.TARGET === 'firefox'
 
@@ -38,7 +39,7 @@ export default defineManifest({
     : { side_panel: { default_path: 'src/sidepanel/index.html' } }),
 
   options_ui: {
-    page: 'src/options/index.html',
+    page: OPTIONS_PAGE,
     open_in_tab: true
   },
 

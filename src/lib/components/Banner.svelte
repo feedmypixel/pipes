@@ -6,14 +6,14 @@
 </script>
 
 <div class="form-message {variant}" role={variant === 'err' ? 'alert' : 'status'}>
-  <MessageIcon variant={variant === 'ok' ? 'success' : 'error'} size={15} />
+  <MessageIcon variant={variant === 'ok' ? 'success' : 'error'} size={16} />
   <span>{@render children()}</span>
 </div>
 
 <style>
   .form-message {
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     gap: var(--space-md);
     margin-bottom: var(--space-2xl);
     padding: var(--space-lg) var(--space-xl);
@@ -21,6 +21,9 @@
     border-radius: var(--radius);
     font-size: var(--font-size-base);
     line-height: var(--leading-normal);
+  }
+  .form-message :global(.message-icon) {
+    margin-top: 1px;
   }
   .form-message.ok {
     background: var(--success-bg);
