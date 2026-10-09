@@ -44,18 +44,25 @@ test('rateLimited lists only accounts paused into the future, with their resume 
   cleanup()
 })
 
-test('connectionIssues lists only accounts whose health is not ok, with the error', () => {
+test('connectionIssues lists only unhealthy accounts, with the error and whether the token was rejected', () => {
   let dashboard!: ReturnType<typeof useDashboard>
   const cleanup = $effect.root(() => {
     dashboard = useDashboard()
   })
   flushSync()
 
-  subs.get('accounts')!([account('a', 'work'), account('b', 'home')])
-  subs.get('accountHealth')!({ a: { ok: false, error: 'bad token' }, b: { ok: true } })
+  subs.get('accounts')!([account('a', 'work'), account('b', 'home'), account('c', 'self')])
+  subs.get('accountHealth')!({
+    a: { ok: false, error: 'HTTP 401', status: 401 },
+    b: { ok: true },
+    c: { ok: false, error: 'Request timed out' }
+  })
   flushSync()
 
-  expect(dashboard.connectionIssues).toEqual([{ id: 'a', label: 'work', error: 'bad token' }])
+  expect(dashboard.connectionIssues).toEqual([
+    { id: 'a', label: 'work', error: 'HTTP 401', tokenFailure: true },
+    { id: 'c', label: 'self', error: 'Request timed out', tokenFailure: false }
+  ])
   cleanup()
 })
 

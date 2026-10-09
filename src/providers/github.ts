@@ -10,7 +10,7 @@ import type {
   Repo,
   ValidationResult
 } from './types'
-import { fetchJson, httpUrl, RateLimitError, type RateLimitHeaders } from './http'
+import { fetchJson, failedValidation, httpUrl, RateLimitError, type RateLimitHeaders } from './http'
 import { SAAS_HOST } from '../lib/config'
 
 const SAAS_API = 'https://api.github.com'
@@ -205,7 +205,7 @@ export const github: Provider = {
       if (error instanceof RateLimitError) {
         throw error
       }
-      return { ok: false, error: (error as Error).message }
+      return failedValidation(error)
     }
   },
 

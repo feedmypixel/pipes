@@ -11,7 +11,7 @@
 </script>
 
 <div class="toast {item.variant}" class:undo={item.undo} role="status">
-  <MessageIcon variant={iconVariant} size={22} />
+  <MessageIcon variant={iconVariant} size={18} />
   <div class="toast-main">
     <div class="toast-title">{item.title}</div>
     {#if item.message}<div class="toast-message">{item.message}</div>{/if}

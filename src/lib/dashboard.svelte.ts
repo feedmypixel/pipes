@@ -2,6 +2,7 @@ import * as storage from './storage'
 import type { Snapshots, AccountHealth } from './storage'
 import type { Account, Repo } from '../providers/types'
 import { countDefaultBranchFailures } from './group'
+import { isTokenFailure } from './health'
 import { holdLivePort } from './live-port'
 import browser from './browser'
 
@@ -60,7 +61,8 @@ export function useDashboard() {
       .map((account) => ({
         id: account.id,
         label: account.label,
-        error: accountHealth[account.id].error
+        error: accountHealth[account.id].error,
+        tokenFailure: isTokenFailure(accountHealth[account.id])
       }))
   )
   const rateLimited = $derived(

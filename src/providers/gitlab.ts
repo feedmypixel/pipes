@@ -10,7 +10,7 @@ import type {
   Repo,
   ValidationResult
 } from './types'
-import { fetchJson, httpUrl, RateLimitError, type RateLimitHeaders } from './http'
+import { fetchJson, failedValidation, httpUrl, RateLimitError, type RateLimitHeaders } from './http'
 
 const REPO_PAGES = 3 // up to 300 projects
 // Enough recent pipelines to cover every active ref (default + open MR source branches) in one fetch.
@@ -168,7 +168,7 @@ export const gitlab: Provider = {
       if (error instanceof RateLimitError) {
         throw error
       }
-      return { ok: false, error: (error as Error).message }
+      return failedValidation(error)
     }
   },
 

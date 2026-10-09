@@ -13,6 +13,7 @@
   import { useDashboard } from '../lib/dashboard.svelte'
   import { migrateLegacyScope } from './migrate-scope'
   import browser from '../lib/browser'
+  import { openReplaceToken } from '../lib/options-link'
 
   const dash = useDashboard()
   let search = $state('')
@@ -87,6 +88,7 @@
     mainFailing={dash.mainFailing}
     ready={dash.configured && dash.watchedRepos.length > 0}
     onOpenSettings={openOptions}
+    onReplaceToken={openReplaceToken}
   />
 
   {#if !dash.configured || dash.watchedRepos.length === 0}

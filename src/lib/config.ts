@@ -10,6 +10,9 @@ export const SAAS_HOST = {
   gitlab: 'https://gitlab.com'
 } as const
 
+/** Options page path inside the extension, shared by the manifest and deep links. */
+export const OPTIONS_PAGE = 'src/options/index.html'
+
 /** chrome.alarms name for the poll loop. */
 export const POLL_ALARM = 'pw-poll'
 

@@ -1,6 +1,8 @@
 /** Shared fetch concerns for providers: timeout, conditional requests (ETag),
    and rate-limit header parsing. One place so GitHub + GitLab behave the same. */
 
+import type { ValidationResult } from './types'
+
 const TIMEOUT_MS = 10_000
 
 export interface RateLimit {
@@ -62,6 +64,25 @@ export class RateLimitError extends Error {
   }
 }
 
+/** A non-2xx response; `status` lets callers tell a rejected token (401/403) from other failures. */
+export class HttpError extends Error {
+  readonly status: number
+  constructor(status: number, statusText: string, url: string) {
+    super(`HTTP ${status} ${statusText} on ${url}`)
+    this.name = 'HttpError'
+    this.status = status
+  }
+}
+
+/** A failed token check, keeping the HTTP status when the provider answered. */
+export function failedValidation(error: unknown): ValidationResult {
+  return {
+    ok: false,
+    error: (error as Error).message,
+    status: error instanceof HttpError ? error.status : undefined
+  }
+}
+
 /** Best-effort resume time (epoch seconds) from Retry-After or the provider's reset header. */
 function rateLimitResetAt(headers: Headers, names?: RateLimitHeaders): number {
   const nowSeconds = Math.floor(Date.now() / 1000)
@@ -116,7 +137,7 @@ export async function fetchJson<T>(
       throw new RateLimitError(rateLimitResetAt(res.headers, options.rateLimitHeaders))
     }
     if (!res.ok) {
-      throw new Error(`HTTP ${res.status} ${res.statusText} on ${url}`)
+      throw new HttpError(res.status, res.statusText, url)
     }
     return {
       status: res.status,
