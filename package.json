@@ -83,7 +83,7 @@
     "web-ext": "10.7.0"
   },
   "dependencies": {
-    "@lucide/svelte": "1.48.0",
+    "@lucide/svelte": "1.57.0",
     "pino": "10.3.1"
   }
 }
