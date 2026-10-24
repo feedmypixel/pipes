@@ -35,6 +35,19 @@ describe('ChangeRow', () => {
     )
   })
 
+  test('no pipelines: ring, plain row, announced, no run time, author kept', async () => {
+    const screen = await render(ChangeRow, {
+      props: { change: change({ status: null, updatedAt: undefined }) }
+    })
+    expect(screen.container.querySelector('.row')?.getAttribute('data-status')).toBe('none')
+    expect(screen.container.querySelector('.status.none')).not.toBeNull()
+    expect(screen.container.querySelector('a.r-link')?.getAttribute('aria-label')).toBe(
+      '#42 Add widget on feature/widget, no pipelines'
+    )
+    expect(screen.container.querySelector('.meta-end time')).toBeNull()
+    expect(screen.container.querySelector('.meta-end .avatar')).not.toBeNull()
+  })
+
   test('drafts are dimmed and announced', async () => {
     const screen = await render(ChangeRow, { props: { change: change({ isDraft: true }) } })
     expect(screen.container.querySelector('.row')?.classList.contains('draft')).toBe(true)

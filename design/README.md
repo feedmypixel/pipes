@@ -20,7 +20,9 @@ HTML + CSS + JS prototypes intended as the visual brief for re-implementation as
 
 ## Status
 
-**`v6/` is the current locked direction** (handoff 2026-10-09). It is `v5` plus **replace token**
+**`v7/` is the current locked direction** (handoff 2026-10-24). It is `v6` plus **no pipelines on a
+PR** (`v7/NO-PIPELINES.md` — hollow ring for an open PR/MR with no runs; `unknown` settled as purple
+`?`). `v6` was `v5` plus **replace token**
 (`v6/REPLACE-TOKEN.md` — swap a connection's PAT in place, keeping its watched repos; panel banner
 deep link; solid MessageIcon v2). `v5` was `v4` plus **author attribution
 on rows** (`v5/AUTHOR-ATTRIBUTION.md` — avatar + name "who caused this?" on default-branch + PR/MR
@@ -61,7 +63,8 @@ are earlier iterations kept for reference.
 
 | Date       | Version | Notes                                                                 |
 | ---------- | ------- | --------------------------------------------------------------------- |
-| 2026-10-09 | v6      | Current. v5 + replace token (`REPLACE-TOKEN.md`): in-place PAT swap on a connection row, panel 401/403 banner "Replace token" deep link, solid MessageIcon v2 variants. All other specs/assets unchanged from v5. |
+| 2026-10-24 | v7      | Current. v6 + no pipelines on a PR (`NO-PIPELINES.md`): hollow `--neutral` ring for an open PR/MR with no runs (an absence, `status: null`, not a new status); `unknown` stays purple `?`, README colour table corrected. All other specs/assets unchanged from v6. |
+| 2026-10-09 | v6      | v5 + replace token (`REPLACE-TOKEN.md`): in-place PAT swap on a connection row, panel 401/403 banner "Replace token" deep link, solid MessageIcon v2 variants. All other specs/assets unchanged from v5. |
 | 2026-06-23 | v5      | v4 + author attribution on rows (`AUTHOR-ATTRIBUTION.md`): avatar + name "who caused this?" on default-branch + PR/MR rows, split-target stretched link, greyscale→colour avatar, container-query avatar-only fallback. All other specs/assets unchanged from v4. |
 | 2026-06-18 | v4      | Consolidated handoff: all four surfaces + forms/in-app notifications (`FORMS.md`) + the "Mine" authorship scope filter (`MINE-FILTER.md`). Supersedes v2. |
 | 2026-06-06 | v2      | v1 plus the forms + in-app notifications spec (`FORMS.md`, `assets/forms.css`): fields, error states, toasts, banners, the undo pattern. |

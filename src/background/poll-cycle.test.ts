@@ -91,7 +91,7 @@ function runs(status?: PipelineStatus, extra: ReturnType<typeof prPipe>[] = []) 
     rateLimit: null
   }
 }
-function change(number: number, status: PipelineStatus, isDraft = false) {
+function change(number: number, status: PipelineStatus | null, isDraft = false) {
   return {
     number,
     title: `PR ${number}`,
@@ -159,6 +159,38 @@ test('a PR check going failed notifies (status joined from runs by head ref)', a
   h.provider.listOpenChanges.mockResolvedValue(openChanges([change(7, 'success')]))
   await poll()
   expect(h.notify.notifyChangeFailed).toHaveBeenCalledTimes(1)
+})
+
+test('a PR with no run has no pipelines (null), not unknown', async () => {
+  seed()
+  h.provider.listOpenChanges.mockResolvedValue(openChanges([change(7, 'success')]))
+  await poll()
+  const pr = (snap().changes as { number: number; status: string | null; updatedAt?: string }[])[0]
+  expect(pr.status).toBe(null)
+  expect(pr.updatedAt).toBeUndefined()
+})
+
+test('a PR that had no pipelines and then fails notifies', async () => {
+  seed({ snapshots: { 'o/r': { default: null, changes: [change(7, null)] } } })
+  h.provider.listPipelines.mockResolvedValue(runs(undefined, [prPipe('f7', 'failed')]))
+  h.provider.listOpenChanges.mockResolvedValue(openChanges([change(7, null)]))
+  await poll()
+  expect((snap().changes as { number: number; status: string | null }[])[0].status).toBe('failed')
+  expect(h.notify.notifyChangeFailed).toHaveBeenCalledTimes(1)
+})
+
+test('a newly opened PR joins its existing run even when the runs list is unchanged (304)', async () => {
+  seed({
+    snapshots: { 'o/r': { default: defaultPipe('success'), changes: [] } },
+    repoEtags: { 'o/r': 'e' }
+  })
+  h.provider.listPipelines
+    .mockResolvedValueOnce({ pipelines: [], etag: 'e', notModified: true, rateLimit: null })
+    .mockResolvedValueOnce(runs('success', [prPipe('f7', 'failed')]))
+  h.provider.listOpenChanges.mockResolvedValue(openChanges([change(7, 'success')]))
+  await poll()
+  expect((snap().changes as { number: number; status: string | null }[])[0].status).toBe('failed')
+  expect(h.provider.listPipelines).toHaveBeenLastCalledWith(account, repo, undefined)
 })
 
 test('a GitLab MR joins its pipeline by merge-request ref when the branch ref does not match', async () => {

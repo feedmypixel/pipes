@@ -3,7 +3,7 @@
   import { statusVisual } from './status-icon'
   import { tooltip } from '../tooltip'
 
-  let { status, size = 20 }: { status: PipelineStatus; size?: number } = $props()
+  let { status, size = 20 }: { status: PipelineStatus | null; size?: number } = $props()
 
   const visual = $derived(statusVisual(status))
   const symbolSize = $derived(Math.round(size * 0.66))
@@ -12,30 +12,33 @@
 <span
   class="status"
   class:spin={visual.symbol === 'arc'}
+  class:none={visual.symbol === 'none'}
   style="--circle: {visual.colour}; --ink: {visual.ink ??
     'var(--status-ink)'}; --size: {size}px; --symbol: {symbolSize}px"
   role="img"
   aria-label={visual.label}
   use:tooltip={visual.label}
 >
-  <svg viewBox="0 0 24 24" aria-hidden="true">
-    {#if visual.symbol === 'check'}
-      <path d="M4.5 12.5l4.5 4.5L20 6" />
-    {:else if visual.symbol === 'cross'}
-      <path d="M6 6l12 12M18 6L6 18" />
-    {:else if visual.symbol === 'pause'}
-      <path d="M9 6v12M15 6v12" />
-    {:else if visual.symbol === 'slash'}
-      <path d="M5.5 18.5L18.5 5.5" />
-    {:else if visual.symbol === 'chevrons'}
-      <path d="M6.5 5.5l6.5 6.5-6.5 6.5M12.5 5.5l6.5 6.5-6.5 6.5" />
-    {:else if visual.symbol === 'arc'}
-      <path d="M12 3a9 9 0 1 1-9 9" />
-    {:else}
-      <path d="M7.5 8a4.5 4.5 0 0 1 8.5 2.1c0 3.2-4.5 3.9-4.5 6" />
-      <path d="M12 19.5h.01" />
-    {/if}
-  </svg>
+  {#if visual.symbol !== 'none'}
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      {#if visual.symbol === 'check'}
+        <path d="M4.5 12.5l4.5 4.5L20 6" />
+      {:else if visual.symbol === 'cross'}
+        <path d="M6 6l12 12M18 6L6 18" />
+      {:else if visual.symbol === 'pause'}
+        <path d="M9 6v12M15 6v12" />
+      {:else if visual.symbol === 'slash'}
+        <path d="M5.5 18.5L18.5 5.5" />
+      {:else if visual.symbol === 'chevrons'}
+        <path d="M6.5 5.5l6.5 6.5-6.5 6.5M12.5 5.5l6.5 6.5-6.5 6.5" />
+      {:else if visual.symbol === 'arc'}
+        <path d="M12 3a9 9 0 1 1-9 9" />
+      {:else}
+        <path d="M7.5 8a4.5 4.5 0 0 1 8.5 2.1c0 3.2-4.5 3.9-4.5 6" />
+        <path d="M12 19.5h.01" />
+      {/if}
+    </svg>
+  {/if}
 </span>
 
 <style>
@@ -47,6 +50,9 @@
     height: var(--size);
     background: var(--circle);
     border-radius: 50%;
+  }
+  .none {
+    box-shadow: inset 0 0 0 1.5px var(--neutral);
   }
   svg {
     width: var(--symbol);

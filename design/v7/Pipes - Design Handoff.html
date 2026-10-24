@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Pipes — Design Handoff</title>
+<link rel="stylesheet" href="assets/pipes.css"/>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500;600&family=Space+Grotesk:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap"/>
+</head>
+<body>
+
+<!-- ============ MASTHEAD ============ -->
+<header class="masthead">
+  <div class="wrap">
+    <div class="masthead-top">
+      <span class="masthead-logo" id="hero-logo"></span>
+      <div>
+        <h1>Pipes</h1>
+      </div>
+    </div>
+    <p class="lede">
+      Design handoff for the <strong>Pipes</strong> MV3 extension — watches GitHub Actions &amp;
+      GitLab CI/CD across your repos and gets loud when the default branch breaks. This page
+      is the <strong>source of truth for the visuals</strong>: three surfaces in light + dark,
+      a logo direction, and annotated tokens. Code lives elsewhere; nothing here ships as-is.
+    </p>
+    <div class="meta-row">
+      <span class="meta-chip"><b>Popup</b> 380px</span>
+      <span class="meta-chip"><b>Side panel</b> 360px</span>
+      <span class="meta-chip"><b>Options</b> 720px</span>
+      <span class="meta-chip"><b>Themes</b> light + dark</span>
+      <span class="meta-chip"><b>Type</b> system-ui + mono</span>
+    </div>
+  </div>
+</header>
+
+<!-- ============ CONTROL BAR ============ -->
+<!-- ============ LOGO LAB ============ -->
+<section class="block">
+  <div class="wrap">
+    <div class="block-head">
+      <p class="eyebrow">Brand · 01</p>
+      <h2>Logo</h2>
+      <p>One original mark, no third-party logos, legible down to 16px on the toolbar. The hero reads as
+        two top-down pipe openings that double as watching eyes.</p>
+    </div>
+    <div class="logo-grid" id="logo-grid"></div>
+  </div>
+</section>
+
+<!-- ============ FOUNDATIONS: COLOUR ============ -->
+<section class="block">
+  <div class="wrap">
+    <div class="block-head">
+      <p class="eyebrow">Foundations · 02</p>
+      <h2>Colour tokens</h2>
+      <p>A cool slate palette — Pipes’ own, not borrowed. The brand colour is reserved for identity,
+        links and focus — deliberately <em>not</em> a status hue. Every value is annotated light / dark.</p>
+    </div>
+
+    <h3 style="font-size:13px;color:var(--d-ink-3);margin:0 0 12px;font-family:var(--d-mono);letter-spacing:.05em">Brand &amp; surfaces</h3>
+    <div class="token-grid" id="tok-surface" style="margin-bottom:32px"></div>
+
+    <h3 style="font-size:13px;color:var(--d-ink-3);margin:0 0 12px;font-family:var(--d-mono);letter-spacing:.05em">Status colours</h3>
+    <div class="token-grid" id="tok-status"></div>
+  </div>
+</section>
+
+<!-- ============ FOUNDATIONS: TYPE ============ -->
+<section class="block">
+  <div class="wrap">
+    <div class="block-head">
+      <p class="eyebrow">Foundations · 03</p>
+      <h2>Type</h2>
+      <p>System stack by default (fast, native, zero shipped fonts) with a monospace for refs, SHAs and
+        timestamps. Prefer a installed typeface? Try a few clean, technical options live — the whole
+        document and every surface reflows.</p>
+      <div class="font-control">
+        <span class="cb-label">Typeface</span>
+        <div class="seg" id="font-seg">
+          <button data-font="system" aria-pressed="true">System</button>
+          <button data-font="geist" aria-pressed="false">Geist</button>
+          <button data-font="plex" aria-pressed="false">IBM Plex</button>
+          <button data-font="space" aria-pressed="false">Space Grotesk</button>
+        </div>
+      </div>
+    </div>
+    <div class="type-spec">
+      <div class="type-row">
+        <span class="sample" style="font:700 21px/1 var(--d-sans)">Pipes</span>
+        <span class="sample" style="font:650 15px/1 var(--d-sans)">2 pipelines failing on main</span>
+        <span class="ts-meta">UI · system-ui<br/>15–21px · 600–700</span>
+      </div>
+      <div class="type-row">
+        <span class="sample" style="font:600 13px/1 var(--d-sans)">feedmypixel/status-api</span>
+        <span class="sample" style="font:500 12.5px/1 var(--d-sans)">Re-validate the token to resume watching.</span>
+        <span class="ts-meta">Body · system-ui<br/>12.5–13px · 500–600</span>
+      </div>
+      <div class="type-row" style="border-bottom:0">
+        <span class="sample" style="font:500 13px/1 var(--d-mono)">main · a1dc0018 · 4m ago</span>
+        <span class="ts-meta">Code · ui-monospace<br/>11–13px · 500</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ STATUS VOCABULARY ============ -->
+<section class="block">
+  <div class="wrap">
+    <div class="block-head">
+      <p class="eyebrow">System · 04</p>
+      <h2>Status vocabulary</h2>
+      <p>One unified icon set — a solid colour circle with a white symbol — applied everywhere, so the
+        meaning is universal. The word lives in a hover title. <strong>A broken default branch is the
+        headline state</strong>: red, with an alarm strip.</p>
+    </div>
+    <table class="status-table">
+      <thead><tr><th>State</th><th>Icon</th><th>Colour</th><th>Meaning</th></tr></thead>
+      <tbody id="status-rows"></tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ============ GLOSSARY ============ -->
+<section class="block">
+  <div class="wrap">
+    <div class="block-head">
+      <p class="eyebrow">Reference · key</p>
+      <h2>Glossary</h2>
+      <p>Plain-language meaning of the terms used across the surfaces.</p>
+    </div>
+    <dl class="glossary">
+      <div class="gl-term"><dt>Default branch <code>main</code> / <code>trunk</code></dt><dd>A repo’s primary branch. A failure here is the headline alarm — loud and pinned.</dd></div>
+      <div class="gl-term"><dt>Ref</dt><dd>The branch or tag a pipeline ran against.</dd></div>
+      <div class="gl-term"><dt>Pipeline / run</dt><dd>One execution of CI for a ref. A row shows the latest run per ref.</dd></div>
+      <div class="gl-term"><dt>Job</dt><dd>A step within a run. Failures deep-link straight to the failed job’s log.</dd></div>
+      <div class="gl-term"><dt>PR / MR</dt><dd>A proposed change (pull request / merge request). Its checks show in red but stay calm — not the loud <code>main</code> alarm.</dd></div>
+      <div class="gl-term"><dt>Owner</dt><dd>The account or org repos are grouped under (e.g. <code>feedmypixel</code>). Tap it to open on the provider.</dd></div>
+      <div class="gl-term"><dt>Connection</dt><dd>A GitHub or GitLab account + read-only token Pipes polls. The provider is auto-detected from the host.</dd></div>
+      <div class="gl-term"><dt>Watched repo</dt><dd>A repository you’ve ticked for Pipes to monitor.</dd></div>
+      <div class="gl-term"><dt>Poll interval</dt><dd>How often Pipes checks for new results (0.5 min minimum).</dd></div>
+      <div class="gl-term"><dt>Transition</dt><dd>A change in state between polls. Notifications fire only on transitions — re-polling the same failure stays silent.</dd></div>
+    </dl>
+  </div>
+</section>
+
+<!-- ============ BEHAVIOUR / DEEP-LINKING ============ -->
+<section class="block">
+  <div class="wrap">
+    <div class="block-head">
+      <p class="eyebrow">System · 05</p>
+      <h2>Behaviour — straight to the point</h2>
+    </div>
+    <div class="callout" style="margin-bottom:16px">
+      <div class="co-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:19px;height:19px"><path d="M15 3h6v6"/><path d="M10 14 21 3"/><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/></svg></div>
+      <div>
+        <h3>A click lands on the exact run — never the repo.</h3>
+        <p>Every row opens the <strong>specific pipeline/run</strong> in a <strong>new tab</strong>, and a
+          <strong>failure</strong> goes deeper still — straight to the <strong>failed job’s log, scrolled to
+          the failure</strong>. No landing on a pipelines list, no hunting. Browsing the rest of a repo is
+          something people do themselves — out of scope for Pipes.</p>
+      </div>
+    </div>
+    <div class="note-cards">
+      <div class="note-card good">
+        <h4><span class="tick">●</span> Status, succinctly</h4>
+        <p>Icons carry the state; the word is in a <strong>hover title</strong> so rows stay scannable and
+          dense. No text labels cluttering the list.</p>
+      </div>
+      <div class="note-card good">
+        <h4><span class="tick">●</span> Loud only for <code>main</code></h4>
+        <p>A broken default branch gets the red alarm strip + pin. A failing PR/MR is shown in red but stays
+          <strong>calm</strong> (amber note, no klaxon) — see the “Main green · PR/MR failing” popup state.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ ICON SYSTEM ============ -->
+<section class="block">
+  <div class="wrap">
+    <div class="block-head">
+      <p class="eyebrow">Foundations · 06</p>
+      <h2>Icon system — yes, Lucide</h2>
+      <p>The UI glyphs are drawn on Lucide’s 24×24 / 2px round-stroke grid, so
+        <strong><code>@lucide/svelte</code> is exactly right</strong> — MIT-licensed, tree-shakeable, and a
+        perfect aesthetic match. Import the named icons rather than shipping these inline copies. Mapping:</p>
+    </div>
+    <div class="icon-legend" id="icon-legend"></div>
+  </div>
+</section>
+
+<!-- ============ POPUP ============ -->
+<section class="block">
+  <div class="wrap">
+    <div class="block-head">
+      <p class="eyebrow">Surface · 07</p>
+      <h2>Popup <span style="font-weight:500;color:var(--d-ink-3);font-size:18px">· 380px, auto-height → scroll</span></h2>
+      <p>The quick glance. Repos <strong>grouped by owner</strong>, sorted A–Z. Each row shows the
+        default-branch run; other refs collapse underneath. An alarm strip appears when <code>main</code> is
+        red. Five states below — including a green <code>main</code> with a failing PR/MR (calm, not loud).</p>
+    </div>
+    <div class="frames" id="popup-frames"></div>
+  </div>
+</section>
+
+<!-- ============ SIDE PANEL ============ -->
+<section class="block">
+  <div class="wrap">
+    <div class="block-head">
+      <p class="eyebrow">Surface · 08</p>
+      <h2>Side panel <span style="font-weight:500;color:var(--d-ink-3);font-size:18px">· 360px, full height</span></h2>
+      <p>Stays open while you work. Same row component as the popup but denser, plus a sticky health
+        summary (“failing · green · other”) and a subtle auto-refresh indicator.</p>
+    </div>
+    <div class="frames" id="sidepanel-frames"></div>
+  </div>
+</section>
+
+<!-- ============ NOTIFICATIONS ============ -->
+<section class="block">
+  <div class="wrap">
+    <div class="block-head">
+      <p class="eyebrow">Surface · 09</p>
+      <h2>Notifications &amp; badge</h2>
+      <p>The whole point: be loud the moment <code>main</code> breaks, quiet otherwise. OS notifications fire
+        only on <strong>state transitions</strong> (re-polling the same failure stays silent) and use the
+        status colour so a failure is unmissable. The <strong>toolbar icon reflects overall status</strong>
+        at a glance.</p>
+    </div>
+    <div class="frames" id="notif-frames"></div>
+    <h3 style="font-size:13px;color:var(--d-ink-3);margin:30px 0 14px;font-family:var(--d-mono);letter-spacing:.05em">Toolbar icon — status at a glance</h3>
+    <div class="frames" id="badge-frames"></div>
+  </div>
+</section>
+
+<!-- ============ OPTIONS ============ -->
+<section class="block">
+  <div class="wrap">
+    <div class="block-head">
+      <p class="eyebrow">Surface · 10</p>
+      <h2>Options <span style="font-weight:500;color:var(--d-ink-3);font-size:18px">· centred 720px column</span></h2>
+      <p>Connections (with live token state), an add-connection form that validates and auto-detects the
+        provider, a searchable repo picker, and settings. Forms follow the portal <code>forms.md</code>
+        spec: label → hint → error → input order, fields implicit-required with a lowercase
+        <code>(optional)</code> tag, inline errors above the input, and submit never disabled (block via
+        validation, not greying out).</p>
+    </div>
+    <div class="frames" id="options-frames" style="flex-direction:column"></div>
+  </div>
+</section>
+
+<footer class="doc-foot">
+  <div class="wrap">
+    Pipes design handoff · surfaces × light/dark + logo + tokens · built to communicate the design,
+    not to ship. Hand to Claude Code for the Svelte build.
+  </div>
+</footer>
+
+<script src="assets/logos.js"></script>
+<script src="assets/data.js"></script>
+<script src="assets/components.js"></script>
+<script src="assets/surfaces.js"></script>
+<script src="assets/app.js"></script>
+</body>
+</html>

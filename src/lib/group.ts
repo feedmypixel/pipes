@@ -127,6 +127,11 @@ export const BRANCH_STATE_ORDER: PipelineStatus[] = [
 /** Every branch state — the side panel's default (show all). */
 export const ALL_BRANCH_STATES: ReadonlySet<PipelineStatus> = new Set(BRANCH_STATE_ORDER)
 
+/** Rows with no pipelines have no status to match, so any narrowed status filter hides them. */
+function everyStateAllowed(allowed: ReadonlySet<PipelineStatus>): boolean {
+  return BRANCH_STATE_ORDER.every((state) => allowed.has(state))
+}
+
 /** True when a change was opened by the account's authenticated user. Shared by the panel's
  * Mine filter and the worker's notification gate — an unresolved login matches nothing. */
 export function isMine(change: Change, viewerLogin: string | undefined): boolean {
@@ -144,7 +149,9 @@ export function visibleChanges(
   mineOnly = false
 ): Change[] {
   return view.changes.filter(
-    (change) => allowed.has(change.status) && (!mineOnly || isMine(change, view.viewerLogin))
+    (change) =>
+      (change.status === null ? everyStateAllowed(allowed) : allowed.has(change.status)) &&
+      (!mineOnly || isMine(change, view.viewerLogin))
   )
 }
 
@@ -170,13 +177,9 @@ export function failingCount(
   )
 }
 
-/** Has no status to match, so any narrowed status filter hides it. */
 export function noPipelinesVisible(view: RepoView, allowed: ReadonlySet<PipelineStatus>): boolean {
   return (
-    view.polled &&
-    view.default === null &&
-    view.changes.length === 0 &&
-    BRANCH_STATE_ORDER.every((state) => allowed.has(state))
+    view.polled && view.default === null && view.changes.length === 0 && everyStateAllowed(allowed)
   )
 }
 
