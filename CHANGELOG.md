@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [1.7.0](https://github.com/feedmypixel/pipes/compare/v1.6.0...v1.7.0) (2026-10-24)
+
+### Features
+
+- show a hollow ring for a PR/MR with no pipelines ([#185](https://github.com/feedmypixel/pipes/issues/185)) ([3870957](https://github.com/feedmypixel/pipes/commit/3870957a4395f8a6230c4f118cd180c81f968479))
+
 ## [1.6.0](https://github.com/feedmypixel/pipes/compare/v1.5.1...v1.6.0) (2026-10-09)
 
 ### Features

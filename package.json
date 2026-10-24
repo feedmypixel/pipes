@@ -1,6 +1,6 @@
 {
   "name": "pipes",
-  "version": "1.6.0",
+  "version": "1.7.0",
   "description": "Watch GitHub Actions and GitLab CI/CD pipeline status across the repos you care about.",
   "keywords": [
     "chrome-extension",
