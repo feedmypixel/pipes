@@ -32,7 +32,12 @@ function mainPipe(status: PipelineStatus): Pipeline {
   }
 }
 
-function change(number: number, status: PipelineStatus, isDraft = false, author = 'me'): Change {
+function change(
+  number: number,
+  status: PipelineStatus | null,
+  isDraft = false,
+  author = 'me'
+): Change {
   return {
     number,
     title: `PR ${number}`,
@@ -155,6 +160,19 @@ test('visibleChanges: filters PRs by state; the default branch is never filtered
   const view = groupByOwner([repo('o/r', 'o/r')], snapshots)[0].repos[0]
   expect(visibleChanges(view, PROBLEM_STATES).map((c) => c.number)).toEqual([2])
   expect(visibleChanges(view, ALL_BRANCH_STATES).map((c) => c.number)).toEqual([3, 2, 1])
+})
+
+test('visibleChanges: a PR with no pipelines shows only while every status is allowed', () => {
+  const snapshots: Snapshots = { 'o/r': snapshot(null, [change(1, null), change(2, 'failed')]) }
+  const view = groupByOwner([repo('o/r', 'o/r')], snapshots)[0].repos[0]
+  expect(visibleChanges(view, ALL_BRANCH_STATES).map((c) => c.number)).toEqual([2, 1])
+  expect(visibleChanges(view, PROBLEM_STATES).map((c) => c.number)).toEqual([2])
+})
+
+test('failingCount: a PR with no pipelines never counts as failing', () => {
+  const snapshots: Snapshots = { 'o/r': snapshot(null, [change(1, null), change(2, 'failed')]) }
+  const view = groupByOwner([repo('o/r', 'o/r')], snapshots)[0].repos[0]
+  expect(failingCount(view, ALL_BRANCH_STATES)).toBe(1)
 })
 
 test('visibleChanges: mineOnly keeps only changes the viewer authored', () => {

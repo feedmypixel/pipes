@@ -29,3 +29,15 @@ test('transition into a non-terminal state is quiet', () => {
 test('canceled is terminal but not announced', () => {
   expect(decideAction('running', 'canceled', true)).toBe(null)
 })
+
+test('a PR that had no pipelines and then fails announces', () => {
+  expect(decideAction(null, 'failed', true)).toBe('fail')
+})
+
+test('a PR that had no pipelines and then passes stays quiet (not a recovery)', () => {
+  expect(decideAction(null, 'success', true)).toBe(null)
+})
+
+test('losing every run (no pipelines) is silent', () => {
+  expect(decideAction('failed', null, true)).toBe(null)
+})

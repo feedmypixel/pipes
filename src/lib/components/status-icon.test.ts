@@ -35,3 +35,11 @@ test('unknown is a purple question mark', () => {
   expect(statusVisual('unknown').colour).toBe('var(--unknown)')
   expect(statusVisual('unknown').symbol).toBe('question')
 })
+
+test('no pipelines (null) is an empty circle with no glyph', () => {
+  expect(statusVisual(null)).toEqual({
+    colour: 'transparent',
+    symbol: 'none',
+    label: 'no pipelines'
+  })
+})

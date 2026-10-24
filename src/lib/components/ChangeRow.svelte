@@ -15,7 +15,7 @@
   )
 </script>
 
-<div class="row" class:draft={change.isDraft} data-status={change.status}>
+<div class="row" class:draft={change.isDraft} data-status={change.status ?? 'none'}>
   <a
     class="r-link"
     href={change.webUrl}

@@ -41,14 +41,15 @@
     }
   })
 
-  const statuses: PipelineStatus[] = [
+  const statuses: (PipelineStatus | null)[] = [
     'success',
     'failed',
     'running',
     'pending',
     'canceled',
     'skipped',
-    'unknown'
+    'unknown',
+    null
   ]
 
   const swatches = [
@@ -124,7 +125,7 @@
 
   function change(
     number: number,
-    status: PipelineStatus,
+    status: PipelineStatus | null,
     isDraft = false,
     attribution: Author = demoAuthors.ada
   ): Change {
@@ -162,7 +163,9 @@
   const repoViews: RepoView[] = [
     view('status-api', pipeline('failed', 'main', true, 4, demoAuthors.grace), [
       change(210, 'failed', false, demoAuthors.linus),
-      change(208, 'success', true, demoAuthors.bot)
+      change(209, null, false, demoAuthors.grace),
+      change(208, 'success', true, demoAuthors.bot),
+      change(207, 'unknown', false, demoAuthors.initials)
     ]),
     view('marketing-site', pipeline('success', 'main', true, 90, demoAuthors.ada)),
     view('cli', pipeline('running', 'main', true, 1, demoAuthors.initials))
@@ -253,7 +256,7 @@
           <StatusIcon {status} size={30} />
           <StatusIcon {status} size={20} />
           <StatusIcon {status} size={18} />
-          <code>{status}</code>
+          <code>{status ?? 'no pipelines'}</code>
         </div>
       {/each}
     </div>

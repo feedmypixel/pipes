@@ -105,7 +105,8 @@ export interface Change {
   headRef: string
   /** Head commit SHA the status reflects. */
   headSha: string
-  status: PipelineStatus
+  /** Null when no run matched: the PR/MR has no pipelines (an absence, not a status). */
+  status: PipelineStatus | null
   /** ISO time of the head pipeline run, joined from the runs list. Undefined when none matched. */
   updatedAt?: string
   /** ISO start time of the head pipeline, for a live "running Xm". Undefined when none matched. */

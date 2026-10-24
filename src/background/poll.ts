@@ -31,16 +31,18 @@ export type TransitionAction = 'fail' | 'recover' | null
  * what we last saw for the same thing (default branch, or a PR keyed by number).
  *
  * - First sight (prev undefined) seeds the baseline silently, so adding an already-red repo
- *   doesn't fire a notification storm.
+ *   doesn't fire a notification storm. A PR that had no pipelines (prev null) is not first sight:
+ *   its first run failing announces like any other failure.
+ * - Losing every run (next null) is silent.
  * - Only a *change* into a terminal state fires; re-polling the same failure stays quiet.
  * - Success only announces as a recovery from a previous failure.
  */
 export function decideAction(
-  prev: PipelineStatus | undefined,
-  next: PipelineStatus,
+  prev: PipelineStatus | null | undefined,
+  next: PipelineStatus | null,
   notifyOnSuccess: boolean
 ): TransitionAction {
-  if (prev === undefined || prev === next) {
+  if (prev === undefined || next === null || prev === next) {
     return null
   }
   if (!TERMINAL_STATUSES.has(next)) {
@@ -134,10 +136,18 @@ async function pollRepo(
   try {
     const provider = getProvider(account.provider)
 
-    const [runs, open] = await Promise.all([
+    const [conditionalRuns, open] = await Promise.all([
       provider.listPipelines(account, repo, etag),
       provider.listOpenChanges(account, repo, changeEtag)
     ])
+    const prevByNumber = new Map(prev.changes.map((change) => [change.number, change]))
+    const hasNewChange =
+      !open.notModified && open.changes.some((meta) => !prevByNumber.has(meta.number))
+    // A 304 leaves nothing to join a new PR/MR to, though its branch may already have a run.
+    const runs =
+      conditionalRuns.notModified && hasNewChange
+        ? await provider.listPipelines(account, repo, undefined)
+        : conditionalRuns
     // Pause off whichever call is closer to the budget floor, so neither fetch is invisible.
     const rateLimit = worstRateLimit(runs.rateLimit, open.rateLimit)
 
@@ -171,7 +181,6 @@ async function pollRepo(
         }
       }
     }
-    const prevByNumber = new Map(prev.changes.map((change) => [change.number, change]))
     const metas = open.notModified ? prev.changes : open.changes
     const nextChanges: Change[] = metas.map((meta) => {
       const byRef = pipelineByRef.get(meta.headRef)
@@ -191,7 +200,7 @@ async function pollRepo(
         isDraft: meta.isDraft,
         isBot: meta.isBot,
         attribution: meta.attribution,
-        status: pipeline?.status ?? previous?.status ?? 'unknown',
+        status: pipeline?.status ?? previous?.status ?? null,
         updatedAt: pipeline?.updatedAt ?? previous?.updatedAt,
         startedAt: pipeline?.startedAt ?? previous?.startedAt
       }

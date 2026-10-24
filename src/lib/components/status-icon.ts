@@ -1,6 +1,7 @@
 import type { PipelineStatus } from '../../providers/types'
 
-export type StatusSymbol = 'check' | 'cross' | 'arc' | 'pause' | 'slash' | 'chevrons' | 'question'
+export type StatusSymbol =
+  'check' | 'cross' | 'arc' | 'pause' | 'slash' | 'chevrons' | 'question' | 'none'
 
 export interface StatusVisual {
   /** CSS custom-property reference for the circle fill. */
@@ -24,6 +25,8 @@ const VISUALS: Record<PipelineStatus, StatusVisual> = {
   unknown: { colour: 'var(--unknown)', symbol: 'question', label: 'unknown' }
 }
 
-export function statusVisual(status: PipelineStatus): StatusVisual {
-  return VISUALS[status]
+const NO_PIPELINES: StatusVisual = { colour: 'transparent', symbol: 'none', label: 'no pipelines' }
+
+export function statusVisual(status: PipelineStatus | null): StatusVisual {
+  return status === null ? NO_PIPELINES : VISUALS[status]
 }
