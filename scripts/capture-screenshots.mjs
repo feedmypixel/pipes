@@ -9,9 +9,12 @@ const SCALE = 2
 
 const TARGETS = [
   { name: 'sidepanel-dark', surface: 'sidepanel', width: 540, height: 440, theme: 'dark' },
+  { name: 'sidepanel-light', surface: 'sidepanel', width: 540, height: 440, theme: 'light' },
   { name: 'author-light', surface: 'sidepanel', width: 540, height: 392, theme: 'light' },
   { name: 'popup-dark', surface: 'popup', width: 440, height: 500, theme: 'dark' },
+  { name: 'popup-light', surface: 'popup', width: 440, height: 500, theme: 'light' },
   { name: 'options-dark', surface: 'options', width: 680, height: 600, theme: 'dark' },
+  { name: 'options-light', surface: 'options', width: 680, height: 600, theme: 'light' },
   { name: 'marquee', surface: 'sidepanel', width: 480, height: 360, theme: 'dark' }
 ]
 
