@@ -25,6 +25,11 @@ Chrome window at `deviceScaleFactor: 2`, sets the viewport width + colour scheme
 screenshots into `store-screenshots/auto/`. Headed Chrome matters: headless renders the status icons
 slightly off. Edit the `TARGETS` array to change which surfaces, themes, widths, or crops are shot.
 
+`sidepanel-light`, `popup-light` and `options-light` pair the dark captures at the same sizes for
+feedmypixel.com. They are not framed. `failure-notification-light.png` and
+`failure-notification-dark.png` are a pixel-aligned pair of real macOS notifications, captured
+outside this pipeline with macOS in each theme.
+
 ## 3. Frame
 
 `scripts/frame-store.mjs` wraps a capture in the brand frame: navy backdrop, headline + subline on
