@@ -26,7 +26,9 @@ screenshots into `store-screenshots/auto/`. Headed Chrome matters: headless rend
 slightly off. Edit the `TARGETS` array to change which surfaces, themes, widths, or crops are shot.
 
 `sidepanel-light`, `popup-light` and `options-light` pair the dark captures at the same sizes for
-feedmypixel.com. They are not framed.
+feedmypixel.com. They are not framed. `failure-notification-light.png` pairs
+`3-failure-notification.png`: a real macOS notification, captured outside this pipeline with macOS
+in light mode.
 
 ## 3. Frame
 
