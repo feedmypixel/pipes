@@ -4,7 +4,4 @@ allowBuilds:
 
 overrides:
   shell-quote: ^1.11.0
-
-auditConfig:
-  ignoreGhsas:
-    - GHSA-86w9-cpqp-85rv
+  minimatch@>=7.0.0 <11.0.1: ^11.0.1
