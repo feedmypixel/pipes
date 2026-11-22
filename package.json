@@ -55,15 +55,15 @@
     "@eslint/js": "10.0.1",
     "@sveltejs/vite-plugin-svelte": "7.3.1",
     "@tsconfig/svelte": "5.0.8",
-    "@types/chrome": "0.3.5",
+    "@types/chrome": "0.3.7",
     "@vitest/browser": "4.1.12",
     "@vitest/browser-playwright": "4.1.12",
     "@vitest/coverage-v8": "4.1.12",
     "commit-and-tag-version": "13.3.0",
     "eslint": "10.12.0",
     "eslint-config-prettier": "10.1.8",
-    "eslint-plugin-security": "4.2.0",
-    "eslint-plugin-svelte": "3.23.1",
+    "eslint-plugin-security": "4.2.1",
+    "eslint-plugin-svelte": "3.24.1",
     "globals": "17.13.0",
     "husky": "9.1.7",
     "lint-staged": "17.6.0",
@@ -80,7 +80,7 @@
     "vite": "8.3.4",
     "vitest": "4.1.12",
     "vitest-browser-svelte": "3.1.0",
-    "web-ext": "10.7.0"
+    "web-ext": "10.8.0"
   },
   "dependencies": {
     "@lucide/svelte": "1.57.0",
