@@ -77,7 +77,7 @@
     "svelte-check": "4.7.7",
     "typescript": "6.0.3",
     "typescript-eslint": "8.71.2",
-    "vite": "8.3.4",
+    "vite": "8.3.8",
     "vitest": "4.1.12",
     "vitest-browser-svelte": "3.1.0",
     "web-ext": "10.7.0"
